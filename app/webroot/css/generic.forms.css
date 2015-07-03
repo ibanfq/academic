@@ -15,6 +15,7 @@ dt {
 dd {
 	margin-left: 17em;
 	margin-top: -2em;
+        min-height: 2em;
 	vertical-align: top;
 }
 
