@@ -40,6 +40,7 @@
 			<tr>
 				<!-- Shows the next and previous links -->
 				<?php
+                                        $paginator->options(array('url' => array('q'=>$q)));
 					echo $paginator->prev('« Anterior ', null, null, array('class' => 'disabled'));
 					echo "&nbsp";
 					echo $paginator->numbers();

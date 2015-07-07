@@ -6,12 +6,16 @@ class ClassroomsController extends AppController {
 	function index(){
 		App::import('Sanitize');
 		if (isset($this->params['url']['q']))
-			$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
-		else
-			$q = '%%';
-		$classrooms = $this->paginate('Classroom', array("OR" => array('Classroom.name LIKE' => $q, 'Classroom.type LIKE' => $q)));
+			$q = Sanitize::escape($this->params['url']['q']);
+		else {
+			if (isset($this->passedArgs['q']))
+				$q = Sanitize::escape($this->passedArgs['q']);
+			else
+				$q = '';
+		}
+		$classrooms = $this->paginate('Classroom', array("OR" => array('Classroom.name LIKE' => "%$q%", 'Classroom.type LIKE' => "%$q%")));
 		$this->set('classrooms', $classrooms);
-		$this->set('q', isset($this->params['url']['q']) ? $this->params['url']['q'] : '');
+		$this->set('q', $q);
 	}
 	
 	function add(){
