@@ -67,7 +67,7 @@
 		$.ajax({
 			cache: false,
 			type: "POST", 
-			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': $('#EventTeacher_2Id').val(), 'data[Event][initial_hour]': initial_hour.toString(), 'data[Event][final_hour]': final_hour.toString(), 'data[Event][classroom_id]': $('#classrooms').val()},
+			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': $('#EventTeacher2Id').val(), 'data[Event][initial_hour]': initial_hour.toString(), 'data[Event][final_hour]': final_hour.toString(), 'data[Event][classroom_id]': $('#classrooms').val()},
 			url: "<?php echo PATH ?>/events/add/" + $('#EventFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script', 
@@ -100,8 +100,9 @@
 		$('#EventActivityId').html("<option value=''>Seleccione una actividad</option>");
 		$('#EventGroupId').html("<option value=''>Seleccione un grupo</option>");
 		$('#teacher_name').val("");
+        $('#teacher_2_name').val("");
 		$('#EventTeacherId').val("");
-		$('#EventTeacher_2Id').val("");
+		$('#EventTeacher2Id').val("");
 		$('#Frequency').val("");
 		$('#finished_at').val("");
 		$('#finish_date').hide();
@@ -459,7 +460,7 @@
 		
 		$("#teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#EventTeacherId").val(item[1]); });
 		
-		$("#teacher_2_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#EventTeacher_2Id").val(item[1]); });
+		$("#teacher_2_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#EventTeacher2Id").val(item[1]); });
 	
 		$("#subject_name").autocomplete(subjects, {
 			minChars: 0,
