@@ -463,6 +463,7 @@
 	
 		$("#subject_name").autocomplete(subjects, {
 			minChars: 0,
+            matchContains: true,
 			formatItem: function(row){
 				return row.name;
 			},
