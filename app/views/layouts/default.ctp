@@ -58,7 +58,7 @@
 			<?php if (isset($auth)) { ?>
 				<div class="tabs">
 					<ul>
-						<li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>">Mi agenda</li>
+						<li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Mi agenda</li>
 						<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
 							<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
 								<li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
