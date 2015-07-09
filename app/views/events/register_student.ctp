@@ -18,14 +18,14 @@
 	<?php if ((isset($student_groups[$activity['id']])) && ($student_groups[$activity['id']] == -1)) { 
 		$ul_display = "display:none";
 	?>
-		<span id="not_passed_<?php echo $activity['id'] ?>"> La tengo aprobada <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. No la tengo aprobada</a><br /><br /></span>
-		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link" style="display:none">Tengo esta actividad aprobada</a>
+		<span id="not_passed_<?php echo $activity['id'] ?>"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
+		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link" style="display:none">No elegir ningún grupo</a>
 
 	<?php } else { 
 			$ul_display = "";
 	?>
-		<span id="not_passed_<?php echo $activity['id'] ?>" style="display:none"> La tengo aprobada <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. No la tengo aprobada</a><br /><br /></span>
-		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link">Tengo esta actividad aprobada</a>
+		<span id="not_passed_<?php echo $activity['id'] ?>" style="display:none"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
+		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link">No elegir ningún grupo</a>
 
 	<?php } ?>
 
