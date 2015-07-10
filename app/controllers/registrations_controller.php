@@ -9,7 +9,11 @@ class RegistrationsController extends AppController {
 		
 		$this->Registration->id = null;
 		
-		$activity_exists = $this->Registration->Activity->_exists($activity_id);
+        if ($this->Registration->studentRegistered($this->Auth->user('id'), $activity_id)) {
+            $activity_exists = $this->Registration->Activity->_existsAndGroupsOpened($activity_id);
+        } else {
+            $activity_exists = $this->Registration->Activity->_exists($activity_id);
+        }
 		$group_exists = $this->Registration->Group->_exists($group_id);
 		
 		if ($activity_exists && $group_exists) {
@@ -35,7 +39,13 @@ class RegistrationsController extends AppController {
 	function pass_activity($activity_id = null){
 		$this->set('success', false);
 		
-		if ($this->Registration->Activity->_exists($activity_id)){
+        if ($this->Registration->studentRegistered($this->Auth->user('id'), $activity_id)) {
+            $activity_exists = $this->Registration->Activity->_existsAndGroupsOpened($activity_id);
+        } else {
+            $activity_exists = $this->Registration->Activity->_exists($activity_id);
+        }
+        
+		if ($activity_exists) {
 			$this->Registration->create();
 			$registration = array('Registration' => array('group_id' => -1, 'activity_id' => $activity_id, 'student_id' => $this->Auth->user('id')));
 			

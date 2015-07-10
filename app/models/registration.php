@@ -29,5 +29,15 @@ class Registration extends AcademicModel {
 
 		return $registrations[0][0]['registrations'] < 2;
 	}
+    
+    function studentRegistered($student_id, $activity_id, $group_id = null) {
+        if ($group_id) {
+            $registrations = $this->query("SELECT count(*) AS registrations FROM registrations WHERE activity_id = $activity_id AND group_id = $group_id AND student_id = $student_id");
+        } else {
+            $registrations = $this->query("SELECT count(*) AS registrations FROM registrations WHERE activity_id = $activity_id AND student_id = $student_id");
+        }
+        
+        return (bool)$registrations[0][0]['registrations'];
+    }
 }
 ?>

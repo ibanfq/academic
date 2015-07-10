@@ -21,31 +21,37 @@
 		<span id="not_passed_<?php echo $activity['id'] ?>"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
 		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link" style="display:none">No elegir ningún grupo</a>
 
-	<?php } else { 
-			$ul_display = "";
-	?>
-		<span id="not_passed_<?php echo $activity['id'] ?>" style="display:none"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
-		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link">No elegir ningún grupo</a>
+    <?php } else {
+        $ul_display = "";
+    ?>
+        <?php if (!$activity['groups_closed'] || !isset($student_groups[$activity['id']])) { ?>
+            <span id="not_passed_<?php echo $activity['id'] ?>" style="display:none"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
+            <a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link">No elegir ningún grupo</a>
 
-	<?php } ?>
+        <?php } ?>
+    <?php } ?>
 
-		<ul class="groups" id="group_list_<?php echo $activity['id']?>" style="<?php echo $ul_display ?>">
+		<ul class="groups <?php echo $activity['groups_closed']? 'closed' : 'opened' ?>" id="group_list_<?php echo $activity['id']?>" style="<?php echo $ul_display ?>">
 		<?php foreach ($activity['Groups'] as $group): ?>
 				<li>
 					<?php if ((isset($student_groups[$activity['id']])) && ($group['id'] == $student_groups[$activity['id']])){
 						echo "<span class='selected group activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 				
 						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
-						echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
+                        if (!$activity['groups_closed']) {
+                            echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
+                        }
 						
 					} else {
 					
 						echo "<span class='group activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
-					$style = $group['free_seats'] > 0 ? '' : 'display:none';
-					echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a></span>";
-				
-				} ?>
+                        if (!$activity['groups_closed'] || !isset($student_groups[$activity['id']]) || $student_groups[$activity['id']] == -1) {
+                            $style = $group['free_seats'] > 0 ? '' : 'display:none';
+                            echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a></span>";
+                        }
+
+                    } ?>
 				
 				<?php echo $html->link('Ver alumnos apuntados', array('controller' => 'registrations', 'action' => 'view_students_registered', $activity['id'], $group['id'], 'class' => '')) ?>
 				
@@ -85,10 +91,14 @@
 				
 				switch(data){
 				case "success":
+                    var closed = $('#group_list_' + activity_id).hasClass('closed');
 					$('.activity_' + activity_id).removeClass('selected');
 					$('#' + activity_id + "_" + group_id).addClass('selected');
-					$('.register_me_link_activity_' + activity_id).show();
+					$('.register_me_link_activity_' + activity_id).toggle(!closed);
 					$('#register_me_link_activity_' + activity_id + '_' + group_id).hide();
+                    if (closed) {
+                        $('#passed_' + activity_id).hide();
+                    }
 					break;
 				case "notEnoughSeatsError":
 					$('#notice').removeClass('success');
@@ -147,6 +157,7 @@
 					$('#group_list_' + activity_id).show();
 					$('#passed_' + activity_id).show();
 					$('#not_passed_' + activity_id).hide();
+                    $('.register_me_link_activity_' + activity_id).show();
 				} else {
 					$('#notice').removeClass('success');
 					$('#notice').addClass('error');

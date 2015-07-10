@@ -210,7 +210,7 @@
 			
 			$this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id))));
 			
-			$events = $this->Event->query("SELECT Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
+			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
 			
 			$activities_groups = array();
 			foreach ($events as $event):
@@ -220,7 +220,8 @@
 					array_push($activities_groups[$event['Activity']['id']]['Groups'], array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity']));
 				}
 				else {
-					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'Groups' => array(array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'])));
+                    $closed = $event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP;
+					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => $closed, 'Groups' => array(array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'])));
 				}
 			endforeach;
 			
