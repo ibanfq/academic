@@ -7,9 +7,9 @@
 		function index(){
 			$this->set('section', 'bookings');
 			$classrooms = array();
-			foreach($this->Booking->Classroom->find('all', array('order' => array('Classroom.name'))) as $classroom):
+			foreach($this->Booking->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
 				$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
-			endforeach;
+			}
 			
 			$this->set('classrooms', $classrooms);
 		}

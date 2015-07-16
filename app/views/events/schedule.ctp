@@ -77,23 +77,50 @@
 		});
 	}
 	
-	function update_teacher(event_id) {
-	  if ($("#edit_teacher_2_name").val() == "") {
-	    $('#teacher_2_id').val("");
-	  }
-	  
-		$.ajax({
-			cache: false,
-			type: "GET", 
-			url: "<?php echo PATH ?>/events/update_teacher/" + event_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val(),
-			asynchronous: false,
-			dataType: 'script', 
-			success: function(data){
-				$('#edit_form').dialog('close');
-				$('#edit_form').html("");
+	<?php if ($auth->user('type') == "Administrador") { ?>
+		function update_classroom(event_id) {
+			var classroom_id = $('#EventClassroomId').val();
+			
+			if ($("#edit_teacher_2_name").val() == "") {
+	  		    $('#teacher_2_id').val("");
+  		    }
+			  
+			$.ajax({
+				cache: false,
+				type: "GET", 
+				url: "<?php echo PATH ?>/events/update_classroom/" + event_id + "/" + classroom_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val(),
+				asynchronous: false,
+				dataType: 'script', 
+				success: function(data){
+					$('#edit_form').dialog('close');
+					$('#edit_form').html("");
+					if (classroom_id != $('#classrooms').val()) {
+						if ($('#notice').hasClass('success')) {
+							$('#calendar').fullCalendar('removeEvents', event_id);
+						}
+					}
+				}
+			});
+		}
+	<?php } else { ?>
+		function update_teacher(event_id) {
+			if ($("#edit_teacher_2_name").val() == "") {
+				$('#teacher_2_id').val("");
 			}
-		});
-	}
+		  
+			$.ajax({
+				cache: false,
+				type: "GET", 
+				url: "<?php echo PATH ?>/events/update_teacher/" + event_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val(),
+				asynchronous: false,
+				dataType: 'script', 
+				success: function(data){
+					$('#edit_form').dialog('close');
+					$('#edit_form').html("");
+				}
+			});
+		}
+	<?php } ?>
 	
 	function reset_form(){
 		$('#subject_name').val("");

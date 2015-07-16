@@ -14,9 +14,9 @@
 			$course = $this->Event->Activity->Subject->Course->read();
 			
 			$classrooms = array();
-			foreach($this->Event->Classroom->find('all', array('order' => array('Classroom.name'))) as $classroom):
+            foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
 				$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
-			endforeach;
+			}
 			$this->set('classrooms', $classrooms);
 			$this->set('subjects', $course['Subject']);
 			$this->set('course', $course);
@@ -146,8 +146,15 @@
 			$subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
 			$uid = $this->Auth->user('id');
 
-			if (($event['Event']['owner_id'] == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($uid == $subject['Subject']['coordinator_id']) || ($uid == $subject['Subject']['practice_responsible_id']))
+			if (($event['Event']['owner_id'] == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($uid == $subject['Subject']['coordinator_id']) || ($uid == $subject['Subject']['practice_responsible_id'])) {
+				if ($this->Auth->user('type') == "Administrador") {
+					foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
+	                    $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
+	                }
+	                $this->set('classrooms', $classrooms);
+				}
 				$this->set('event', $event);
+            }
 		}
 		
 		function update($id, $deltaDays, $deltaMinutes, $resize = null) {
@@ -183,6 +190,22 @@
 			$ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
 			$this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");
 			$this->set('events', $ids);
+		}
+		
+		function update_classroom($event_id = null, $classroom_id = null, $teacher_id = null, $teacher_2_id = null) {
+			if (($this->Auth->user('type') == "Administrador") && ($classroom_id != null) && ($teacher_id != null) && ($event_id != null)) {
+				$this->Event->id = $event_id;
+				$event = $this->Event->read();
+				$event['Event']['classroom_id'] = $classroom_id;
+				if ($this->Event->save($event)) {
+					$this->update_teacher($event_id, $teacher_id, $teacher_2_id);
+				} else if ($this->Event->id != -1) {
+					$event = $this->Event->read();
+					$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
+					$this->set('event', $event);
+					$this->set('activity', $activity);
+				}
+			}
 		}
 		
 		function update_teacher($event_id = null, $teacher_id = null, $teacher_2_id = null) {

@@ -20,6 +20,11 @@
 					<dd style="margin-left: 8em"><?php echo date_create($event['Event']['final_hour'])->format('H:i')?> </dd>
 				</dl>
 				<div>
+				<?php if ($auth->user('type') == "Administrador") { ?>
+	            	<?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $event['Event']['classroom_id'], 'div' => false, 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+				<?php } ?>
+        </div>
+				<div>
 					<dl>
 						<dt><label for="teacher_name">Profesor</label></dt>
 						<dd><input type="text" name="edit_teacher_name" id="edit_teacher_name" value="<?php echo "{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}"?>" /></dd>
@@ -45,8 +50,14 @@
 			<input type="submit" value="Actualizar" onclick="
 			<?php if ($event['Event']['parent_id'] == null) {?>
 				if (confirm('Este evento es el primero de la serie. Si modifica el profesor se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
-				<?php } ?>
-					update_teacher(<?php echo $event['Event']['id'] ?>);
+			<?php } ?>
+				{
+					<?php if ($auth->user('type') == "Administrador") { ?>
+						update_classroom(<?php echo $event['Event']['id'] ?>);
+					<?php } else { ?>
+						update_teacher(<?php echo $event['Event']['id'] ?>);
+					<?php } ?>
+				}
 			">
 			o
 			<a class="dialog" href="javascript:;" title="Eliminar este evento" onclick="delete_event(<?php echo $event['Event']['id'] ?>, '<?php echo $event['Event']['parent_id'] ?>');">Eliminar este evento</a>
