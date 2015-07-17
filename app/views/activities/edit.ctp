@@ -19,6 +19,26 @@
 	</fieldset>
 		<?php echo $form->input('subject_id', array('type' => 'hidden')); ?>
 		<?php echo $form->input('id', array('type' => 'hidden')); ?>
+		
+	<fieldset>
+	<legend>Estudiantes</legend>
+		<table>
+			<thead>
+				<tr>
+					<th style="width:80%">Estudiante</th>
+					<th>Grupo</th>
+				</th>
+			</thead>
+			<tbody>
+				<?php foreach ($registrations as $registration): ?>
+					<tr>
+						<td><?php echo "{$registration['Student']['first_name']} {$registration['Student']['last_name']}"?></td>
+						<td><?php echo $form->select("Students.{$registration['Student']['id']}.group_id", $groups, $registration['Registration']['group_id']); ?></td>
+					</tr>
+				<?php endforeach;?>
+			</tbody>
+		</table>		
+	</fieldset>
 <?php
 	echo $form->end('Modificar');
 ?>

@@ -52,4 +52,30 @@
 			</table>
 		</fieldset>
 	<?php }?>
+	
+	<?php if (count($registrations) > 0) { ?>
+		<fieldset>
+		<legend>Estudiantes</legend>
+			<table>
+				<tr>
+					<th>Estudiante</th>
+					<th>Grupo</th>
+				</tr>
+				<?php foreach($registrations as $registration): ?>
+					<tr>
+						<td><?php echo "{$registration['Student']['first_name']} {$registration['Student']['last_name']}" ?></td>
+						<td><?php
+							if ($registration['Registration']['group_id'] === null) {
+								echo 'Ninguno';
+							} else if ($registration['Registration']['group_id'] == -1) {
+                                echo 'Tiene esta actividad aprobada';
+                            } else {
+                                echo $groups[$registration['Registration']['group_id']]['Group']['name'];
+                            }
+                        ?></td>
+					</tr>
+                <?php endforeach; ?>
+			</table>
+		</fieldset>
+	<?php }?>
 </div>

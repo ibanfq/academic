@@ -34,7 +34,9 @@
 			$activity = $this->Activity->read();
 			$this->set('activity', $activity);
 			$this->set('subject', $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $activity['Subject']['id']))));
-			$this->set('groups', $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id"));
+			$groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id");
+			$this->set('groups', set::combine($groups, '{n}.Group.id', '{n}'));
+			$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$activity['Subject']['id']} ORDER BY Registration.group_id"));
 		}
 	
 		function edit($id = null) {
@@ -44,8 +46,31 @@
 				$subject = $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $this->data['Activity']['subject_id'])));
 				$this->set('activity', $this->data);
 				$this->set('subject', $subject);
+				$groups = $this->Activity->query("SELECT `Group`.id, `Group`.name FROM groups `Group` WHERE subject_id = {$this->data['Subject']['id']}");
+				$this->set('groups', array(-1 => 'Tiene la actividad aprobada') + set::combine($groups, '{n}.Group.id', '{n}.Group.name'));
+				$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$this->data['Subject']['id']} ORDER BY Registration.group_id"));
 			} else {
-				if ($this->Activity->save($this->data)) {
+				$registrations = $this->Activity->query("SELECT Registration.* FROM registrations Registration WHERE Registration.activity_id = {$id}");
+				$registrations_deleted = array();
+				foreach ($registrations as $i => &$registration) {
+					$student_id = $registration['Registration']['student_id'];
+					$group_id = $this->data['Students'][$student_id]['group_id'];
+					if ($group_id) {
+						$registration['Registration']['group_id'] = $group_id;
+					} else {
+						array_push($registrations_deleted, $registration['Registration']['id']);
+						unset($registrations[$i]);
+					}
+					unset($this->data['Students'][$student_id]);
+				}
+				foreach ($this->data['Students'] as $student_id => $student) {
+					if ($student['group_id']) {
+						array_push($registrations, array('group_id' => $student['group_id'], 'activity_id' => $id, 'student_id' => $student_id));
+					}
+				}
+				unset($this->data['Students']);
+				$this->Activity->Registration->unbindModel(array('hasOne' => array('User', 'Activity', 'Group')), false);
+				if ($this->Activity->save($this->data) && $this->Activity->Registration->saveAll($registrations) && $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted))) {
 					$this->Session->setFlash('La actividad se ha modificado correctamente.');
 					$this->redirect(array('action' => 'view', $id));
 				}
