@@ -21,10 +21,11 @@
 		<ul class="groups <?php echo $activity['groups_closed']? 'closed' : 'opened' ?>" id="group_list_<?php echo $activity['id']?>">
 		<?php foreach ($activity['Groups'] as $group): ?>
 				<li class="group <?php echo $group['closed']? 'closed' : 'opened' ?>" id="group_<?php echo $activity['id']?>_<?php echo $group['id'] ?>">
+					<?php $free_seats = max(0, $group['free_seats']); ?>
 					<?php if ((isset($student_groups[$activity['id']])) && ($group['id'] == $student_groups[$activity['id']])){
 						echo "<span class='selected group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 				
-						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
+						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
 						echo "<span>";
                         if (!$group['closed']) {
                             echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a>";
@@ -34,7 +35,7 @@
 					} else {
 					
 						echo "<span class='group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
-						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
+						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
 						echo "<span>";
                         if (!isset($student_groups[$activity['id']]) || (!$activity['groups_closed'] && !$group['closed'])) {
                             $style = $group['free_seats'] > 0 ? '' : 'display:none';
