@@ -36,7 +36,7 @@
 			$this->set('subject', $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $activity['Subject']['id']))));
 			$groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id");
 			$this->set('groups', set::combine($groups, '{n}.Group.id', '{n}'));
-			$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$activity['Subject']['id']} ORDER BY Registration.group_id"));
+			$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$activity['Subject']['id']} ORDER BY Registration.group_id, Student.first_name, Student.last_name"));
 		}
 	
 		function edit($id = null) {
@@ -46,9 +46,9 @@
 				$subject = $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $this->data['Activity']['subject_id'])));
 				$this->set('activity', $this->data);
 				$this->set('subject', $subject);
-				$groups = $this->Activity->query("SELECT `Group`.id, `Group`.name FROM groups `Group` WHERE subject_id = {$this->data['Subject']['id']}");
+				$groups = $this->Activity->query("SELECT distinct(`Group`.id), `Group`.name FROM events Event INNER JOIN groups `Group` on `Group`.id = Event.group_id WHERE Event.activity_id = {$id}");
 				$this->set('groups', array(-1 => 'Tiene la actividad aprobada') + set::combine($groups, '{n}.Group.id', '{n}.Group.name'));
-				$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$this->data['Subject']['id']} ORDER BY Registration.group_id"));
+				$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$this->data['Subject']['id']} ORDER BY Registration.group_id, Student.first_name, Student.last_name"));
 			} else {
 				$registrations = $this->Activity->query("SELECT Registration.* FROM registrations Registration WHERE Registration.activity_id = {$id}");
 				$registrations_deleted = array();

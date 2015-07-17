@@ -43,8 +43,10 @@ class Activity extends AcademicModel {
 		return ($activity != null);
 	}
     
-    function _existsAndGroupsOpened($id) {
-        $activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Activity.id = $id");
+    function _existsAndGroupOpened($activity_id, $group_id) {
+        $activity_id = intval($activity_id);
+        $group_id = intval($group_id);
+        $activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Event.activity_id = $activity_id AND Event.group_id = $group_id");
         if ($activity && $activity[0]['Activity']['id']) {
             return (!$activity[0]['Activity']['inflexible_groups'] || $activity[0][0]['days_to_start'] > self::DAYS_TO_BLOCK_CHANGING_GROUP);
         } else {

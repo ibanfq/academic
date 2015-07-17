@@ -238,13 +238,13 @@
 			$activities_groups = array();
 			foreach ($events as $event):
 				$busy_capacity = $this->Event->query("SELECT count(*) as busy_capacity FROM registrations WHERE group_id = {$event['Group']['id']} AND activity_id = {$event['Activity']['id']}");
+				$closed = $event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP;
 				
 				if (isset($activities_groups[$event['Activity']['id']])){
-					array_push($activities_groups[$event['Activity']['id']]['Groups'], array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity']));
+					$activities_groups[$event['Activity']['id']]['Groups'][$event['Group']['id']] = array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed);
 				}
 				else {
-                    $closed = $event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP;
-					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => $closed, 'Groups' => array(array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'])));
+					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => false, 'Groups' => array($event['Group']['id'] => array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed)));
 				}
 			endforeach;
 			
@@ -253,6 +253,22 @@
 			$student_groups = array();
 			foreach ($student_groups_activities as $sga):
 				$student_groups[$sga['registrations']['activity_id']] = $sga['registrations']['group_id'];
+				if ($sga['registrations']['group_id'] != -1 && isset($activities_groups[$sga['registrations']['activity_id']]['Groups'][$sga['registrations']['group_id']])) {
+					$activities_groups[$sga['registrations']['activity_id']]['groups_closed'] = $activities_groups[$sga['registrations']['activity_id']]['Groups'][$sga['registrations']['group_id']]['closed'];
+				}
+			endforeach;
+			
+			foreach ($activities_groups as $activity):
+				if (!$activity['groups_closed']) {
+					//There is an open group?
+					$activities_groups[$activity['id']]['groups_closed'] = true;
+					foreach ($activity['Groups'] as $group) {
+						if (!$group['closed']) {
+							$activities_groups[$activity['id']]['groups_closed'] = false;
+							break;
+						}
+					}
+				}
 			endforeach;
 			
 			$this->set('activities_groups', $activities_groups);

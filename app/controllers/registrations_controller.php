@@ -9,12 +9,19 @@ class RegistrationsController extends AppController {
 		
 		$this->Registration->id = null;
 		
-        if ($this->Registration->studentRegistered($this->Auth->user('id'), $activity_id)) {
-            $activity_exists = $this->Registration->Activity->_existsAndGroupsOpened($activity_id);
+		$actual_group_id = $this->Registration->studentGroupRegistered($this->Auth->user('id'), $activity_id);
+		
+        if ($actual_group_id) {
+			if ($this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id)) {
+            	$activity_exists = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+			} else {
+				$activity_exists = false;
+			}
+			$group_exists = $activity_exists;
         } else {
             $activity_exists = $this->Registration->Activity->_exists($activity_id);
+			$group_exists = $this->Registration->Group->_exists($group_id);
         }
-		$group_exists = $this->Registration->Group->_exists($group_id);
 		
 		if ($activity_exists && $group_exists) {
 			$this->Registration->create();
@@ -34,36 +41,6 @@ class RegistrationsController extends AppController {
 		$free_seats = $this->Registration->query("SELECT `Group`.id, Activity.id, `Group`.capacity - IFNULL(count(Registration.id), 0) AS free_seats FROM groups `Group` INNER JOIN activities Activity ON Activity.subject_id = `Group`.subject_id AND Activity.type = `Group`.type LEFT JOIN registrations Registration ON `Group`.id = Registration.group_id AND Activity.id = Registration.activity_id WHERE `Group`.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id");
 		
 		$this->set('free_seats', $free_seats);
-	}
-	
-	function pass_activity($activity_id = null){
-		$this->set('success', false);
-		
-        if ($this->Registration->studentRegistered($this->Auth->user('id'), $activity_id)) {
-            $activity_exists = $this->Registration->Activity->_existsAndGroupsOpened($activity_id);
-        } else {
-            $activity_exists = $this->Registration->Activity->_exists($activity_id);
-        }
-        
-		if ($activity_exists) {
-			$this->Registration->create();
-			$registration = array('Registration' => array('group_id' => -1, 'activity_id' => $activity_id, 'student_id' => $this->Auth->user('id')));
-			
-			if ($this->Registration->save($registration)){
-				$this->Registration->query("DELETE FROM registrations WHERE activity_id = {$activity_id} AND student_id = {$this->Auth->user('id')} AND id <> {$this->Registration->id}");
-				
-				$this->set('success', true);
-			}
-		}
-	}
-	
-	function fail_activity($activity_id = null) {
-		$this->set('success', false);
-		
-		if ($this->Registration->Activity->_exists($activity_id)){
-			$this->Registration->query("DELETE FROM registrations WHERE activity_id = {$activity_id} AND student_id = {$this->Auth->user('id')}");
-			$this->set('success', true);
-		}
 	}
 	
 	function view_students_registered($activity_id = null, $group_id = null) {

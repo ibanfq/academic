@@ -15,41 +15,32 @@
 <?php foreach ($activities_groups as $activity): ?>
 	<h2 style="display:inline"><?php echo $activity['name'] ?></h2>
 	&nbsp;
-	<?php if ((isset($student_groups[$activity['id']])) && ($student_groups[$activity['id']] == -1)) { 
-		$ul_display = "display:none";
-	?>
-		<span id="not_passed_<?php echo $activity['id'] ?>"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
-		<a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link" style="display:none">No elegir ningún grupo</a>
-
-    <?php } else {
-        $ul_display = "";
-    ?>
-        <?php if (!$activity['groups_closed'] || !isset($student_groups[$activity['id']])) { ?>
-            <span id="not_passed_<?php echo $activity['id'] ?>" style="display:none"> <a href="javascript:;" onclick="i_havent_passed_this(<?php echo $activity['id'] ?>)" class="small_link">Me confundí. Si tengo que elegir grupo</a><br /><br /></span>
-            <a href="javascript:;" onclick="i_have_passed_this(<?php echo $activity['id'] ?>)" id="passed_<?php echo $activity['id'] ?>" class="small_link">No elegir ningún grupo</a>
-
-        <?php } ?>
-    <?php } ?>
-
-		<ul class="groups <?php echo $activity['groups_closed']? 'closed' : 'opened' ?>" id="group_list_<?php echo $activity['id']?>" style="<?php echo $ul_display ?>">
+	<?php if ((isset($student_groups[$activity['id']])) && ($student_groups[$activity['id']] == -1)) { ?>
+			<span>Tienes esta actividad aprobada</span><br /><br />
+    <?php } else { ?>
+		<ul class="groups <?php echo $activity['groups_closed']? 'closed' : 'opened' ?>" id="group_list_<?php echo $activity['id']?>">
 		<?php foreach ($activity['Groups'] as $group): ?>
-				<li>
+				<li class="group <?php echo $group['closed']? 'closed' : 'opened' ?>" id="group_<?php echo $activity['id']?>_<?php echo $group['id'] ?>">
 					<?php if ((isset($student_groups[$activity['id']])) && ($group['id'] == $student_groups[$activity['id']])){
-						echo "<span class='selected group activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
+						echo "<span class='selected group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 				
 						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
-                        if (!$activity['groups_closed']) {
-                            echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
+						echo "<span>";
+                        if (!$group['closed']) {
+                            echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a>";
                         }
+						echo "</span>";
 						
 					} else {
 					
-						echo "<span class='group activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
+						echo "<span class='group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$group['free_seats']} plazas libres</span>";
-                        if (!$activity['groups_closed'] || !isset($student_groups[$activity['id']]) || $student_groups[$activity['id']] == -1) {
+						echo "<span>";
+                        if (!isset($student_groups[$activity['id']]) || (!$activity['groups_closed'] && !$group['closed'])) {
                             $style = $group['free_seats'] > 0 ? '' : 'display:none';
-                            echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a></span>";
+                            echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a>";
                         }
+						echo "</span>";
 
                     } ?>
 				
@@ -58,11 +49,12 @@
 				</li>
 		<?php endforeach; ?>
 		</ul>
+	<?php } ?>
 
 <?php endforeach; ?>
 
 <script type="text/javascript">
-	$('.group').tooltip({
+	$('.group_label').tooltip({
 		delay: 500,
 		bodyHandler: function() {
 			activity_id = $('#' + this.id).attr('activity_id');
@@ -91,10 +83,11 @@
 				
 				switch(data){
 				case "success":
-                    var closed = $('#group_list_' + activity_id).hasClass('closed');
+                    var closed = $('#group_list_' + activity_id + ',#group_' + activity_id + '_' + group_id).hasClass('closed');
 					$('.activity_' + activity_id).removeClass('selected');
 					$('#' + activity_id + "_" + group_id).addClass('selected');
-					$('.register_me_link_activity_' + activity_id).toggle(!closed);
+					$('.group.opened .register_me_link_activity_' + activity_id).toggle(!closed);
+					$('.group.closed .register_me_link_activity_' + activity_id).hide();
 					$('#register_me_link_activity_' + activity_id + '_' + group_id).hide();
                     if (closed) {
                         $('#passed_' + activity_id).hide();
@@ -121,49 +114,6 @@
 			asynchronous: false, 
 			url: "<?php echo PATH ?>/registrations/get_subject_free_seats/" + <?php echo $subject['Subject']['id'] ?>, 
 			dataType: 'script'
-		});
-	}
-	
-	function i_have_passed_this(activity_id) {
-		$.ajax({
-			type: "GET",
-			asynchronous: false, 
-			url: "<?php echo PATH ?>/registrations/pass_activity/" + activity_id, 
-			success: function(result){
-				if (result == "success"){
-					$('.activity_' + activity_id).removeClass('selected');
-					$('#group_list_' + activity_id).hide();
-					$('#passed_' + activity_id).hide();
-					$('#not_passed_' + activity_id).show();
-				} else {
-					$('#notice').removeClass('success');
-					$('#notice').addClass('error');
-					$('#notice').html("Se ha producido algún error que ha impedido marcar esta actividad como aprobada. Por favor, contacte con el administrador del sistema para que le ayude a solucionarlo");
-				}
-				
-			}
-		});
-	}
-	
-	function i_havent_passed_this(activity_id) {
-		$.ajax({
-			type: "GET",
-			asynchronous: false, 
-			url: "<?php echo PATH ?>/registrations/fail_activity/" + activity_id, 
-			success: function(result){
-				if (result == "success"){
-					update_subject_free_seats();
-					$('.activity_' + activity_id).removeClass('selected');
-					$('#group_list_' + activity_id).show();
-					$('#passed_' + activity_id).show();
-					$('#not_passed_' + activity_id).hide();
-                    $('.register_me_link_activity_' + activity_id).show();
-				} else {
-					$('#notice').removeClass('success');
-					$('#notice').addClass('error');
-					$('#notice').html("Se ha producido algún error que ha impedido marcar esta actividad como aprobada. Por favor, contacte con el administrador del sistema para que le ayude a solucionarlo");
-				}
-			}
 		});
 	}
 </script>
