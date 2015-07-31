@@ -92,7 +92,11 @@ class UsersController extends AppController {
 	function find_teachers_by_name(){
 		App::import('Sanitize');
 		$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
-		$users = $this->User->find('all', array('conditions' => "(User.type = 'Profesor' OR User.type = 'Administrador') AND (User.first_name LIKE '%{$q}%' OR User.last_name LIKE '%{$q}%')"));
+		$users = $this->User->find('all', array(
+			'fields' => array('User.id', 'User.first_name', 'User.last_name'),
+			'recursive' => 0,
+			'conditions' => "(User.type = 'Profesor' OR User.type = 'Administrador') AND (User.first_name LIKE '%{$q}%' OR User.last_name LIKE '%{$q}%')"
+		));
 		$this->set('users', $users);
 	}
 	
@@ -103,6 +107,8 @@ class UsersController extends AppController {
 		App::import('Sanitize');
 		$q = '%'.utf8_decode(Sanitize::escape($this->params['url']['q'])).'%';
 		$users = $this->User->find('all', array(
+			'fields' => array('User.id', 'User.first_name', 'User.last_name'),
+			'recursive' => 0,
 			'conditions' => array(
 				'User.type' => 'Estudiante',
 				"OR" => array(

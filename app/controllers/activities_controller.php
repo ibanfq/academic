@@ -99,7 +99,7 @@
 		function find_activities_by_name(){
 			App::import('Sanitize');
 			$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
-			$activities = $this->Activity->find('all', array('conditions' => array( 'Activity.name LIKE' => $q)));
+			$activities = $this->Activity->find('all', array('fields' => array('Activity.id', 'Activity.name'), 'recursive' => 0, 'conditions' => array( 'Activity.name LIKE' => $q)));
 			$this->set('activities', $activities);
 		}
 		

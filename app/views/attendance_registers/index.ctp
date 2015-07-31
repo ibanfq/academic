@@ -123,19 +123,21 @@
 	}
 
 	$(document).ready(function() {
-		function formatItem(row){
-			if (row[1] != null)
-				return row[0];
-			else
-				return 'No existe ningún profesor con este nombre.';
+		function makeFormatItem(noItemString) {
+		    return function formatItem(row){
+				if (row[1] != null)
+					return row[0];
+				else
+					return noItemString;
+			}
 		}
 
 		//$('#AttendanceRegisterId').autocomplete("<?php echo PATH ?>/attendance_registers/find_by_code", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterId").val(item[1]); });
 
-		$('#activity_name').autocomplete("<?php echo PATH ?>/activities/find_activities_by_name", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterActivityId").val(item[1]); });
+		$('#activity_name').autocomplete("<?php echo PATH ?>/activities/find_activities_by_name", {formatItem: makeFormatItem('No existe ninguna actividad con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterActivityId").val(item[1]); });
 
-	  $("#teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterTeacherId").val(item[1]); });
+	  $("#teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: makeFormatItem('No existe ningún profesor con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterTeacherId").val(item[1]); });
 
-		$("#student_name").autocomplete("<?php echo PATH ?>/users/find_students_by_name", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterStudentId").val(item[1]); });
+		//$("#student_name").autocomplete("<?php echo PATH ?>/users/find_students_by_name", {formatItem: makeFormatItem('No existe ningún alumno con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterStudentId").val(item[1]); });
 	});
 </script>
