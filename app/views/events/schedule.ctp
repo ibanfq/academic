@@ -35,6 +35,21 @@
 		}
 	}
 	
+	function deleteBooking(id, parent_id){
+		if (parent_id == '')
+			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva? Al eliminarla se eliminarán también todos las reservas de la misma serie.");
+		else
+			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva?");
+		if (confirmated){
+			$.ajax({
+				cache: false,
+				type: "POST",
+				url: "<?php echo PATH?>/bookings/delete/" + id,
+				dataType: 'script'
+			});
+		}
+	}
+	
 	function toEventDateString(date){
 		var day = date.getDate();
 		var month = date.getMonth() + 1;
@@ -163,10 +178,12 @@
 			dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
 			dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
 			eventResize: function(event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
+				var model = event.className == 'booking'? 'bookings' : 'events';
+				var id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET", 
-					url: "<?php echo PATH ?>/events/update/" + event.id + "/" + dayDelta + "/" + minuteDelta + "/1",
+					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
 					success: function(data){
 						if (data == "false"){
 							revertFunc();
@@ -191,10 +208,13 @@
 			},
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
 			eventClick: function(event, jsEvent, view) {
+				var model = event.className == 'booking'? 'bookings' : 'events';
+				var action = event.className == 'booking'? 'view' : 'edit';
+				var id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET",
-					url: "<?php echo PATH ?>/events/edit/" + event.id, 
+					url: "<?php echo PATH ?>/" + model + "/" + action + "/" + id, 
 					success: function(data) {
 						if (data == "false")
 							alert("Usted no tiene permisos para editar este evento");
@@ -215,10 +235,12 @@
 				});
 			},
 			eventDrop: function( event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view ) {
+				var model = event.className == 'booking'? 'bookings' : 'events';
+				var id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET", 
-					url: "<?php echo PATH ?>/events/update/" + event.id + "/" + dayDelta + "/" + minuteDelta,
+					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta,
 					success: function(data){
 						if (data == "false"){
 							revertFunc();
@@ -247,15 +269,15 @@
 					url = "<?php echo PATH ?>/bookings/view/";
 				else
 					url = "<?php echo PATH ?>/events/view/";
-					
+				
 				$.ajax({
 					cache: false,
 					type: "GET", 
-					url: url + event.id,
+					url: url + event.id.match(/\d+/),
 					asynchronous: false,
 					success: function(data) {
-						$('#tooltip').html(data);
-						$('#EventDetails').html(data);
+						$('#tooltip').html(data).find('a').remove();
+						$('#EventDetails').html(data).find('a').remove();
 					}
 				});
 				

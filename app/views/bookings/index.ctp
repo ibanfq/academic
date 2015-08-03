@@ -102,7 +102,7 @@
 					revertFunc();
 				}
 				else {
-					id = event.id.match(/\d/);
+					id = event.id.match(/\d+/);
 					$.ajax({
 						cache: false,
 						type: "GET",
@@ -169,7 +169,7 @@
 					revertFunc();
 				}
 				else {
-					id = event.id.match(/\d/);
+					id = event.id.match(/\d+/);
 					$.ajax({
 						cache: false,
 						type: "GET",
@@ -211,8 +211,8 @@
 					url: url + id,
 					asynchronous: false,
 					success: function(data) {
-						$('#tooltip').html(data);
-						$('#BookingDetails').html(data);
+						$('#tooltip').html(data).find('a').remove();
+						$('#BookingDetails').html(data).find('a').remove();
 					}
 				});
 
