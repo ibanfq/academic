@@ -47,7 +47,7 @@ class ClassroomsController extends AppController {
 	}
 	
 	function get_sign_file() {
-	  $classrooms = $this->Classroom->find('all', array('order' => "name ASC"));
+	  $classrooms = $this->Classroom->find('all', array('order' => "name ASC", 'recursive' => 0));
 
 	  $classrooms_mapped = array();
 	  foreach($classrooms as $cl):
