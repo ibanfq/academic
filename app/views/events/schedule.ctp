@@ -272,7 +272,7 @@
 			},
 			dayClick: function(date, allDay, jsEvent, view){
                 if (allDay) {
-                    $('#calendar').fullCalendar('select', date, new Date(date.getTime()+60*60*1000), allDay);
+                    $('#calendar').fullCalendar('select', new Date(date.getTime()+9*60*60*1000), new Date(date.getTime()+10*60*60*1000), allDay);
                 }
 			},
             select: function(date, endDate, allDay, jsEvent, view) {
@@ -304,6 +304,7 @@
 						width:500, 
 						position:'top', 
 						close: function(event, ui) {
+							$('#calendar').fullCalendar('unselect');
 							if (currentEvent != null){
 								$('#calendar').fullCalendar('removeEventSource', currentEvent);
 								$('#calendar').fullCalendar('refetchEvents');

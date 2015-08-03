@@ -4,7 +4,7 @@
 
 	var currentEvent = null;
 
-	function toDateString(date){
+	function toEventDateString(date){
 		var day = date.getDate();
 		var month = date.getMonth() + 1;
 		var year = date.getFullYear();
@@ -78,6 +78,9 @@
 			defaultView: 'agendaWeek',
 			defaultEventMinutes: 60,
 			editable: true,
+			selectable: {
+                agenda: true
+            },
 			minTime: 7,
 			maxTime: 22,
 			firstDay: 1,
@@ -225,31 +228,20 @@
 
 			},
 			dayClick: function(date, allDay, jsEvent, view){
-				var hour, minute;
-
-				if ($('#classrooms').val() == "")
+				if (allDay) {
+                    $('#calendar').fullCalendar('select', new Date(date.getTime()+9*60*60*1000), new Date(date.getTime()+10*60*60*1000), allDay);
+                }
+			},
+            select: function(date, endDate, allDay, jsEvent, view) {
+				if ($('#classrooms').val() == "") {
 					alert("Debe seleccionar un aula antes de comenzar a programar actividades");
-				else{
+					$('#calendar').fullCalendar('unselect');
+				}else{
 					reset_form();
-					hour = date.getHours();
-					minute = date.getMinutes();
-
-					if (hour < 9){
-						initial_hour = "0" + hour;
-						final_hour = "0" + (hour + 1);
-					} else {
-						if (hour == 9){
-							initial_hour = "0" + hour;
-							final_hour = hour + 1
-						}
-						else{
-							initial_hour = hour;
-							final_hour = hour + 1
-						}
-					}
-
-					if (minute == 0)
-						minute = "0" + minute;
+					var initial_hour = ('0'+date.getHours()).slice(-2);
+                    var initial_minute = ('0'+date.getMinutes()).slice(-2);
+                    var final_hour = ('0'+endDate.getHours()).slice(-2);
+                    var final_minute = ('0'+endDate.getMinutes()).slice(-2);
 
 					if (currentEvent != null){
 						$('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -257,19 +249,19 @@
 					}
 
 
-	 				initial_date = toDateString(date);
-					date.setHours(date.getHours() + 1);
-					final_date = toDateString(date);
+					var initial_date = toEventDateString(date);
+					var final_date = toEventDateString(endDate);
 					currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
 					$('#date').val(date.toString());
 					$('#BookingInitialHourHour').val(initial_hour);
-					$('#BookingInitialHourMin').val(minute);
+					$('#BookingInitialHourMin').val(initial_minute);
 					$('#BookingFinalHourHour').val(final_hour);
-					$('#BookingFinalHourMin').val(minute);
+					$('#BookingFinalHourMin').val(final_minute);
 					$('#form').dialog({
 						width:500,
 						position:'top',
 						close: function(event, ui) {
+							$('#calendar').fullCalendar('unselect');
 							if (currentEvent != null){
 								$('#calendar').fullCalendar('removeEventSource', currentEvent);
 								$('#calendar').fullCalendar('refetchEvents');
