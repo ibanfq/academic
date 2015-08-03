@@ -29,7 +29,18 @@ class RegistrationsController extends AppController {
 			$registration = array('Registration' => array('group_id' => $group_id, 'activity_id' => $activity_id, 'student_id' => $this->Auth->user('id'), 'id' => null));
 
  			if (($this->Registration->enoughFreeSeats($activity_id, $group_id)) && ($this->Registration->save($registration))) {
-				$this->Registration->query("DELETE FROM registrations WHERE activity_id = {$activity_id} AND student_id = {$this->Auth->user('id')} AND id <> {$this->Registration->id}");
+				$this->loadModel('AttendanceRegister');
+				$attendanceRegisters = $this->AttendanceRegister->find("all", array(
+					'fields' => array('AttendanceRegister.*'),
+					'conditions' => "AttendanceRegister.activity_id = {$activity_id} and AttendanceRegister.initial_hour > now()",
+					'recursive' => 0
+				));
+				foreach ($attendanceRegisters as $attendanceRegister) {
+					$this->AttendanceRegister->data = $attendanceRegister;
+					$this->AttendanceRegister->id = $attendanceRegister['AttendanceRegister']['id'];
+					$this->AttendanceRegister->updateStudents();
+				}
+
 				$this->set('success', true);
 		  	} else {
 				$this->set('error', "notEnoughSeatsError");

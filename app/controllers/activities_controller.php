@@ -71,6 +71,18 @@
 				unset($this->data['Students']);
 				$this->Activity->Registration->unbindModel(array('hasOne' => array('User', 'Activity', 'Group')), false);
 				if ($this->Activity->save($this->data) && $this->Activity->Registration->saveAll($registrations) && $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted))) {
+					$this->loadModel('AttendanceRegister');
+					$attendanceRegisters = $this->AttendanceRegister->find("all", array(
+						'fields' => array('AttendanceRegister.*'),
+						'conditions' => "AttendanceRegister.activity_id = {$id} and AttendanceRegister.initial_hour > now()",
+						'recursive' => 0
+					));
+					foreach ($attendanceRegisters as $attendanceRegister) {
+						$this->AttendanceRegister->data = $attendanceRegister;
+						$this->AttendanceRegister->id = $attendanceRegister['AttendanceRegister']['id'];
+						$this->AttendanceRegister->updateStudents();
+					}
+					
 					$this->Session->setFlash('La actividad se ha modificado correctamente.');
 					$this->redirect(array('action' => 'view', $id));
 				}

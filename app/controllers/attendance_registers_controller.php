@@ -167,11 +167,13 @@ class AttendanceRegistersController extends AppController {
 
 				// Recover information in case of error
 				$students = array();
-				foreach ($this->data['AttendanceRegister']['students'] as $student_id => $present) {
-					$students[] = $this->AttendanceRegister->Student->find('first', array(
-						'conditions' => array('id' => $student_id),
-						'recursive' => -1,
-					));
+				if (!empty($this->data['AttendanceRegister']['students'])) {
+					foreach ($this->data['AttendanceRegister']['students'] as $student_id => $present) {
+						$students[] = $this->AttendanceRegister->Student->find('first', array(
+							'conditions' => array('id' => $student_id),
+							'recursive' => -1,
+						));
+					}
 				}
 
 				$subject = $this->AttendanceRegister->Activity->Subject->findById($ar['Activity']['subject_id']);
@@ -324,10 +326,7 @@ class AttendanceRegistersController extends AppController {
 		}
 
 		$event = $this->AttendanceRegister->Event->findById($event_id);
-		$shouldUpdateAttendanceRegisters = true;
 		if ($event['AttendanceRegister']['id'] == null) {
-			$shouldUpdateAttendanceRegisters = false;
-
 			// Preload a list of students attending to this activity
 			$students = $this->AttendanceRegister->Student->query("
 				SELECT Student.id
@@ -355,6 +354,8 @@ class AttendanceRegistersController extends AppController {
 
 			$event['AttendanceRegister'] = $ar;
 			$event['AttendanceRegister']['id'] = $this->AttendanceRegister->id;
+			
+			$attendanceCreatedTimestamp = time();
 		} else {
 			if (!isset($event["Teacher_2"]["id"])) {
 				$event["Teacher_2"]["id"] = -1;
@@ -364,73 +365,37 @@ class AttendanceRegistersController extends AppController {
 				SET teacher_id = {$event["Teacher"]["id"]}, teacher_2_id = {$event["Teacher_2"]["id"]}
 				WHERE id = {$event['AttendanceRegister']['id']}
 			");
-		}
+			$this->AttendanceRegister->data = array('AttendanceRegister' => $event['AttendanceRegister']);
+			$this->AttendanceRegister->id = $event['AttendanceRegister']['id'];
+			
+			$attendanceCreatedTimestamp = strtotime($event['AttendanceRegister']['created']);
 
-		$students = $this->AttendanceRegister->query("
-			SELECT Student.*
-			FROM users Student
-			INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-			WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
-			ORDER BY Student.last_name, Student.first_name
-		");
-
-		$studentsRegistered = $this->AttendanceRegister->Student->query("
-			SELECT Student.*
-			FROM users Student
-			INNER JOIN registrations Registration ON Student.id = Registration.student_id
-			WHERE Registration.activity_id = {$event['Event']['activity_id']}
-			AND Registration.group_id = {$event['Event']['group_id']}
-			ORDER BY Student.last_name, Student.first_name
-		");
-
-		/**
-		 * Update users preloaded in attendance register if activity hasn't take place.
-		 *
-		 * This has been added because students can register and unregister in activities
-		 * at any time.
-		 *
-		 * @author Eliezer Talon <elitalon@gmail.com>
-		 * @since 2013-09-20
-		 */
-		if ($shouldUpdateAttendanceRegisters) {
-			$currentTimestamp = strtotime(date('Y-m-d H:i:s'));
+			/**
+			 * Update users preloaded in attendance register if activity hasn't take place.
+			 *
+			 * This has been added because students can register and unregister in activities
+			 * at any time.
+			 *
+			 * @author Eliezer Talon <elitalon@gmail.com>
+			 * @since 2013-09-20
+			 */
+			$currentTimestamp = time();
 			$activityTimestamp = strtotime($event['Event']['initial_hour']);
-
 			if ($currentTimestamp < $activityTimestamp) {
-				// Delete from AR those who aren't registered yet
-				$studentsPreloadedToKeep = array();
-				foreach ($students as $student) {
-					$results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
-					$isStudentRegistered = count($results);
-
-					if ($isStudentRegistered) {
-						$studentsPreloadedToKeep[] = $student;
-					}
-				}
-				$students = $studentsPreloadedToKeep;
-
-				// Add to preloaded attendance registers the newly registered students
-				foreach ($studentsRegistered as $studentRegistered) {
-					$results = Set::extract(sprintf('/Student[id=%d]', $studentRegistered['Student']['id']), $students);
-					$isStudentPreloaded = count($results);
-
-					if ($isStudentPreloaded) {
-						continue;
-					}
-					if (!is_array($students)) {
-						$students = array();
-					}
-					array_push($students, $studentRegistered);
-				}
-
-				// Update database
-				$attendanceRegister = $this->AttendanceRegister->findById($event['AttendanceRegister']['id'], array('AttendanceRegister.*'));
-				$attendanceRegister['Student'] = array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id')));
-				$this->AttendanceRegister->id = $event['AttendanceRegister']['id'];
-				$saved = $this->AttendanceRegister->saveAll($attendanceRegister);
+				$students = $this->AttendanceRegister->updateStudents();
 			}
 		}
 
+		if (!isset($students)) {
+			$students = $this->AttendanceRegister->query("
+				SELECT Student.*
+				FROM users Student
+				INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+				WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+				ORDER BY Student.last_name, Student.first_name
+			");
+		}
+		
 		/**
 		 * Temporary fix to reload students from original registrations.
 		 *
@@ -442,9 +407,18 @@ class AttendanceRegistersController extends AppController {
 		 * @author Eliezer Talon <elitalon@gmail.com>
 		 * @since 2012-06-14
 		 */
-		if (empty($students)) {
-			$students = $studentsRegistered;
-		}
+		 if (empty($students)) {
+			if ($attendanceCreatedTimestamp < strtotime('2012-08-01 00:00:00')) {
+	 			$students = $this->AttendanceRegister->Student->query("
+	 				SELECT Student.*
+	 				FROM users Student
+	 				INNER JOIN registrations Registration ON Student.id = Registration.student_id
+	 				WHERE Registration.activity_id = {$event['Event']['activity_id']}
+	 				AND Registration.group_id = {$event['Event']['group_id']}
+	 				ORDER BY Student.last_name, Student.first_name
+	 			");
+			}
+ 		}
 
 		$this->set('event', $event);
 		$this->set('students', $students);

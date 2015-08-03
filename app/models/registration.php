@@ -12,6 +12,16 @@ class Registration extends AcademicModel {
 			)
 		);
 
+	function afterSave($created) {
+		$student_id = $this->data['Registration']['student_id'];
+		$activity_id = $this->data['Registration']['activity_id'];
+		$group_id = $this->data['Registration']['group_id'];
+		
+		if ($created) {
+			$this->query("DELETE FROM registrations WHERE activity_id = {$activity_id} AND student_id = {$student_id} AND id <> {$this->id}");
+		}
+	}
+
 	function enoughFreeSeats($activity_id, $group_id){
 		if ($group_id != -1) {
 			$busy_seats = $this->query("SELECT count(*) AS busy_seats FROM registrations WHERE activity_id = {$activity_id} AND group_id = {$group_id}");

@@ -60,6 +60,59 @@ class AttendanceRegister extends AcademicModel {
 		return true;
 	}
 	
+	function updateStudents(){
+		$activity_id = $this->data['AttendanceRegister']['activity_id'];
+		$group_id = $this->data['AttendanceRegister']['group_id'];
+		
+		$students = $this->query("
+			SELECT Student.*
+			FROM users Student
+			INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+			WHERE UAR.attendance_register_id = {$this->id}
+			ORDER BY Student.last_name, Student.first_name
+		");
+
+		$studentsRegistered = $this->Student->query("
+			SELECT Student.*
+			FROM users Student
+			INNER JOIN registrations Registration ON Student.id = Registration.student_id
+			WHERE Registration.activity_id = {$activity_id}
+			AND Registration.group_id = {$group_id}
+			ORDER BY Student.last_name, Student.first_name
+		");
+
+		// Delete from AR those who aren't registered yet
+		$studentsPreloadedToKeep = array();
+		foreach ($students as $student) {
+			$results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
+			$isStudentRegistered = count($results);
+
+			if ($isStudentRegistered) {
+				$studentsPreloadedToKeep[] = $student;
+			}
+		}
+		$students = $studentsPreloadedToKeep;
+
+		// Add to preloaded attendance registers the newly registered students
+		foreach ($studentsRegistered as $studentRegistered) {
+			$results = Set::extract(sprintf('/Student[id=%d]', $studentRegistered['Student']['id']), $students);
+			$isStudentPreloaded = count($results);
+
+			if ($isStudentPreloaded) {
+				continue;
+			}
+			if (!is_array($students)) {
+				$students = array();
+			}
+			array_push($students, $studentRegistered);
+		}
+
+		// Update database
+		$this->data['Student'] = array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id')));
+		$this->saveAll();
+		return $students;
+	}
+	
 	function initialHourNotEmpty(){
 		return ($this->data['AttendanceRegister']['initial_hour'] != null);
 	}
