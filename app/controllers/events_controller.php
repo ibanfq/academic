@@ -211,9 +211,30 @@
 		function update_teacher($event_id = null, $teacher_id = null, $teacher_2_id = null) {
 			if (($teacher_id != null) && ($event_id != null)) {
 				$teacher_id = trim("{$teacher_id}");
-				$this->Event->query("UPDATE events SET teacher_id = {$teacher_id} WHERE id = {$event_id} OR parent_id = {$event_id}");
+				if ($teacher_2_id !== null) {
+					$teacher_2_id = trim("{$teacher_2_id}");
+				}
 				
-				$teacher_2_id = trim("{$teacher_2_id}");
+				$events = $this->Event->query("SELECT id FROM events as Event where id = {$event_id} or parent_id = {$event_id}");
+				$events_ids = Set::extract('/Event/id', $events);
+				
+				$this->Event->updateAll(
+					array(
+						'Event.teacher_id' => $teacher_id,
+						'Event.teacher_2_id' => $teacher_2_id
+					),
+					array('Event.id' => $events_ids)
+				);
+				
+				$this->loadModel('AttendanceRegister');
+				$this->AttendanceRegister->updateAll(
+					array(
+						'AttendanceRegister.teacher_id' => $teacher_id,
+						'AttendanceRegister.teacher_2_id' => $teacher_2_id
+					),
+					array('AttendanceRegister.event_id' => $events_ids)
+				);
+				
 				$this->Event->query("UPDATE events SET teacher_2_id = '{$teacher_2_id}' WHERE id = {$event_id} OR parent_id = {$event_id}");
 							  
 				$this->set('ok', true);
