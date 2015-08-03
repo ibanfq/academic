@@ -43,7 +43,10 @@ class AttendanceRegister extends AcademicModel {
 		);
 	
 	function beforeValidate(){
-		if (!empty($this->data['AttendanceRegister']['date'])) {
+		if (empty($this->data['AttendanceRegister']['date'])) {
+			$initial_hour = date_create("{$this->data['AttendanceRegister']['initial_hour']}");
+			$final_hour = date_create("{$this->data['AttendanceRegister']['final_hour']}");
+		} else {
 			$internal_format = $this->dateFormatInternal($this->data['AttendanceRegister']['date']);
 			$initial_hour = date_create("{$internal_format} {$this->data['AttendanceRegister']['initial_hour']}");
 			$final_hour = date_create("{$internal_format} {$this->data['AttendanceRegister']['final_hour']}");
@@ -51,8 +54,8 @@ class AttendanceRegister extends AcademicModel {
 			$this->data['AttendanceRegister']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
 			
 			$this->data['AttendanceRegister']['final_hour'] = $final_hour->format('Y-m-d H:i:s');
-			$this->data['AttendanceRegister']['duration'] = $this->_get_register_duration($initial_hour, $final_hour);
 		}
+		$this->data['AttendanceRegister']['duration'] = $this->_get_register_duration($initial_hour, $final_hour);
 
 		return true;
 	}
