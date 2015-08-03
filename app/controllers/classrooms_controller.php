@@ -1,7 +1,7 @@
 <?php
 class ClassroomsController extends AppController {
 	var $name = 'Classrooms';
-	var $paginate = array('limit' => 10, 'order' => array('Classroom.name' => 'asc'));
+	var $paginate = array('limit' => 10, 'order' => array('Classroom.name' => 'asc'), 'recursive' => 0);
 	
 	function index(){
 		App::import('Sanitize');
