@@ -37,8 +37,8 @@ class UsersController extends AppController {
 		$this->User->data = $user;
 		$events = $this->User->getEvents();
 		
-		header('Content-type: text/calendar; charset=utf-8');
-		header('Content-Disposition: attachment; filename=calendar.ics');
+		#header('Content-type: text/calendar; charset=utf-8');
+		#header('Content-Disposition: attachment; filename=calendar.ics');
 		
 		echo "BEGIN:VCALENDAR\r\n";
 		echo "VERSION:2.0\r\n";
@@ -51,35 +51,22 @@ class UsersController extends AppController {
 		echo "X-PUBLISHED-TTL:PT12H\r\n";
 		echo "CALSCALE:GREGORIAN\r\n";
 		echo "METHOD:PUBLISH\r\n";
-		echo "BEGIN:VTIMEZONE\r\n";
-		echo "TZID:Atlantic/Canary\r\n";
-		echo "X-LIC-LOCATION:Atlantic/Canary\r\n";
-		echo "BEGIN:STANDARD\r\n";
-		echo "TZNAME:WET\r\n";
-		echo "DTSTART:19710101T020000\r\n";
-		echo "TZOFFSETTO:+0000\r\n";
-		echo "TZOFFSETFROM:+0100\r\n";
-		echo "RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU\r\n";
-		echo "END:STANDARD\r\n";
-		echo "BEGIN:DAYLIGHT\r\n";
-		echo "TZNAME:WEST\r\n";
-		echo "DTSTART:19710101T010000\r\n";
-		echo "TZOFFSETTO:+0100\r\n";
-		echo "TZOFFSETFROM:+0000\r\n";
-		echo "RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=-1SU\r\n";
-		echo "END:DAYLIGHT\r\n";
-		echo "END:VTIMEZONE\r\n";
+		
+		$utc = new DateTimeZone('UTC');
 		foreach ($events as $event) {
 			$initial_date = date_create($event['Event']['initial_hour']);
 			$final_date = date_create($event['Event']['final_hour']);
+			$initial_date->setTimezone($utc);
+			$final_date->setTimezone($utc);
 			
 			echo "BEGIN:VEVENT\r\n";
 			echo "UID:{$event['Event']['id']}\r\n";
 			echo "SUMMARY:{$event['Activity']['name']} ({$event['Subject']['acronym']})\r\n";
-			echo "DTSTART;TZID=Atlantic/Canary:{$initial_date->format('Ymd\THis\Z')}\r\n";
-			echo "DTEND;TZID=Atlantic/Canary:{$final_date->format('Ymd\THis\Z')}\r\n";
+			echo "DTSTART:{$initial_date->format('Ymd\THis\Z')}\r\n";
+			echo "DTEND:{$final_date->format('Ymd\THis\Z')}\r\n";
 			echo "END:VEVENT\r\n";
 		}
+		
 		echo "END:VCALENDAR";
 		exit;
 	}
