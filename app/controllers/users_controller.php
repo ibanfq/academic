@@ -4,6 +4,12 @@ class UsersController extends AppController {
 	var $paginate = array('limit' => 10, 'order' => array('User.last_name' => 'asc'));
 	var $helpers = array('UserModel', 'activityHelper');
 
+	function beforeFilter() 
+	{
+	    parent::beforeFilter();
+	    $this->Auth->allow('calendars');
+	}
+
 	function login() {
 		$this->set('action', 'login');
 		$this->Auth->loginError = "El nombre de usuario y contraseña no son correctos";
@@ -14,20 +20,68 @@ class UsersController extends AppController {
 	}
 	
 	function home() {
-		switch($this->Auth->user('type')){
-			case "Estudiante":
-				$events = $this->User->query("SELECT Event.id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM registrations Registration INNER JOIN activities Activity ON Activity.id = Registration.activity_id INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Registration.student_id = {$this->Auth->user('id')} AND Registration.group_id <> -1");
-				break;
-			case "Profesor":
-			case "Administrador":
-				$events = $this->User->query("SELECT Event.id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.teacher_id = {$this->Auth->user('id')} OR Event.teacher_2_id = {$this->Auth->user('id')}");
-				break;
-			default:
-				$events = array();
-		}
+		$this->User->id = $this->Auth->user('id');
+		$this->User->data = $this->Auth->user();
 		
 		$this->set('section', 'home');
-		$this->set('events', $events);
+		$this->set('user', $this->User);
+		$this->set('events', $this->User->getEvents());
+	}
+	
+	function calendars($token) {
+		$user = $this->User->findByCalendarToken($token);
+		if ($user === false) {
+			$this->cakeError('error404');
+		}
+		$this->User->id = $user['User']['id'];
+		$this->User->data = $user;
+		$events = $this->User->getEvents();
+		
+		header('Content-type: text/calendar; charset=utf-8');
+		header('Content-Disposition: attachment; filename=calendar.ics');
+		
+		echo "BEGIN:VCALENDAR\r\n";
+		echo "VERSION:2.0\r\n";
+		echo "PRODID:-//ULPGC//Academic\r\n";
+		echo "NAME:Facultad de Veterinaria ULPGC\r\n";
+		echo "X-WR-CALNAME:Facultad de Veterinaria ULPGC\r\n";
+		echo "TIMEZONE-ID:Atlantic/Canary\r\n";
+		echo "X-WR-TIMEZONE:Atlantic/Canary\r\n";
+		echo "REFRESH-INTERVAL;VALUE=DURATION:PT12H\r\n";
+		echo "X-PUBLISHED-TTL:PT12H\r\n";
+		echo "CALSCALE:GREGORIAN\r\n";
+		echo "METHOD:PUBLISH\r\n";
+		echo "BEGIN:VTIMEZONE\r\n";
+		echo "TZID:Atlantic/Canary\r\n";
+		echo "X-LIC-LOCATION:Atlantic/Canary\r\n";
+		echo "BEGIN:STANDARD\r\n";
+		echo "TZNAME:WET\r\n";
+		echo "DTSTART:19710101T020000\r\n";
+		echo "TZOFFSETTO:+0000\r\n";
+		echo "TZOFFSETFROM:+0100\r\n";
+		echo "RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU\r\n";
+		echo "END:STANDARD\r\n";
+		echo "BEGIN:DAYLIGHT\r\n";
+		echo "TZNAME:WEST\r\n";
+		echo "DTSTART:19710101T010000\r\n";
+		echo "TZOFFSETTO:+0100\r\n";
+		echo "TZOFFSETFROM:+0000\r\n";
+		echo "RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=-1SU\r\n";
+		echo "END:DAYLIGHT\r\n";
+		echo "END:VTIMEZONE\r\n";
+		foreach ($events as $event) {
+			$initial_date = date_create($event['Event']['initial_hour']);
+			$final_date = date_create($event['Event']['final_hour']);
+			
+			echo "BEGIN:VEVENT\r\n";
+			echo "UID:{$event['Event']['id']}\r\n";
+			echo "SUMMARY:{$event['Activity']['name']} ({$event['Subject']['acronym']})\r\n";
+			echo "DTSTART;TZID=Atlantic/Canary:{$initial_date->format('Ymd\THis\Z')}\r\n";
+			echo "DTEND;TZID=Atlantic/Canary:{$final_date->format('Ymd\THis\Z')}\r\n";
+			echo "END:VEVENT\r\n";
+		}
+		echo "END:VCALENDAR";
+		exit;
 	}
 	
 	function index() {

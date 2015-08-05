@@ -51,6 +51,46 @@ class User extends AppModel {
 			'message' => 'Debe especificar el nombre de pila'
 		)
 	);
+	
+	function getCalendarToken() {
+		$security = Security::getInstance();
+		$value = $this->id.' '. $this->data['User']['created'];
+		$key = Configure::read('Security.calendarTokenSeed');
+		return rtrim(strtr(base64_encode($security->cipher($value, $key)), '+/', '-_'), '=');
+	}
+	
+	function findByCalendarToken($token) {
+		$key = Configure::read('Security.calendarTokenSeed');
+		$security = Security::getInstance();
+		$value = $security->cipher(base64_decode(strtr($token, '-_', '+/')), $key);
+		$value = explode(' ', $value, 2);
+		if (count($value) !== 2) {
+			return false;
+		}
+		list($id, $created) = $value;
+		if (!is_numeric($id)) {
+			return false;
+		}
+		return $this->find('first', array(
+			'recursive' => 0,
+			'conditions' => array('User.id' => $id, 'User.created' => $created)
+		));
+	}
+	
+	function getEvents() {
+		switch($this->data['User']['type']){
+			case "Estudiante":
+				$events = $this->query("SELECT Event.id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM registrations Registration INNER JOIN activities Activity ON Activity.id = Registration.activity_id INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Registration.student_id = {$this->id} AND Registration.group_id <> -1");
+				break;
+			case "Profesor":
+			case "Administrador":
+				$events = $this->query("SELECT Event.id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.teacher_id = {$this->id} OR Event.teacher_2_id = {$this->id}");
+				break;
+			default:
+				$events = array();
+		}
+		return $events;
+	}
 
 	function can_send_alerts($user_id, $activity_id, $group_id) {
 		return $this->query("SELECT events.* FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND teacher_id = {$user_id}") > 0;

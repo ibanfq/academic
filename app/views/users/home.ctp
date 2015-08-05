@@ -69,7 +69,11 @@ $(document).ready(function() {
 	});
 </script>
 <div id="calendar_container">
-	<div id="calendar" class="fc" style="margin: 3em 0pt; font-size: 13px;"></div>
+	<div id="calendar" class="fc" style="margin: 1em 0pt; font-size: 13px;"></div>
+	<p style="margin-bottom: 2em;">
+		<strong>Url de exportación:</strong>
+		<?php echo $this->Html->url('/users/calendars/'.$user->getCalendarToken().'.ics', true ); ?>
+	</p>
 </div>
 <div id="EventDetails" style="display:none">
 	
