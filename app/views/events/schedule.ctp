@@ -553,6 +553,7 @@
 				url: "<?php echo PATH ?>/activities/get/" + item.id,
 				success: function(data){
 					$('#EventActivityId').html(data);
+					$('#EventGroupId').html("<option value=''>Seleccione un grupo</option>");
 				}
 			})
 		});
