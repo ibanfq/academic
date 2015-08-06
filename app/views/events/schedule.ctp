@@ -87,7 +87,10 @@
 			asynchronous: false,
 			dataType: 'script', 
 			success: function(data){
-				$('#form').dialog('close');
+				var form = $('#form').dialog('close');
+				if (!$('#notice').hasClass('error')) {
+					form.data('no-reset', true);
+				}
 			}
 		});
 	}
@@ -302,7 +305,6 @@
 					alert("Debe seleccionar un aula antes de comenzar a programar actividades");
                     $('#calendar').fullCalendar('unselect');
                 }else{
-					reset_form();
 					var initial_hour = ('0'+date.getHours()).slice(-2);
                     var initial_minute = ('0'+date.getMinutes()).slice(-2);
                     var final_hour = ('0'+endDate.getHours()).slice(-2);
@@ -322,19 +324,51 @@
 					$('#EventInitialHourMin').val(initial_minute);
 					$('#EventFinalHourHour').val(final_hour);
 					$('#EventFinalHourMin').val(final_minute);
-					$('#form').dialog({
-						width:500, 
-						position:'top', 
-						close: function(event, ui) {
-							$('#calendar').fullCalendar('unselect');
-							if (currentEvent != null){
-								$('#calendar').fullCalendar('removeEventSource', currentEvent);
-								$('#calendar').fullCalendar('refetchEvents');
-							}
-						}
-					});
 					$('#calendar').fullCalendar('addEventSource', currentEvent);
 					$('#calendar').fullCalendar('refetchEvents');
+					
+					var show_form = function() {
+						$('#form').dialog({
+							width:500, 
+							position:'top', 
+							close: function(event, ui) {
+								$('#calendar').fullCalendar('unselect');
+								if (currentEvent != null){
+									$('#calendar').fullCalendar('removeEventSource', currentEvent);
+									$('#calendar').fullCalendar('refetchEvents');
+								}
+							}
+						});
+					}
+					
+					if ($('#form').data('no-reset')) {
+						$.ajax({
+							cache: false,
+							type: "GET", 
+							url: "<?php echo PATH ?>/groups/get/" + $('#EventActivityId').val(),
+							asynchronous: false,
+							success: function(data){
+								if (data.match(/\s*<option/)) {
+									var options = $(data);
+									if (options.length > 1) {
+										$('#EventGroupId').html(options);
+										return;
+									}
+								}
+								reset_form();
+							},
+							error: function(){
+								reset_form();
+							},
+							complete: function() {
+								$('#form').removeData('no-reset');
+								show_form();
+							}
+						});
+					} else {
+						reset_form();
+						show_form();
+					}
 				}
             }
 		});
