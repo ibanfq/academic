@@ -316,7 +316,7 @@
 			$this->layout = 'public';
 			
 			$classrooms = array();
-			foreach($this->Event->Classroom->find('all', array('order' => array('Classroom.name'))) as $classroom):
+			foreach($this->Event->Classroom->find('all', array('order' => array('Classroom.name'), 'recursive' => 0)) as $classroom):
 				$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
 			endforeach;
 
