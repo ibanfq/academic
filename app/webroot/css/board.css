@@ -1,0 +1,243 @@
+body, #content {
+    background: #000;
+    font-size: 130%;
+    padding: 0;
+    overflow: hidden;
+}
+#footer {
+    height: 15px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    padding: 0;
+    background: linear-gradient(rgba(0,0,0,0), #000);
+}
+#clock {
+    font-size: 110%;
+    font-weight: bold;
+    color: #fff;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+table {
+    border-spacing: 20px;
+}
+th {
+    font-size: 80%;
+    color: #fff;
+    line-height: 20px;
+    padding: 0 5px;
+    border-bottom: 0;
+}
+table tr td {
+    padding: 10px;
+    border: 0;
+    background: inherit;
+    color: inherit;
+}
+
+table tr td small {
+    display: inline-block;
+    margin-top: 10px;
+}
+
+table tr:nth-child(2n) td {
+    background: inherit;
+    color: inherit;
+}
+
+.clase_magistral{
+    color:#fff;
+    background:#FF9900;
+}
+.clase_magistral a {
+    color:#fff;
+    background:#FF9900;
+}
+
+.clase_magistral .fc-event-time{
+    background:#FF9900;
+}
+
+.seminario{
+    color:#fff;
+    background:#CC3300;
+}
+
+.seminario a {
+    color:#fff;
+    background:#CC3300;
+}
+
+.seminario .fc-event-time{
+    background:#CC3300;
+}
+
+.taller_trabajo{
+    color:#fff;
+    background:#660000;
+}
+
+.taller_trabajo a {
+    color:#fff;
+    background:#660000;
+}
+
+.taller_trabajo .fc-event-time{
+    background:#660000;
+}
+
+.practica_aula{
+    color:#fff;
+    background:#003300;
+}
+
+.practica_aula a {
+    color:#fff;
+    background:#003300;
+}
+
+.practica_aula .fc-event-time{
+    background:#003300;
+}
+
+.practica_problemas{
+    color:#fff;
+    background:#009900;
+}
+
+.practica_problemas a {
+    color:#fff;
+    background:#009900;
+}
+
+.practica_problemas .fc-event-time{
+    background:#009900;
+}
+
+.practica_informatica{
+    color:#fff;
+    background:#00CC66;
+}
+
+.practica_informatica a {
+    color:#fff;
+    background:#00CC66;
+}
+
+.practica_informatica .fc-event-time{
+    background:#00CC66;
+}
+
+.practica_microscopia{
+    color:#fff;
+    background:#00CCCC;
+}
+
+.practica_microscopia a {
+    color:#fff;
+    background:#00CCCC;
+}
+
+.practica_microscopia .fc-event-time{
+    background:#00CCCC;
+}
+
+.practica_laboratorio{
+    color:#fff;
+    background:#0099CC;
+}
+
+.practica_laboratorio a {
+    color:#fff;
+    background:#0099CC;
+}
+
+.practica_laboratorio .fc-event-time{
+    background:#0099CC;
+}
+
+.practica_clinica{
+    color:#fff;
+    background:#0000CC;
+}
+
+.practica_clinica a {
+    color:#fff;
+    background:#0000CC;
+}
+
+.practica_clinica .fc-event-time{
+    background:#0000CC;
+}
+
+.practica_externa{
+    color:#fff;
+    background:#000066;
+}
+
+.practica_externa a {
+    color:#fff;
+    background:#000066;
+}
+
+.practica_externa .fc-event-time{
+    background:#000066;
+}
+
+.tutoria{
+    color:#fff;
+    background:#990099;
+}
+
+.tutoria a {
+    color:#fff;
+    background:#990099;
+}
+
+.tutoria .fc-event-time{
+    background:#990099;
+}
+
+.evaluacion{
+    color:#fff;
+    background:#660066;
+}
+
+.evaluacion a {
+    color:#fff;
+    background:#660066;
+}
+
+.evaluacion .fc-event-time{
+    background:#660066;
+}
+
+.otra_presencial{
+    color:#fff;
+    background:#999999;
+}
+
+.otra_presencial a {
+    color:#fff;
+    background:#999999;
+}
+
+.otra_presencial .fc-event-time{
+    background:#999999;
+}
+
+.booking{
+    color:#fff;
+    background:#999999;
+}
+
+.booking a {
+    color:#fff;
+    background:#999999;
+}
+
+.booking .fc-event-time{
+    background:#999999;
+}

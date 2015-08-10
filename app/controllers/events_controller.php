@@ -14,7 +14,7 @@
 			$course = $this->Event->Activity->Subject->Course->read();
 			
 			$classrooms = array();
-            foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
+			foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
 				$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
 			}
 			$this->set('classrooms', $classrooms);
@@ -149,12 +149,12 @@
 			if (($event['Event']['owner_id'] == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($uid == $subject['Subject']['coordinator_id']) || ($uid == $subject['Subject']['practice_responsible_id'])) {
 				if ($this->Auth->user('type') == "Administrador") {
 					foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
-	                    $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
-	                }
-	                $this->set('classrooms', $classrooms);
+						$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
+					}
+					$this->set('classrooms', $classrooms);
 				}
 				$this->set('event', $event);
-            }
+			}
 		}
 		
 		function update($id, $deltaDays, $deltaMinutes, $resize = null) {
@@ -236,7 +236,7 @@
 				);
 				
 				$this->Event->query("UPDATE events SET teacher_2_id = '{$teacher_2_id}' WHERE id = {$event_id} OR parent_id = {$event_id}");
-							  
+
 				$this->set('ok', true);
 			}
 		}
@@ -331,6 +331,34 @@
 		
 		function calendar_by_level(){
 			$this->layout = 'public';
+		}
+		
+		function events_board(){
+			$this->layout = 'board';
+			$this->Event->unbindModel(array(
+				'belongsTo' => array('Activity')
+			));
+			$events = $this->Event->find('all', array(
+				'fields' => 'Event.initial_hour, Activity.name, Activity.type, Subject.acronym, Classroom.name, Group.name',
+				'conditions' => 'Event.initial_hour > now()',
+				'joins' => array(
+					array(
+                        'table' => 'activities',
+						'alias' => 'Activity',
+						'type' => 'left',
+						'conditions' => 'Event.activity_id = Activity.id'
+					),
+					array(
+						'table' => 'subjects',
+						'alias' => 'Subject',
+						'type' => 'left',
+						'conditions' => 'Activity.subject_id = Subject.id'
+					)
+				),
+                'order' => 'Event.initial_hour, Subject.acronym, Activity.name, Group.name',
+				'recursive' => 0
+			));
+			$this->set('events', $events);
 		}
 		
 		function _add_days(&$date, $ndays, $nminutes = 0){

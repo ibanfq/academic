@@ -19,7 +19,7 @@ class AppController extends Controller {
 		$this->Auth->logoutRedirect = array('controller' => 'users', 'action' => 'login');
 		$this->Auth->loginRedirect = array('controller' => 'users', 'action' => 'home');
 		$this->Auth->allow('login');
-		$this->Auth->allow('rememberPassword', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'get', 'get_by_level', 'find_subjects_by_name', 'get_by_subject');
+		$this->Auth->allow('rememberPassword', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'events_board', 'get', 'get_by_level', 'find_subjects_by_name', 'get_by_subject');
 
 		if ($this->params['controller'] == 'events') {
 			$this->Auth->allow('view');
