@@ -132,11 +132,29 @@ class UsersController extends AppController {
 	
 	function find_teachers_by_name(){
 		App::import('Sanitize');
-		$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
+
+		$name_conditions = array();
+		foreach (explode(' ', $this->params['url']['q']) as $q) {
+			$q = '%'.Sanitize::escape($q).'%';
+			$name_conditions[] = array(
+				'OR' => array(
+					'User.first_name like' => $q,
+					'User.last_name like' => $q
+				)
+			);
+		}
+		
 		$users = $this->User->find('all', array(
 			'fields' => array('User.id', 'User.first_name', 'User.last_name'),
 			'recursive' => 0,
-			'conditions' => "(User.type = 'Profesor' OR User.type = 'Administrador') AND (User.first_name LIKE '%{$q}%' OR User.last_name LIKE '%{$q}%')"
+			'conditions' => array(
+				'OR' => array(
+					array('User.type' => 'Profesor'),
+					array('User.type' => 'Administrador')
+				),
+				'AND' => $name_conditions
+			),
+			'order' => array('User.first_name', 'User.last_name')
 		));
 		$this->set('users', $users);
 	}
@@ -146,17 +164,26 @@ class UsersController extends AppController {
 	 */
 	function find_students_by_name() {
 		App::import('Sanitize');
-		$q = '%'.utf8_decode(Sanitize::escape($this->params['url']['q'])).'%';
+
+		$name_conditions = array();
+		foreach (explode(' ', $this->params['url']['q']) as $q) {
+			$q = '%'.Sanitize::escape($q).'%';
+			$name_conditions[] = array(
+				'OR' => array(
+					'User.first_name like' => $q,
+					'User.last_name like' => $q
+				)
+			);
+		}
+
 		$users = $this->User->find('all', array(
 			'fields' => array('User.id', 'User.first_name', 'User.last_name'),
 			'recursive' => 0,
 			'conditions' => array(
 				'User.type' => 'Estudiante',
-				"OR" => array(
-					'User.first_name LIKE' => $q,
-					'User.last_name LIKE' => $q,
-				),
+				"AND" => $name_conditions
 			),
+			'order' => array('User.first_name', 'User.last_name')
 		));
 		$this->set('users', $users);
 	}
