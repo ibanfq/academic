@@ -70,10 +70,6 @@ $(document).ready(function() {
 </script>
 <div id="calendar_container">
 	<div id="calendar" class="fc" style="margin: 1em 0pt; font-size: 13px;"></div>
-	<p style="margin-bottom: 2em;">
-		<strong>Url de exportación:</strong>
-		<?php echo $this->Html->url('/users/calendars/'.$user->getCalendarToken().'.ics', true ); ?>
-	</p>
 </div>
 <div id="EventDetails" style="display:none">
 	
@@ -102,3 +98,10 @@ $(document).ready(function() {
 		</ul>			
 	</div>
 </div>
+<p id="calendar_ics">
+        <strong>Url de exportación:</strong> <br />
+        <?php echo $html->tag('input', null, array(
+            'value' => $this->Html->url('/users/calendars/'.$user->getCalendarToken().'.ics', true),
+            'onFocus' => 'window.setTimeout((function(){$(this).select();}).bind(this), 100);'
+        )); ?>
+</p>

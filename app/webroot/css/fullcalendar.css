@@ -771,6 +771,7 @@ table.fc-header {
 	}
 
 /* leyend */
+#legend {overflow: hidden;}
 #legend_left {float:left; width:25%;}
 #legend_right {float:right; width:75%; }
 
@@ -791,3 +792,6 @@ table.fc-header {
 #evaluacion {background:url(../img/fullcalendar/660066.png) no-repeat left 1px;}
 #otra_presencial {background:url(../img/fullcalendar/999999.png) no-repeat left 1px;}
 
+/* calendar ics */
+#calendar_ics {margin-top: 2em;}
+#calendar_ics input {margin-top: 0.5em;}
