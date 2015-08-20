@@ -8,7 +8,10 @@
 
 <div class="intro">
 	<p>Para consultar la información sobre un grupo, pase el ratón por encima del nombre y espere a que aparezca el cuadro con la información disponible.</p>
-	<p><strong>IMPORTANTE:</strong> Tenga en cuenta que el número de plazas libres puede ir cambiando debido a que los otros estudiantes van seleccionando sus grupos. Siempre puede <a href="javascript:;" onclick="update_subject_free_seats()">actualizar</a> las plazas disponibles.</p>
+	<p>
+            <strong>IMPORTANTE:</strong> Tenga en cuenta que el número de plazas libres puede ir cambiando debido a que los otros estudiantes van seleccionando sus grupos. Siempre puede <a href="javascript:;" onclick="update_subject_free_seats()">actualizar</a> las plazas disponibles.
+            No escojas grupo de prácticas si tienes esa actividad aprobada. En caso de escoger erróneamente grupo ponte en contacto con tu profesor para que te borre de esa actividad.
+        </p>
 </div>
 
 

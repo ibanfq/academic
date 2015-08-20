@@ -40,6 +40,8 @@
 		}
 	
 		function edit($id = null) {
+                        $administrator = $this->Auth->user('type') === "Administrador";
+                        
 			$this->Activity->id = $id;
 			if (empty($this->data)) {
 				$this->data = $this->Activity->read();
@@ -56,21 +58,25 @@
 					$student_id = $registration['Registration']['student_id'];
 					$group_id = $this->data['Students'][$student_id]['group_id'];
 					if ($group_id) {
-						$registration['Registration']['group_id'] = $group_id;
+                                                if ($administrator || $group_id == -1) {
+                                                    $registration['Registration']['group_id'] = $group_id;
+                                                }
 					} else {
-						array_push($registrations_deleted, $registration['Registration']['id']);
-						unset($registrations[$i]);
+                                                if ($administrator || $registration['Registration']['group_id'] == -1) {
+                                                    array_push($registrations_deleted, $registration['Registration']['id']);
+                                                    unset($registrations[$i]);
+                                                }
 					}
 					unset($this->data['Students'][$student_id]);
 				}
 				foreach ($this->data['Students'] as $student_id => $student) {
-					if ($student['group_id']) {
+					if ($student['group_id'] && ($administrator || $student['group_id'] == -1)) {
 						array_push($registrations, array('group_id' => $student['group_id'], 'activity_id' => $id, 'student_id' => $student_id));
 					}
 				}
 				unset($this->data['Students']);
 				$this->Activity->Registration->unbindModel(array('hasOne' => array('User', 'Activity', 'Group')), false);
-				if ($this->Activity->save($this->data) && $this->Activity->Registration->saveAll($registrations) && $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted))) {
+				if ($this->Activity->save($this->data) && (empty($registrations) || $this->Activity->Registration->saveAll($registrations)) && $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted))) {
 					$this->loadModel('AttendanceRegister');
 					$attendanceRegisters = $this->AttendanceRegister->find("all", array(
 						'fields' => array('AttendanceRegister.*'),
