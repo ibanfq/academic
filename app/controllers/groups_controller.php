@@ -68,10 +68,16 @@
 		}
 	
 		function get($activity_id = null){
-			$activity = $this->Group->query("SELECT Activity.id, Activity.type, Activity.subject_id FROM activities Activity WHERE id = {$activity_id}");
+			$activity = $this->Group->query("SELECT Activity.id, Activity.type, Activity.subject_id, Activity.duration FROM activities Activity WHERE id = {$activity_id}");
+                        
+                        $groups = $this->Group->query("SELECT DISTINCT `Group`.*, scheduled FROM `groups` `Group` LEFT JOIN (SELECT group_id, sum(duration) as scheduled from events WHERE activity_id = {$activity_id} group by group_id) Event ON `Group`.id = Event.group_id WHERE `Group`.subject_id = {$activity[0]['Activity']['subject_id']} AND `Group`.type = '{$activity[0]['Activity']['type']}' AND scheduled IS NULL or scheduled < {$activity[0]['Activity']['duration']} ORDER BY `Group`.name");
 
-			$groups = $this->Group->query("SELECT DISTINCT `Group`.* FROM `groups` `Group` WHERE `Group`.subject_id = {$activity[0]['Activity']['subject_id']} AND `Group`.type = '{$activity[0]['Activity']['type']}' AND `Group`.id NOT IN (SELECT `Group`.id FROM `groups` `Group` INNER JOIN (SELECT activity_id, group_id, sum(duration) as scheduled from events WHERE activity_id = {$activity_id} group by activity_id, group_id) Event ON `Group`.id = Event.group_id INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE `Group`.type = '{$activity[0]['Activity']['type']}' AND `Group`.subject_id = {$activity[0]['Activity']['subject_id']} AND Activity.duration <= scheduled)");
-			
+                        $duration = floatval($activity[0]['Activity']['duration']);
+                        foreach ($groups as $key => $group) {
+                            $scheduled = floatval($group['Event']['scheduled']);
+                            $groups[$key]['Event']['no_scheduled'] = number_format(max(0, $duration - $scheduled), 2);
+                        }
+
 			$this->set('groups', $groups);
 		}
 	
