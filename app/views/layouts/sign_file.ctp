@@ -88,7 +88,7 @@
 								  <th style="width:6%;border:1px #000 solid">Id</th>
 									<th style="width:8%;border:1px #000 solid">Tipo</th>
 									<th style="width:15%;border:1px #000 solid">Asignatura</th>
-									<th style="width:35%;border:1px #000 solid">Profesor</th>
+									<th style="width:35%;border:1px #000 solid">Profesor/es</th>
 									<th style="width:8%;border:1px #000 solid">Inicio</th>
 									<th style="width:8%;border:1px #000 solid">Fin</th>
 									<th style="width:20%;border:1px #000 solid">Firma</th>
@@ -107,7 +107,12 @@
 											<?php echo "{$activities[$i]['Subject']['acronym']}"?>
 										</td>
 										<td style="padding-left:0.2em; border:1px #000 solid">
-											<?php echo "{$activities[$i]['User']['first_name']} {$activities[$i]['User']['last_name']}"?>
+											<?php
+                                                                                            echo "{$activities[$i]['Teacher']['first_name']} {$activities[$i]['Teacher']['last_name']}";
+                                                                                            if (!empty($activities[$i]['Teacher2']['id'])) {
+                                                                                                echo ", {$activities[$i]['Teacher2']['first_name']} {$activities[$i]['Teacher2']['last_name']}";
+                                                                                            }
+                                                                                        ?>
 										</td>
 										
 										<td style="text-align:center; padding-left:0.2em; border:1px #000 solid">

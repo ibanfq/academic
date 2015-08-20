@@ -84,7 +84,7 @@ class ClassroomsController extends AppController {
 	  $this->layout = 'sign_file';
     $date = $this->_parse_date($this->params['url']['date']);
 
-    $activities = $this->Classroom->query("SELECT Event.*, Activity.*, Subject.*, User.* FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id INNER JOIN users User ON User.id = Event.teacher_id WHERE DATE_FORMAT(Event.initial_hour, '%Y-%m-%d') = '{$date}' AND Event.classroom_id = {$this->params['url']['classroom']} ORDER BY Event.initial_hour");
+    $activities = $this->Classroom->query("SELECT Event.*, Activity.*, Subject.*, Teacher.*, Teacher2.* FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id INNER JOIN users Teacher ON Teacher.id = Event.teacher_id LEFT JOIN users Teacher2 ON Teacher2.id = Event.teacher_2_id WHERE DATE_FORMAT(Event.initial_hour, '%Y-%m-%d') = '{$date}' AND Event.classroom_id = {$this->params['url']['classroom']} ORDER BY Event.initial_hour");
 
     $this->Classroom->id = $this->params['url']['classroom'];
     $this->set('activities', $activities);
