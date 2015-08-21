@@ -132,7 +132,7 @@
 			
 		}
 		
-		function send_alert($activity_id=null, $group_id=null, $message=null){
+		function send_alert($activity_id=null, $group_id=null){
       $activity = $this->Activity->findById($activity_id);
       $coordinator_id = $activity['Subject']['coordinator_id'];
       $responsible_id = $activity['Subject']['practice_responsible_id'];
@@ -141,7 +141,7 @@
 		  if (($coordinator_id == $this->Auth->user('id')) || ($responsible_id == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($user_can_send_alerts == true)) {
   			if (($activity_id != null) && ($group_id != null)){
   				App::import('Sanitize');
-  				$message = Sanitize::escape($message);
+  				$message = Sanitize::escape(file_get_contents("php://input"));
   				$this->Email->from = 'Academic <noreply@ulpgc.es>';
 				
   				$students = $this->Activity->query("SELECT Student.* FROM users Student INNER JOIN registrations Registration ON Registration.student_id = Student.id WHERE Registration.activity_id = {$activity_id} AND Registration.group_id = {$group_id}");
@@ -154,8 +154,7 @@
 				
   				$this->Email->to = implode(",", array_unique($emails));
   				$this->Email->subject = "Alta en Academic";
-  				$this->Email->send($message);
-  				$this->set('success', true);
+  				$this->set('success', $this->Email->send($message));
   			}
 			}
 		}

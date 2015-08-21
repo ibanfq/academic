@@ -93,7 +93,7 @@ class User extends AppModel {
 	}
 
 	function can_send_alerts($user_id, $activity_id, $group_id) {
-		return $this->query("SELECT events.* FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND teacher_id = {$user_id}") > 0;
+		return $this->query("SELECT events.* FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND (teacher_id = {$user_id} OR teacher_2_id = {$user_id})") > 0;
 	}
 
 	/**

@@ -25,8 +25,9 @@
 	function send_alert(activity_id, group_id){
 		if (confirm('¿Está seguro de que desea enviar esta alerta?')) {
 			$.ajax({
-				type: "GET", 
-				url: "<?php echo PATH ?>/activities/send_alert/" + activity_id + "/" + group_id + "/" + $('#message').val(),
+				type: "POST", 
+				url: "<?php echo PATH ?>/activities/send_alert/" + activity_id + "/" + group_id,
+                                data: $('#message').val(),
 				dataType: 'script'
 			});
 		}
