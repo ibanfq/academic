@@ -33,6 +33,10 @@
 			<dt>Observaciones</dt>
 			<dd><?php echo $activity['Activity']['notes'] ?></dd>
 		</dl>
+		<dl>
+			<dt>Bloquear grupos 7 días antes</dt>
+			<dd><?php echo $activity['Activity']['inflexible_groups']? 'Sí' : 'No' ?></dd>
+		</dl>
 	</fieldset>
 	
 	<?php if (count($groups) > 0) { ?>
