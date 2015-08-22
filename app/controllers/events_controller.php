@@ -341,7 +341,7 @@
 			));
 			$events = $this->Event->find('all', array(
 				'fields' => 'Event.initial_hour, Activity.name, Activity.type, Subject.acronym, Subject.level, Group.name, Teacher.first_name, Teacher.last_name, Classroom.name',
-				'conditions' => 'Classroom.show_tv AND Event.initial_hour > now() - INTERVAL '.$graceful_minutes.' MINUTE AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+				'conditions' => 'Classroom.show_tv AND Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
 				'joins' => array(
 					array(
 						'table' => 'activities',
