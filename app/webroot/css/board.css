@@ -1,8 +1,27 @@
 body, #content {
-    background: #000;
     font-size: 130%;
     padding: 0;
     overflow: hidden;
+    color: #FFF;
+    background: #34181D;
+}
+#header {
+    padding: 0;
+    background: #572931;
+    overflow: hidden;
+}
+#header ul.logo {
+    margin: 15px 0 0 20px;
+}
+#header ul.logo li {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+#header ul.logo li:first-child {
+    margin-left: 0;
+}   
+#content {
+    background: inherit;
 }
 #footer {
     height: 15px;
@@ -13,50 +32,85 @@ body, #content {
     background: linear-gradient(rgba(0,0,0,0), #000);
 }
 #clock {
-    font-size: 110%;
-    font-weight: bold;
-    color: #fff;
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 20px;
 }
+#clock h2 {
+    background: inherit;
+    color: inherit;
+    font-size: 20px;
+    line-height: 20px;
+    font-weight: 300;
+    text-transform: uppercase;
+    margin-bottom: 0;
+}
+#clock #time {
+    font-size: 60px;
+    line-height: 60px;
+}
 table {
-    border-spacing: 20px;
+    border-spacing: 0;
+}
+thead {
+    background: #572931 linear-gradient(rgba(0,0,0,0), rgba(0, 0, 0, 0.3));
 }
 th {
     font-size: 80%;
     color: #fff;
     line-height: 20px;
-    padding: 0 5px;
-    border-bottom: 0;
+    font-weight: 300;
+    text-transform: uppercase;
+    padding: 25px 10px 10px;
+    border-bottom: 2px solid #572931;
 }
 table tr td {
     padding: 10px;
     border: 0;
     background: inherit;
-    color: inherit;
-}
-
-table tr td small {
-    display: inline-block;
-    margin-top: 10px;
+    color: #FFF;
+    border-bottom: 2px solid #572931;
+    vertical-align: middle;
 }
 
 table tr:nth-child(2n) td {
     background: inherit;
-    color: inherit;
+    color: #FFF;
+}
+
+table tr td.activity {
+    height: 1px;
+    padding: 4px 0;
+}
+
+table tr td.activity .vcenter-outer {
+    width: 100%;
+    height: 100%;
+}
+
+table tr td.activity .vcenter {
+    padding: 4px;
+}
+
+small {
+    font-size: 80%
+}
+
+.center {
+    text-align: center;
+}
+
+.vcenter-outer {
+    display: table;
+}
+
+.vcenter {
+    display: table-cell;
+    vertical-align: middle;
 }
 
 .clase_magistral{
     color:#fff;
-    background:#FF9900;
-}
-.clase_magistral a {
-    color:#fff;
-    background:#FF9900;
-}
-
-.clase_magistral .fc-event-time{
     background:#FF9900;
 }
 
@@ -65,26 +119,8 @@ table tr:nth-child(2n) td {
     background:#CC3300;
 }
 
-.seminario a {
-    color:#fff;
-    background:#CC3300;
-}
-
-.seminario .fc-event-time{
-    background:#CC3300;
-}
-
 .taller_trabajo{
     color:#fff;
-    background:#660000;
-}
-
-.taller_trabajo a {
-    color:#fff;
-    background:#660000;
-}
-
-.taller_trabajo .fc-event-time{
     background:#660000;
 }
 
@@ -93,26 +129,8 @@ table tr:nth-child(2n) td {
     background:#003300;
 }
 
-.practica_aula a {
-    color:#fff;
-    background:#003300;
-}
-
-.practica_aula .fc-event-time{
-    background:#003300;
-}
-
 .practica_problemas{
     color:#fff;
-    background:#009900;
-}
-
-.practica_problemas a {
-    color:#fff;
-    background:#009900;
-}
-
-.practica_problemas .fc-event-time{
     background:#009900;
 }
 
@@ -121,26 +139,8 @@ table tr:nth-child(2n) td {
     background:#00CC66;
 }
 
-.practica_informatica a {
-    color:#fff;
-    background:#00CC66;
-}
-
-.practica_informatica .fc-event-time{
-    background:#00CC66;
-}
-
 .practica_microscopia{
     color:#fff;
-    background:#00CCCC;
-}
-
-.practica_microscopia a {
-    color:#fff;
-    background:#00CCCC;
-}
-
-.practica_microscopia .fc-event-time{
     background:#00CCCC;
 }
 
@@ -149,26 +149,8 @@ table tr:nth-child(2n) td {
     background:#0099CC;
 }
 
-.practica_laboratorio a {
-    color:#fff;
-    background:#0099CC;
-}
-
-.practica_laboratorio .fc-event-time{
-    background:#0099CC;
-}
-
 .practica_clinica{
     color:#fff;
-    background:#0000CC;
-}
-
-.practica_clinica a {
-    color:#fff;
-    background:#0000CC;
-}
-
-.practica_clinica .fc-event-time{
     background:#0000CC;
 }
 
@@ -177,26 +159,8 @@ table tr:nth-child(2n) td {
     background:#000066;
 }
 
-.practica_externa a {
-    color:#fff;
-    background:#000066;
-}
-
-.practica_externa .fc-event-time{
-    background:#000066;
-}
-
 .tutoria{
     color:#fff;
-    background:#990099;
-}
-
-.tutoria a {
-    color:#fff;
-    background:#990099;
-}
-
-.tutoria .fc-event-time{
     background:#990099;
 }
 
@@ -205,39 +169,12 @@ table tr:nth-child(2n) td {
     background:#660066;
 }
 
-.evaluacion a {
-    color:#fff;
-    background:#660066;
-}
-
-.evaluacion .fc-event-time{
-    background:#660066;
-}
-
 .otra_presencial{
     color:#fff;
     background:#999999;
 }
 
-.otra_presencial a {
-    color:#fff;
-    background:#999999;
-}
-
-.otra_presencial .fc-event-time{
-    background:#999999;
-}
-
 .booking{
     color:#fff;
-    background:#999999;
-}
-
-.booking a {
-    color:#fff;
-    background:#999999;
-}
-
-.booking .fc-event-time{
     background:#999999;
 }

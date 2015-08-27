@@ -97,6 +97,8 @@ class Subject extends AcademicModel {
 			)
 		)
 	);
+        
+        var $levels = array('Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto', 'Postgrado');
 
 	/**
 	 * Validates that a combination of code,course is unique
@@ -193,5 +195,9 @@ class Subject extends AcademicModel {
 		 }
 		 return $registers;
 	 }
+         
+         function levelToInt($level) {
+             return array_search($level, $this->levels);
+         }
 }
 ?>

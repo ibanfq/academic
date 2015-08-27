@@ -2,7 +2,7 @@
 	class EventsController extends AppController {
 		var $name = 'Events';
 		var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
-		var $helpers = array('Ajax', 'activityHelper');
+		var $helpers = array('Ajax', 'activityHelper', 'Text');
 		
 		function schedule($course_id) {
 			
@@ -333,17 +333,18 @@
 			$this->layout = 'public';
 		}
 		
-		function events_board(){
+		function board(){
+                        $graceful_minutes = 10;
 			$this->layout = 'board';
 			$this->Event->unbindModel(array(
 				'belongsTo' => array('Activity')
 			));
 			$events = $this->Event->find('all', array(
-				'fields' => 'Event.initial_hour, Activity.name, Activity.type, Subject.acronym, Classroom.name, Group.name',
-				'conditions' => 'Event.initial_hour > now()',
+				'fields' => 'Event.initial_hour, Activity.name, Activity.type, Subject.acronym, Subject.level, Group.name, Teacher.first_name, Teacher.last_name, Classroom.name',
+				'conditions' => 'Classroom.show_tv AND Event.initial_hour > now() - INTERVAL '.$graceful_minutes.' MINUTE AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
 				'joins' => array(
 					array(
-                        'table' => 'activities',
+						'table' => 'activities',
 						'alias' => 'Activity',
 						'type' => 'left',
 						'conditions' => 'Event.activity_id = Activity.id'
@@ -355,10 +356,15 @@
 						'conditions' => 'Activity.subject_id = Subject.id'
 					)
 				),
-                'order' => 'Event.initial_hour, Subject.acronym, Activity.name, Group.name',
+				'order' => 'Event.initial_hour, Subject.acronym, Activity.name, Group.name',
 				'recursive' => 0
 			));
+                        foreach($events as $i => &$event) {
+                            $event['sql_order'] = $i;
+                        }
+                        usort($events, array($this, '_sortBoardEvents'));
 			$this->set('events', $events);
+			$this->set('graceful_minutes', $graceful_minutes);
 		}
 		
 		function _add_days(&$date, $ndays, $nminutes = 0){
@@ -391,5 +397,16 @@
 
 			return true;
 		}
+                
+                function _sortBoardEvents($a, $b) {
+                    if ($a['Event']['initial_hour'] === $b['Event']['initial_hour']) {
+                        $a_level = $this->Event->Activity->Subject->levelToInt($a['Subject']['level']);
+                        $b_level = $this->Event->Activity->Subject->levelToInt($b['Subject']['level']);
+                        if ($a_level !== $b_level) {
+                            return $a_level - $b_level;
+                        }
+                    }
+                    return $a['sql_order'] - $b['sql_order'];
+                }
 	}
 ?>

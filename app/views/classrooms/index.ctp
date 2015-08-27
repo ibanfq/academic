@@ -11,6 +11,7 @@
 		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")) {?>
 			<li><?php echo $html->link('Imprimir hoja de firmas', array('action' => 'get_sign_file')) ?></li>
 			<li><?php echo $html->link('Imprimir agenda diaria', array('action' => 'get_bookings')) ?></li>
+                        <li><?php echo $html->link('Presentar eventos en TV', array('controller' => 'events', 'action' => 'board')) ?></li>
 		<?php } ?>
 	</ul>
 </div>

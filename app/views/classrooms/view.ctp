@@ -18,6 +18,8 @@
 		<dl>
 			<dt>Capacidad</dt>
 			<dd><?php echo $classroom['Classroom']['capacity']?></dd>
+                        <dt>Mostrar eventos en TV</dt>
+			<dd><?php echo $classroom['Classroom']['show_tv']? 'Sí' : 'No'?></dd>
 		</dl>
 	</fieldset>
 </div>

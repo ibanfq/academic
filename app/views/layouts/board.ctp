@@ -18,6 +18,21 @@
 </head>
 <body>
 <div id="container">
+        <div id="header">
+            <div class="left">
+                <ul class="logo">
+                    <li>
+                        <img src="<?php echo PATH?>/img/logo.jpg">
+                    </li>
+                    <li>
+                        <img src="<?php echo PATH?>/img/divider.jpg">
+                    </li>
+                    <li>
+                        <img src="<?php echo PATH?>/img/logo_ulpgc.jpg">
+                    </li>
+                </ul>
+            </div>
+	</div>
 	<div id="content">
 		<?php echo $content_for_layout ?>
 	</div>

@@ -36,7 +36,6 @@
 	Router::connect('/calendar_by_classroom', array('controller' => 'events', 'action' => 'calendar_by_classroom'));
 	Router::connect('/calendar_by_subject', array('controller' => 'events', 'action' => 'calendar_by_subject'));
 	Router::connect('/calendar_by_level', array('controller' => 'events', 'action' => 'calendar_by_level'));
-	Router::connect('/events_board', array('controller' => 'events', 'action' => 'events_board'));
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */

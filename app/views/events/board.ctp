@@ -1,65 +1,169 @@
-<table>
-    <thead>
+<table id="events">
+    <thead id="events-head">
         <tr>
-            <th style="width: 180px">Hora</th>
-            <th style="width: 60%">Actividad</th>
-            <th>Aula</th>
+            <th class="center" style="width: 80px;">Hora</th>
+            <th class="center" style="width: 110px;">Asig.</th>
+            <th class="center" style="width: 300px;">Actividad</th>
+            <th class="center" style="width: 100px;">Grupo</th>
+            <th class="center" style="width: 250px;">Profesor</th>
+            <th class="center">Aula</th>
         </th>
     </thead>
-    <tbody id="events">
+    <tbody id="events-body">
         <?php foreach ($events as $event): ?>
             <?php
                 $initial_date = date_create($event['Event']['initial_hour']);
             ?>
-            <tr data-datetime="<?php echo $initial_date->format('Y-m-d H:i:s') ?>" class="<?php echo $activityHelper->getActivityClassName($event['Activity']['type']); ?>">
-                <td><?php echo $initial_date->format('d/m H:s'); ?></td>
-                <td>
-                    <?php echo "{$event['Subject']['acronym']} | {$event['Activity']['name']}"; ?>
-                    <br /><small><?php echo "Grupo: {$event['Group']['name']}"; ?></small>
+            <tr data-datetime="<?php echo $initial_date->format('Y-m-d H:i:s') ?>">
+                <td class="center"><?php echo $initial_date->format('H:i'); ?></td>
+                <td class="center"><?php echo $event['Subject']['acronym']; ?></td>
+                <td class="center activity">
+                    <div class="vcenter-outer">
+                        <div class="vcenter <?php echo $activityHelper->getActivityClassName($event['Activity']['type']); ?>">
+                            <small><?php echo $event['Activity']['name']; ?></small>
+                        </div>
+                    </div>
                 </td>
-                <td><?php echo $event['Classroom']['name']; ?></td>
+                <td class="center"><small><?php echo ucfirst(preg_replace('/^grupo\s/i', '', $event['Group']['name'])); ?></small></td>
+                <td class="center"><small><?php echo $text->truncate("{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}", 25); ?></small></td>
+                <td class="center"><?php echo ucfirst(preg_replace('/^aula\s/i', '', $event['Classroom']['name'])); ?></td>
             </tr>
         <?php endforeach;?>
     </tbody>
 </table>
 
-<aside id="clock"></aside>
+<aside id="clock">
+    <h2>Hora local</h2>
+    <p id="time"></p>
+</aside>
 
 <script type="text/javascript">
 function refresh() {
     $.get(window.location.href, function(data) {
-        $('#events').replaceWith($(data).find('#events'))
+        $('#events-body').replaceWith($(data).find('#events-body'));
+        $(window).resize();
     });
 }
 
-var last_minute;
+var last_minutes;
+var scrolling = false;
+var events_updated = true;
+var scroll_timeout = 30*1000;
+var scroll_velocity = 5;
+var overflowed;
 
 function tick() {
     var now = new Date();
-    var Y = now.getFullYear();
-    var m = ('0'+(1+now.getMonth())).slice(-2);
-    var d = ('0'+now.getDate()).slice(-2);
     var h = ('0'+now.getHours()).slice(-2);
     var i = ('0'+now.getMinutes()).slice(-2);
     var s = ('0'+now.getSeconds()).slice(-2);
-    var time = h+':'+i+':'+s;
-    document.getElementById('clock').innerHTML = time;
+    var time = h+':'+i;
+    document.getElementById('time').innerHTML = time;
 
-    if (last_minute !== i) {
-        last_minute = i;
-        var rows = $('#events tr');
-        for (var i in rows) {
-            if (rows[i].getAttribute('data-datetime') <= (Y+'-'+m+'-'+d+' '+time)) {
-                $(rows[i]).remove();
-            } else {
-                break;
-            }
+    if (last_minutes != i) {
+        last_minutes = i;
+        if (time === '04:00') {
+            events_updated = false;
         }
-        if (time === '04:00:00') {
-            refresh();
+
+        if (!scrolling) {
+            if (events_updated) {
+                var rows = $('#events-body tr');
+                if (rows.length) {
+                    now.setMinutes(parseInt(i) - <?php echo $graceful_minutes ?>);
+                    var Y = now.getFullYear();
+                    var m = ('0'+(1+now.getMonth())).slice(-2);
+                    var d = ('0'+now.getDate()).slice(-2);
+                    h = ('0'+now.getHours()).slice(-2);
+                    i = ('0'+now.getMinutes()).slice(-2);
+                    s = ('0'+now.getSeconds()).slice(-2);
+                    var date = Y+'-'+m+'-'+d+' '+h+':'+i+':'+s;
+                    rows.each(function() {
+                        if (this.getAttribute('data-datetime') <= date) {
+                            $(this).remove();
+                        }
+                    });
+                    checkOverflow();
+                }
+            } else {
+                refresh();
+            }
         }
     }
 }
 
-setInterval(tick, 500);
+function checkOverflow() {
+    var tbody = $('#events-body');
+    var last_overflowed = overflowed;
+    overflowed = parseInt(tbody.height() - ($(window).height() - tbody.offset().top)) > 0;
+    if (last_overflowed !== overflowed) {
+        $('#footer')[overflowed? 'fadeIn' : 'fadeOut']();
+    }
+}
+
+function scroll() {
+    if (!overflowed) {
+        setTimeout(scroll, scroll_timeout);
+        return;
+    }
+    scrolling = true;
+    var table = $('#events');
+    var tbody = $('#events-body');
+    var toScroll = parseInt(tbody.height() - ($(window).height() - tbody.offset().top)/2);
+    var duration = toScroll*100/scroll_velocity;
+    table.animate({'margin-top': -toScroll}, {
+        duration: duration,
+        easing: 'linear',
+        step: checkOverflow,
+        complete: function() {
+            toScroll = parseInt(tbody.height());
+            duration = (toScroll + parseInt(table.css('margin-top')))*100/scroll_velocity;
+            tbody.fadeOut(duration);
+            table.animate({'margin-top': -toScroll}, {
+                duration: duration,
+                easing: 'linear',
+                complete: function() {
+                    tbody.stop().hide();
+                    table.css('margin-top', 0);
+                    scrolling = false;
+                    last_minutes = null;
+                    tick();
+                    tbody.fadeIn('slow');
+                    checkOverflow();
+                    setTimeout(scroll, scroll_timeout);
+                }
+            });
+        }
+    });
+}
+
+$(window).load(function() {
+    $(window).resize(function () {
+        var content = $('#content').css('padding-top', 0);
+        var thead = $('#events-head').css('position', 'static');
+        var th = thead.find('th');
+        var td = $('#events-body tr:last td').css('width', 'auto');
+        th.each(function(i) {
+            var th_i = $(this);
+            if (th_i.data('original-width')) {
+                th_i.css('width', th_i.data('original-width'));
+            } else {
+                th_i.data('original-width', (th_i.attr('style')||'').match(/(?:^|\s)width\s*:/)? th_i.css('width'): 'auto');
+            }
+        });
+        if (td.length) { 
+            td.each(function(i) {
+                $(th[i]).css('width', $(td[i]).width());
+                $(td[i]).css('width', $(td[i]).width());
+            });
+            thead.css('position', 'fixed').css('top', thead.offset().top).css('z-index', 9000);
+            content.css('padding-top', thead.height());
+        }
+        checkOverflow();
+    }).resize();
+    
+    setInterval(tick, 500);
+    setTimeout(scroll, scroll_timeout);
+});
+
 </script>
