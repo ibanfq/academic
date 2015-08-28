@@ -54,8 +54,13 @@ class User extends AppModel {
 	
 	function getCalendarToken() {
 		$security = Security::getInstance();
-		$value = $this->id.' '. $this->data['User']['created'];
 		$key = Configure::read('Security.calendarTokenSeed');
+		$value = $this->id.' ';
+                if (empty($this->data['User']['created'])) {
+                    $value .= $this->data['User']['username'];
+                } else {
+                    $value .= $this->data['User']['created'];
+                }
 		return rtrim(strtr(base64_encode($security->cipher($value, $key)), '+/', '-_'), '=');
 	}
 	
@@ -67,13 +72,19 @@ class User extends AppModel {
 		if (count($value) !== 2) {
 			return false;
 		}
-		list($id, $created) = $value;
+		list($id, $field2) = $value;
 		if (!is_numeric($id)) {
 			return false;
 		}
 		return $this->find('first', array(
 			'recursive' => 0,
-			'conditions' => array('User.id' => $id, 'User.created' => $created)
+			'conditions' => array(
+				'User.id' => $id,
+				'OR' => array(
+					'User.username' => $field2,
+					'User.created' => $field2
+				)
+			)
 		));
 	}
 	
