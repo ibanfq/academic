@@ -76,7 +76,7 @@
 				}
 				unset($this->data['Students']);
 				$this->Activity->Registration->unbindModel(array('hasOne' => array('User', 'Activity', 'Group')), false);
-				if ($this->Activity->save($this->data) && (empty($registrations) || $this->Activity->Registration->saveAll($registrations)) && $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted))) {
+				if ($this->Activity->save($this->data) && (empty($registrations) || $this->Activity->Registration->saveAll($registrations)) && (empty($registrations_deleted) || $this->Activity->Registration->deleteAll(array('Registration.id' => $registrations_deleted)))) {
 					$this->loadModel('AttendanceRegister');
 					$attendanceRegisters = $this->AttendanceRegister->find("all", array(
 						'fields' => array('AttendanceRegister.*'),
