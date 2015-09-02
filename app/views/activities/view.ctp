@@ -67,7 +67,7 @@
 				</tr>
 				<?php foreach($registrations as $registration): ?>
 					<tr>
-						<td><?php echo "{$registration['Student']['first_name']} {$registration['Student']['last_name']}" ?></td>
+						<td><?php echo rtrim($registration['Student']['last_name']).', '.$registration['Student']['first_name']; ?></td>
 						<td><?php
 							if ($registration['Registration']['group_id'] == -1) {
                                 echo 'Tiene esta actividad aprobada';

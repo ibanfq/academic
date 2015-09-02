@@ -34,9 +34,9 @@
 			$activity = $this->Activity->read();
 			$this->set('activity', $activity);
 			$this->set('subject', $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $activity['Subject']['id']))));
-			$groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id");
+			$groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id ORDER BY `Group`.name");
 			$this->set('groups', set::combine($groups, '{n}.Group.id', '{n}'));
-			$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$activity['Subject']['id']} ORDER BY Student.first_name, Student.last_name"));
+			$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$activity['Subject']['id']} ORDER BY Student.last_name, Student.first_name"));
 		}
 	
 		function edit($id = null) {
