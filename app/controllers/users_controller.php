@@ -336,7 +336,7 @@ class UsersController extends AppController {
 	
 	function student_stats($id = null) {
 	  $this->User->id = $id;
-	  $courses = $this->User->Subject->Course->find('all');
+	  $courses = $this->User->Subject->Course->find('all', array('order' => 'initial_date desc'));
 	  
 	  $this->set('user', $this->User->read());
 	  $this->set('courses', $courses);
@@ -360,7 +360,7 @@ class UsersController extends AppController {
 	  $this->User->id = $id;
 		$user = $this->User->read();
 		
-	  $courses = $this->User->Subject->Course->find('all');
+	  $courses = $this->User->Subject->Course->find('all', array('order' => 'initial_date desc'));
 	  $this->set('courses', $courses);
 	  $this->set('user', $user);
 	}
