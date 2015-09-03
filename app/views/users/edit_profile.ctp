@@ -1,5 +1,5 @@
 <!-- File: /app/views/users/edit.ctp -->
-<?php $html->addCrumb("Modificar mi perfil", "/editProfile"); ?>
+<?php $html->addCrumb("Mi perfil", "/editProfile"); ?>
 
 <h1>Modificar usuario</h1>
 <?php
@@ -7,11 +7,18 @@
 ?>
 	<fieldset>
 	<legend>Datos generales</legend>
-		<?php 
+		<?php
+                    if ($auth->user('type') == "Estudiante" || $auth->user('type') == "Profesor") {
+                        echo "<dl><dt><label>Nombre</label></dt><dd>{$user['User']['first_name']}</dd></dl>";
+                        echo "<dl><dt><label>Apellidos</label></dt><dd>{$user['User']['last_name']}</dd></dl>";
+                        echo "<dl><dt><label>DNI sin letra</label></dt><dd>{$user['User']['dni']}</dd></dl>";
+                        echo "<dl><dt><label>Teléfono</label></dt><dd>{$user['User']['phone']}</dd></dl>";
+                    } else {
 			echo $form->input('first_name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
 			echo $form->input('last_name', array('label' => 'Apellidos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-			echo $form->input('dni', array('label' => 'DNI', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			echo $form->input('dni', array('label' => 'DNI sin letra', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 			echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+                    }
 		?>
 	</fieldset>
 	

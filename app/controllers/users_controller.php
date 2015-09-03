@@ -194,12 +194,20 @@ class UsersController extends AppController {
 			$this->data = $this->User->read();
 			$this->set('user', $this->data);
 		} else {
+                    if (in_array($this->Auth->user('type'), array('Estudiante', 'Profesor'))) {
+                        $this->data['User'] = array_intersect_key(
+                            $this->data['User'],
+                            array_flip(array('old_password', 'new_password', 'password_confirmation'))
+                        );
+                    }
 			if (($this->_changePasswordValidation()) && ($this->User->save($this->data))) {
 				$this->Session->setFlash('Sus datos han sido actualizados correctamente.');
 				$this->redirect(array('controller' => 'users', 'action' => 'home'));
 			}
-			else
+			else {
+				$this->data = $this->User->read();
 				$this->set('user', $this->data);
+                        }
 		}
 	}
 	
