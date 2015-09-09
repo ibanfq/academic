@@ -56,7 +56,7 @@
 									<div style="width:60%;float:left;">
 										<strong>Profesor/es:</strong> 
 										<?php echo "{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}"?>
-										<?php if ((isset($event['Teacher_2'])) && (isset($event['Teacher_2']['id']))) {
+										<?php if ((isset($event['Teacher_2'])) && ($event['Teacher_2']['id'] > 0)) {
 										    echo ", {$event['Teacher_2']['first_name']} {$event['Teacher_2']['last_name']}";
 										}?>
 									</div>
