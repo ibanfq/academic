@@ -329,7 +329,7 @@ class AttendanceRegistersController extends AppController {
 		if ($event['AttendanceRegister']['id'] == null) {
 			// Preload a list of students attending to this activity
 			$students = $this->AttendanceRegister->Student->query("
-				SELECT Student.id
+				SELECT Student.*
 				FROM users Student
 				INNER JOIN registrations Registration ON Student.id = Registration.student_id
 				WHERE Registration.activity_id = {$event['Event']['activity_id']}

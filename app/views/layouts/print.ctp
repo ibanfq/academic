@@ -122,7 +122,7 @@
 									 
 								?>
 							</tbody>
-						<table>
+						</table>
 					</td>
 				</tr>
 			</table>
