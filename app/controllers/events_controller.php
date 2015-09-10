@@ -334,37 +334,106 @@
 		}
 		
 		function board(){
-                        $graceful_minutes = 10;
 			$this->layout = 'board';
-			$this->Event->unbindModel(array(
-				'belongsTo' => array('Activity')
-			));
-			$events = $this->Event->find('all', array(
-				'fields' => 'Event.initial_hour, Activity.name, Activity.type, Subject.acronym, Subject.level, Group.name, Teacher.first_name, Teacher.last_name, Classroom.name',
+                        $dbo = $this->Event->getDataSource();
+			$sql1 = $dbo->buildStatement(
+                            array(
+                                'table' => $dbo->fullTableName($this->Event),
+                                'alias' => 'Event',
+				'fields' => array(
+                                    'Event.initial_hour',
+                                    'Event.final_hour',
+                                    'Activity.name',
+                                    'Activity.type',
+                                    'Subject.acronym as subject_acronym',
+                                    'Subject.level as subject_level',
+                                    'Group.name as group_name',
+                                    'Teacher.first_name as teacher_first_name',
+                                    'Teacher.last_name as teacher_last_name',
+                                    'Classroom.name as classroom_name'
+                                ),
 				'conditions' => 'Classroom.show_tv AND Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
 				'joins' => array(
-					array(
-						'table' => 'activities',
-						'alias' => 'Activity',
-						'type' => 'left',
-						'conditions' => 'Event.activity_id = Activity.id'
-					),
-					array(
-						'table' => 'subjects',
-						'alias' => 'Subject',
-						'type' => 'left',
-						'conditions' => 'Activity.subject_id = Subject.id'
-					)
+                                    array(
+                                        'table' => 'classrooms',
+                                        'alias' => 'Classroom',
+                                        'type' => 'left',
+                                        'conditions' => 'Event.classroom_id = Classroom.id'
+                                    ),
+                                    array(
+                                        'table' => 'activities',
+                                        'alias' => 'Activity',
+                                        'type' => 'left',
+                                        'conditions' => 'Event.activity_id = Activity.id'
+                                    ),
+                                    array(
+                                        'table' => 'subjects',
+                                        'alias' => 'Subject',
+                                        'type' => 'left',
+                                        'conditions' => 'Activity.subject_id = Subject.id'
+                                    ),
+                                    array(
+                                        'table' => 'groups',
+                                        'alias' => 'Group',
+                                        'type' => 'left',
+                                        'conditions' => 'Event.group_id = Group.id'
+                                    ),
+                                    array(
+                                        'table' => 'users',
+                                        'alias' => 'Teacher',
+                                        'type' => 'left',
+                                        'conditions' => 'Event.teacher_id = Teacher.id AND (Teacher.type = "Profesor" OR Teacher.type = "Administrador")'
+                                    )
 				),
-				'order' => 'Event.initial_hour, Subject.acronym, Activity.name, Group.name',
-				'recursive' => 0
-			));
+				'order' => null,
+				'recursive' => 0,
+                                'limit' => null,
+                                'group' => null
+                            ),
+                            $this->Event
+			);
+                        
+                        $this->loadModel('Booking');
+                        $sql2 = $dbo->buildStatement(
+                            array(
+                                'table' => $dbo->fullTableName($this->Booking),
+                                'alias' => 'Booking',
+                                'fields' => array(
+                                    'Booking.initial_hour',
+                                    'Booking.final_hour',
+                                    'Booking.reason as name',
+                                    '"booking" as type',
+                                    'null as subject_acronym',
+                                    'null as subject_level',
+                                    'null as group_name',
+                                    'null as teacher_first_name',
+                                    'null as teacher_last_name',
+                                    'Classroom.name as classroom_name'
+                                ),
+				'conditions' => 'Classroom.show_tv AND Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+				'joins' => array(
+                                    array(
+                                        'table' => 'classrooms',
+                                        'alias' => 'Classroom',
+                                        'type' => 'left',
+                                        'conditions' => 'Booking.classroom_id = Classroom.id'
+                                    )
+				),
+				'order' => null,
+				'recursive' => 0,
+                                'limit' => null,
+                                'group' => null
+                            ),
+                            $this->Booking
+			);
+                        
+                        $events = $dbo->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
                         foreach($events as $i => &$event) {
+                            $event = $event[0];
                             $event['sql_order'] = $i;
                         }
                         usort($events, array($this, '_sortBoardEvents'));
 			$this->set('events', $events);
-			$this->set('graceful_minutes', $graceful_minutes);
 		}
 		
 		function _add_days(&$date, $ndays, $nminutes = 0){
@@ -399,11 +468,17 @@
 		}
                 
                 function _sortBoardEvents($a, $b) {
-                    if ($a['Event']['initial_hour'] === $b['Event']['initial_hour']) {
-                        $a_level = $this->Event->Activity->Subject->levelToInt($a['Subject']['level']);
-                        $b_level = $this->Event->Activity->Subject->levelToInt($b['Subject']['level']);
-                        if ($a_level !== $b_level) {
-                            return $a_level - $b_level;
+                    if ($a['initial_hour'] === $b['initial_hour']) {
+                        if ($a['subject_level'] === null || $b['subject_level'] === null) {
+                            if ($a['subject_level'] === $b['subject_level']) {
+                                return strcasecmp($a['name'], $b['name']);
+                            }
+                        } else {
+                            $a_level = $this->Event->Activity->Subject->levelToInt($a['subject_level']);
+                            $b_level = $this->Event->Activity->Subject->levelToInt($b['subject_level']);
+                            if ($a_level !== $b_level) {
+                                return $a_level - $b_level;
+                            }
                         }
                     }
                     return $a['sql_order'] - $b['sql_order'];

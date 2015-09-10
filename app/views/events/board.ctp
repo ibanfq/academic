@@ -12,21 +12,22 @@
     <tbody id="events-body">
         <?php foreach ($events as $event): ?>
             <?php
-                $initial_date = date_create($event['Event']['initial_hour']);
+                $initial_date = date_create($event['initial_hour']);
+                $final_date = date_create($event['final_hour']);
             ?>
-            <tr data-datetime="<?php echo $initial_date->format('Y-m-d H:i:s') ?>">
+            <tr data-end-at="<?php echo $final_date->format('Y-m-d H:i:s') ?>" style="display:none;">
                 <td class="center"><?php echo $initial_date->format('H:i'); ?></td>
-                <td class="center"><?php echo $event['Subject']['acronym']; ?></td>
+                <td class="center"><?php echo $event['subject_acronym']; ?></td>
                 <td class="center activity">
                     <div class="vcenter-outer">
-                        <div class="vcenter <?php echo $activityHelper->getActivityClassName($event['Activity']['type']); ?>">
-                            <small><?php echo $event['Activity']['name']; ?></small>
+                        <div class="vcenter <?php echo $event['type'] === 'booking'? 'booking' : $activityHelper->getActivityClassName($event['type']); ?>">
+                            <small><?php echo $event['name']; ?></small>
                         </div>
                     </div>
                 </td>
-                <td class="center"><small><?php echo ucfirst(preg_replace('/^grupo\s/i', '', $event['Group']['name'])); ?></small></td>
-                <td class="center"><small><?php echo $text->truncate("{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}", 25); ?></small></td>
-                <td class="center"><?php echo ucfirst(preg_replace('/^aula\s/i', '', $event['Classroom']['name'])); ?></td>
+                <td class="center"><small><?php echo ucfirst(preg_replace('/^grupo\s/i', '', $event['group_name'])); ?></small></td>
+                <td class="center"><small><?php echo $text->truncate("{$event['teacher_first_name']} {$event['teacher_last_name']}", 25); ?></small></td>
+                <td class="center"><?php echo ucfirst(preg_replace('/^aula\s/i', '', $event['classroom_name'])); ?></td>
             </tr>
         <?php endforeach;?>
     </tbody>
@@ -70,16 +71,12 @@ function tick() {
             if (events_updated) {
                 var rows = $('#events-body tr');
                 if (rows.length) {
-                    now.setMinutes(parseInt(i) - <?php echo $graceful_minutes ?>);
                     var Y = now.getFullYear();
                     var m = ('0'+(1+now.getMonth())).slice(-2);
                     var d = ('0'+now.getDate()).slice(-2);
-                    h = ('0'+now.getHours()).slice(-2);
-                    i = ('0'+now.getMinutes()).slice(-2);
-                    s = ('0'+now.getSeconds()).slice(-2);
-                    var date = Y+'-'+m+'-'+d+' '+h+':'+i+':'+s;
+                    var date = Y+'-'+m+'-'+d+' '+time+':'+s;
                     rows.each(function() {
-                        if (this.getAttribute('data-datetime') <= date) {
+                        if (this.getAttribute('data-end-at') <= date) {
                             $(this).remove();
                         }
                     });
@@ -138,6 +135,21 @@ function scroll() {
 }
 
 $(window).load(function() {
+    var now = new Date();
+    var date = now.getFullYear()
+        + '-' + ('0'+(1+now.getMonth())).slice(-2)
+        + '-' + ('0'+now.getDate()).slice(-2)
+        + ' ' + ('0'+now.getHours()).slice(-2)
+        + ':' + ('0'+now.getMinutes()).slice(-2)
+        + ':' + ('0'+now.getSeconds()).slice(-2)
+    ;
+    $('#events-body tr').each(function() {
+        if (this.getAttribute('data-end-at') <= date) {
+            $(this).remove();
+        } else {
+            $(this).show();
+        }
+    });
     $(window).resize(function () {
         var content = $('#content').css('padding-top', 0);
         var thead = $('#events-head').css('position', 'static');
