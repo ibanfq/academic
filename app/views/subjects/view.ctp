@@ -15,10 +15,11 @@
   		<?php if ($auth->user('type') == "Administrador") {?>
   			<li><?php echo $html->link('Editar asignatura', array('action' => 'edit', $subject['Subject']['id'])) ?></li>
   			<li><?php echo $html->link('Eliminar asignatura', array('action' => 'delete', $subject['Subject']['id']), null, 'Cuando elimina una asignatura, elimina también los grupos, las actividades y toda la programación. ¿Está seguro que desea borrarla?') ?></li>
-		    <?php } ?>
+			<?php } ?>
 		<?php } ?>
 		<?php if (($auth->user('type') == "Administrador") || ($auth->user('id') == $subject['Subject']['coordinator_id']) || ($auth->user('id') == $subject['Subject']['practice_responsible_id'])) {?>
-		  <li><?php echo $html->link('Programar curso', array('controller' => 'events', 'action' => 'schedule', $subject['Course']['id'])) ?></li>
+			<li><?php echo $html->link('Programar curso', array('controller' => 'events', 'action' => 'schedule', $subject['Course']['id'])) ?></li>
+			<li><?php echo $html->link('Editar estudiantes', array('action' => 'students_edit', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Alertar estudiantes', array('action' => 'send_alert_students_without_group', $subject['Subject']['id']), null, 'Esta acción enviará un correo electrónico a todos los estudiantes que no hayan elegido grupo para alguna de las actividades de la asignatura. Debido a que es un cálculo complejo, puede tardar algún tiempo. ¿Está seguro de que desea continuar? Una vez decida continuar, no podrá parar la acción.') ?></li>
 		<?php } ?>
 	</ul>
@@ -49,22 +50,22 @@
 		<fieldset>
 		<legend>Grupos</legend>
 			<table>
-		        <thead>
-		        	<tr>
-		        		<th>Nombre</th>
-		        		<th>Tipo</th>
-		        		<th>Capacidad</th>
-		        	</tr>
-		        </thead>
-		        <tbody>
-		        	<?php foreach ($subject['Group'] as $group): ?>
-		        		<tr>
-		        			<td><?php echo $html->link($group['name'], array('controller' => 'groups', 'action' => 'view', $group['id'])) ?></td>
-		        			<td><?php echo $group['type'] ?></td>
-		        			<td><?php echo $group['capacity'] ?></td>
-		        		</tr>
-		        	<?php endforeach; ?>
-		        </tbody>
+				<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>Tipo</th>
+						<th>Capacidad</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($subject['Group'] as $group): ?>
+						<tr>
+							<td><?php echo $html->link($group['name'], array('controller' => 'groups', 'action' => 'view', $group['id'])) ?></td>
+							<td><?php echo $group['type'] ?></td>
+							<td><?php echo $group['capacity'] ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
 			</table>
 		</fieldset>
 	<?php } ?>
@@ -73,44 +74,44 @@
 		<fieldset>
 		<legend>Actividades</legend>
 			<table>
-		        <thead>
-		        	<tr>
-		        		<th>Nombre</th>
-		        		<th>Tipo</th>
-		        		<th>Duración</th>
-		        		<th>Horas/grupo</th>
-		        		<th>Estudiantes/grupo</th>
-								<th>Total estudiantes</th>
-		        	</tr>
-		        </thead>
-		        <tbody>
-		          <?php $total_duration = 0.0 ?>
-      			  <?php $total_programmed = 0.0 ?>
-		        	<?php foreach ($activities as $activity): ?>
-		        		<tr>
-		        			<td><?php echo $html->link($activity['Activity']['name'], array('controller' => 'activities', 'action' => 'view', $activity['Activity']['id'])) ?></td>
-		        			<td><?php echo $activity['Activity']['type'] ?></td>
-		        			<td><?php echo $activity['Activity']['duration'] ?></td>
-		        			<td><?php echo round($activity[0]['duration'], 2) ?></td>
-		        			<td><?php echo round($activity[0]['students'], 2) ?></td>
-									<td><?php echo $activity['Registration']['activity_total'] ?></td>
-		        			<?php $total_duration += $activity['Activity']['duration'] ?>
-		        			<?php $total_programmed += $activity[0]['duration'] ?>
-		        		</tr>
-		        	<?php endforeach; ?>
-		        </tbody>
-		        <tfoot>
-		          <tr style="align:right">
-		            <td></td>
-		            <td style="text-align:center"><strong>TOTAL:</strong></td>
-		            <td><?php echo $total_duration ?></td>
-		            <td><?php echo $total_programmed ?></td>
-		            <td></td>
-		          </tr>
-		          <tr>
-		            <td colspan="5"><small><strong>Se expone el promedio de horas programadas por grupo y el promedio de estudiantes apuntados por grupo.</strong></small></td>
-		          </tr>
-		        </tfoot>
+				<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>Tipo</th>
+						<th>Duración</th>
+						<th>Horas/grupo</th>
+						<th>Estudiantes/grupo</th>
+						<th>Total estudiantes</th>
+					</tr>
+				</thead>
+				<tbody>
+				  <?php $total_duration = 0.0 ?>
+	  			  <?php $total_programmed = 0.0 ?>
+					<?php foreach ($activities as $activity): ?>
+						<tr>
+							<td><?php echo $html->link($activity['Activity']['name'], array('controller' => 'activities', 'action' => 'view', $activity['Activity']['id'])) ?></td>
+							<td><?php echo $activity['Activity']['type'] ?></td>
+							<td><?php echo $activity['Activity']['duration'] ?></td>
+							<td><?php echo round($activity[0]['duration'], 2) ?></td>
+							<td><?php echo round($activity[0]['students'], 2) ?></td>
+							<td><?php echo $activity['Registration']['activity_total'] ?></td>
+							<?php $total_duration += $activity['Activity']['duration'] ?>
+							<?php $total_programmed += $activity[0]['duration'] ?>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+				<tfoot>
+				  <tr style="align:right">
+					<td></td>
+					<td style="text-align:center"><strong>TOTAL:</strong></td>
+					<td><?php echo $total_duration ?></td>
+					<td><?php echo $total_programmed ?></td>
+					<td></td>
+				  </tr>
+				  <tr>
+					<td colspan="5"><small><strong>Se expone el promedio de horas programadas por grupo y el promedio de estudiantes apuntados por grupo.</strong></small></td>
+				  </tr>
+				</tfoot>
 			</table>
 		</fieldset>
 	<?php } ?>

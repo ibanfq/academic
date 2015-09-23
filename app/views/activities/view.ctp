@@ -70,13 +70,13 @@
 						<td><?php echo rtrim($registration['Student']['last_name']).', '.$registration['Student']['first_name']; ?></td>
 						<td><?php
 							if ($registration['Registration']['group_id'] == -1) {
-                                echo 'Tiene esta actividad aprobada';
-                            } else if ($registration['Registration']['group_id'] !== null) {
-                                echo $groups[$registration['Registration']['group_id']]['Group']['name'];
+								echo $isEvaluation? 'No se puede presentar' : 'Actividad aprobada';
+							} else if ($registration['Registration']['group_id'] !== null) {
+								echo $groups[$registration['Registration']['group_id']]['Group']['name'];
 							}
-                        ?></td>
+						?></td>
 					</tr>
-                <?php endforeach; ?>
+				<?php endforeach; ?>
 			</table>
 		</fieldset>
 	<?php }?>

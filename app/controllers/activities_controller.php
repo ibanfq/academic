@@ -32,7 +32,9 @@
 		function view($id = null) {
 			$this->Activity->id = $id;
 			$activity = $this->Activity->read();
+			$isEvaluation = $activity['Activity']['type'] === 'Evaluación';
 			$this->set('activity', $activity);
+			$this->set('isEvaluation', $isEvaluation);
 			$this->set('subject', $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $activity['Subject']['id']))));
 			$groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id ORDER BY `Group`.name");
 			$this->set('groups', set::combine($groups, '{n}.Group.id', '{n}'));
@@ -40,32 +42,34 @@
 		}
 	
 		function edit($id = null) {
-                        $administrator = $this->Auth->user('type') === "Administrador";
-                        
+			$administrator = $this->Auth->user('type') === "Administrador";
+						
 			$this->Activity->id = $id;
 			if (empty($this->data)) {
 				$this->data = $this->Activity->read();
+				$isEvaluation = $this->data['Activity']['type'] === 'Evaluación';
 				$subject = $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $this->data['Activity']['subject_id'])));
 				$this->set('activity', $this->data);
+				$this->set('isEvaluation', $isEvaluation);
 				$this->set('subject', $subject);
 				$groups = $this->Activity->query("SELECT distinct(`Group`.id), `Group`.name FROM events Event INNER JOIN groups `Group` on `Group`.id = Event.group_id WHERE Event.activity_id = {$id}");
-				$this->set('groups', array(-1 => 'Tiene la actividad aprobada') + set::combine($groups, '{n}.Group.id', '{n}.Group.name'));
-				$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$this->data['Subject']['id']} ORDER BY Student.first_name, Student.last_name"));
+				$this->set('groups', array(-1 => $isEvaluation? 'No se puede presentar' : 'Actividad aprobada') + set::combine($groups, '{n}.Group.id', '{n}.Group.name'));
+				$this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$this->data['Subject']['id']} ORDER BY Student.last_name, Student.first_name"));
 			} else {
 				$registrations = $this->Activity->query("SELECT Registration.* FROM registrations Registration WHERE Registration.activity_id = {$id}");
 				$registrations_deleted = array();
 				foreach ($registrations as $i => &$registration) {
 					$student_id = $registration['Registration']['student_id'];
-					$group_id = $this->data['Students'][$student_id]['group_id'];
+					$group_id = isset($this->data['Students'][$student_id]['group_id'])? $this->data['Students'][$student_id]['group_id'] : false;
 					if ($group_id) {
-                                                if ($administrator || $group_id == -1) {
-                                                    $registration['Registration']['group_id'] = $group_id;
-                                                }
+						if ($administrator || $group_id == -1) {
+							$registration['Registration']['group_id'] = $group_id;
+						}
 					} else {
-                                                if ($administrator || $registration['Registration']['group_id'] == -1) {
-                                                    array_push($registrations_deleted, $registration['Registration']['id']);
-                                                    unset($registrations[$i]);
-                                                }
+						if ($administrator || $registration['Registration']['group_id'] == -1) {
+							array_push($registrations_deleted, $registration['Registration']['id']);
+							unset($registrations[$i]);
+						}
 					}
 					unset($this->data['Students'][$student_id]);
 				}
@@ -133,29 +137,29 @@
 		}
 		
 		function send_alert($activity_id=null, $group_id=null){
-      $activity = $this->Activity->findById($activity_id);
-      $coordinator_id = $activity['Subject']['coordinator_id'];
-      $responsible_id = $activity['Subject']['practice_responsible_id'];
-      $user_can_send_alerts = $this->Activity->Subject->Coordinator->can_send_alerts($this->Auth->user('id'), $activity_id, $group_id);
-      
-		  if (($coordinator_id == $this->Auth->user('id')) || ($responsible_id == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($user_can_send_alerts == true)) {
-  			if (($activity_id != null) && ($group_id != null)){
-  				App::import('Sanitize');
-  				$message = Sanitize::escape(file_get_contents("php://input"));
-  				$this->Email->from = 'Academic <noreply@ulpgc.es>';
-				
-  				$students = $this->Activity->query("SELECT Student.* FROM users Student INNER JOIN registrations Registration ON Registration.student_id = Student.id WHERE Registration.activity_id = {$activity_id} AND Registration.group_id = {$group_id}");
-				
-  				$emails = array();
-  				foreach($students as $student):
-  					if ($student['Student']['username'] != null)
-  						array_push($emails, $student['Student']['username']);
-  				endforeach;
-				
-  				$this->Email->to = implode(",", array_unique($emails));
-  				$this->Email->subject = "Alta en Academic";
-  				$this->set('success', $this->Email->send($message));
-  			}
+			$activity = $this->Activity->findById($activity_id);
+			$coordinator_id = $activity['Subject']['coordinator_id'];
+			$responsible_id = $activity['Subject']['practice_responsible_id'];
+			$user_can_send_alerts = $this->Activity->Subject->Coordinator->can_send_alerts($this->Auth->user('id'), $activity_id, $group_id);
+	  
+			if (($coordinator_id == $this->Auth->user('id')) || ($responsible_id == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($user_can_send_alerts == true)) {
+				if (($activity_id != null) && ($group_id != null)){
+					App::import('Sanitize');
+					$message = Sanitize::escape(file_get_contents("php://input"));
+					$this->Email->from = 'Academic <noreply@ulpgc.es>';
+
+					$students = $this->Activity->query("SELECT Student.* FROM users Student INNER JOIN registrations Registration ON Registration.student_id = Student.id WHERE Registration.activity_id = {$activity_id} AND Registration.group_id = {$group_id}");
+
+					$emails = array();
+					foreach($students as $student):
+						if ($student['Student']['username'] != null)
+							array_push($emails, $student['Student']['username']);
+					endforeach;
+
+					$this->Email->to = implode(",", array_unique($emails));
+					$this->Email->subject = "Alta en Academic";
+					$this->set('success', $this->Email->send($message));
+				}
 			}
 		}
 		

@@ -167,6 +167,112 @@ class SubjectsController extends AppController {
 		$this->Subject->id = $subject_id;
 		$this->set('subject', $this->Subject->read());
 	}
+	
+	function students_edit($subject_id = null) {
+		$this->Subject->id = $subject_id;
+		$this->Subject->unbindModel(array('belongsTo' => array('Coordinator', 'Responsible'), 'hasMany' => array('Group')));
+		$subject = $this->Subject->read();
+		$students = $this->Subject->query("SELECT Student.*, SubjectStudent.* FROM users Student INNER JOIN subjects_users SubjectStudent ON SubjectStudent.user_id = Student.id WHERE SubjectStudent.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
+		$subject['Students'] = &$students;
+		if (empty($this->data)) {
+			$this->data = $subject;
+		} else {
+			$users_to_update = array();
+			$users_to_approve = array();
+			$users_to_disapprove = array();
+			foreach ($students as &$student) {
+				$student_id = $student['Student']['id'];
+				if (isset($this->data['Students'][$student_id]['practices_approved'])) {
+					$practices_approved = (bool)$this->data['Students'][$student_id]['practices_approved'];
+					if ($student['SubjectStudent']['practices_approved'] != $practices_approved) {
+						$users_to_update[$student_id] = $student_id;
+						if ($practices_approved) {
+							$users_to_approve[$student_id] = $student_id;
+						} else {
+							$users_to_disapprove[$student_id] = $student_id;
+						}
+						$student['SubjectStudent']['practices_approved'] = $practices_approved;
+					}
+				}
+			}
+			$this->data = $subject;
+			$error = false;
+			
+			if (!empty($users_to_update)) {
+				$practices_id = array();
+				foreach ($subject['Activity'] as $activity) {
+					if ($this->Subject->Activity->typeIsPractice($activity['type'])) {
+						$practices_id[] = $activity['id'];
+					}
+				}
+
+				$this->loadModel('SubjectsUser');
+				$subjects_users = $this->SubjectsUser->find('all', array('conditions' => array('subject_id' => $subject_id, 'user_id' => $users_to_update)));
+				foreach ($subjects_users as &$subject_user) {
+					if (isset($users_to_approve[$subject_user['SubjectsUser']['user_id']])) {
+						$subject_user['SubjectsUser']['practices_approved'] = 1;
+					} else {
+						$subject_user['SubjectsUser']['practices_approved'] = 0;
+					}
+				}
+
+				$this->loadModel('Registration');
+				$this->Registration->unbindModel(array('hasOne' => array('User', 'Activity', 'Group')), false);
+				$registrations = $this->Registration->find('all', array('conditions' => array('activity_id' => $practices_id, 'student_id' => $users_to_update)));
+				$registrations_to_delete = array();
+				$registrations_to_save = array();
+				foreach ($registrations as &$registration) {
+					$user_id = $registration['Registration']['student_id'];
+					if (isset($users_to_disapprove[$user_id])) {
+						if ($registration['Registration']['group_id'] == -1) {
+							$registrations_to_delete[] = $registration['Registration']['id'];
+						}
+					} else {
+						$registration['Registration']['group_id'] = -1;
+						$registrations_to_save[$user_id][$registration['Registration']['activity_id']] = $registration;
+					}
+				}
+				foreach ($users_to_approve as $user_id) {
+					if (!isset($registrations_to_save[$user_id])) {
+						$registrations_to_save[$user_id] = array();
+					}
+					foreach ($practices_id as $activity_id) {
+						if (!isset($registrations_to_save[$user_id][$activity_id])) {
+							$registrations_to_save[$user_id][$activity_id] = array('Registration' => array(
+								'activity_id' => $activity_id,
+								'student_id' => $user_id,
+								'group_id' => -1
+							));
+						}
+					}
+				}
+				$registrations = array();
+				foreach ($registrations_to_save as &$user_registrations) {
+					foreach ($user_registrations as &$registration) {
+						$registrations[] = $registration;
+					}
+				}
+				$registrations_to_save = &$registrations;
+				
+				if (!empty($registrations_to_save) && !$this->Registration->saveAll($registrations_to_save)) {
+					$error = true;
+				} elseif (!empty($registrations_to_delete) && !$this->Registration->deleteAll(array('Registration.id' => $registrations_to_delete))) {
+					$error = true;
+				} elseif (!empty($subjects_users) && !$this->SubjectsUser->saveAll($subjects_users)) {
+					$error = true;
+				}
+			}
+			
+			if ($error) {
+				$this->Session->setFlash('Error al actualizar los estudiantes.');
+			} else {
+				$this->Session->setFlash('Los estudiantes se han modificado correctamente.');
+				$this->redirect(array('action' => 'view', $subject_id));
+			}
+		}
+		
+		$this->set('subject', $this->data);
+	}
 
 	function statistics($subject_id = null) {
 		$this->Subject->id = $subject_id;

@@ -97,8 +97,8 @@ class Subject extends AcademicModel {
 			)
 		)
 	);
-        
-        var $levels = array('Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto', 'Postgrado');
+	
+	var $levels = array('Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto', 'Postgrado');
 
 	/**
 	 * Validates that a combination of code,course is unique
@@ -150,54 +150,54 @@ class Subject extends AcademicModel {
 	 * Returns an array of attendance registers with teaching hours for
 	 * a subject
 	 */
-	 function teachingHoursSummary($id = null) {
-		 $subject = $this->findById($id, array('Subject.id', 'Course.initial_date', 'Course.final_date'));
-		 $groups = Set::extract('/Group/id', $subject);
-		 $activities = Set::extract('/Activity/id', $subject);
+	function teachingHoursSummary($id = null) {
+		$subject = $this->findById($id, array('Subject.id', 'Course.initial_date', 'Course.final_date'));
+		$groups = Set::extract('/Group/id', $subject);
+		$activities = Set::extract('/Activity/id', $subject);
 
-		 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
-		 $events = $this->Group->AttendanceRegister->Event->find('all', array(
-			 'conditions' => array(
-				 'Event.group_id' => $groups,
-				 'Event.activity_id' => $activities,
-				 'Event.initial_hour >= ' => date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
-				 'Event.final_hour <= ' => date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date'])),
-			 ),
-			 'fields' => array(
-				 'Event.id', 'Event.initial_hour', 'Event.duration',
-				 'AttendanceRegister.id', 'AttendanceRegister.initial_hour', 'AttendanceRegister.duration',
-				 'Activity.id', 'Activity.name',
-				 'Group.id', 'Group.name',
-				 'Teacher.first_name', 'Teacher.last_name',
-				 'Teacher_2.first_name', 'Teacher_2.last_name',
-			 ),
-			 'order' => array('Event.initial_hour'),
-			 'recursive' => 0,
-		 ));
+		$this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+		$events = $this->Group->AttendanceRegister->Event->find('all', array(
+			'conditions' => array(
+				'Event.group_id' => $groups,
+				'Event.activity_id' => $activities,
+				'Event.initial_hour >= ' => date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
+				'Event.final_hour <= ' => date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date'])),
+			),
+			'fields' => array(
+				'Event.id', 'Event.initial_hour', 'Event.duration',
+				'AttendanceRegister.id', 'AttendanceRegister.initial_hour', 'AttendanceRegister.duration',
+				'Activity.id', 'Activity.name',
+				'Group.id', 'Group.name',
+				'Teacher.first_name', 'Teacher.last_name',
+				'Teacher_2.first_name', 'Teacher_2.last_name',
+			),
+			'order' => array('Event.initial_hour'),
+			'recursive' => 0,
+		));
 
-		 $registers = array();
-		 foreach ($events as $event) {
-			 $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
-			 $teachers = $this->Group->AttendanceRegister->find('first', array(
-				 'conditions' => array('AttendanceRegister.id' => $event['AttendanceRegister']['id']),
-				 'fields' => array(
-					 'AttendanceRegister.id',
-					 'Teacher.first_name', 'Teacher.last_name', 'Teacher_2.first_name', 'Teacher_2.last_name',
-				 ),
-				 'recursive' => 0,
-			 ));
+		$registers = array();
+		foreach ($events as $event) {
+			$this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+			$teachers = $this->Group->AttendanceRegister->find('first', array(
+				'conditions' => array('AttendanceRegister.id' => $event['AttendanceRegister']['id']),
+				'fields' => array(
+					'AttendanceRegister.id',
+					'Teacher.first_name', 'Teacher.last_name', 'Teacher_2.first_name', 'Teacher_2.last_name',
+				),
+				'recursive' => 0,
+			));
 
-			 $event['OriginalTeacher'] = $event['Teacher'];
-			 $event['OriginalTeacher_2'] = $event['Teacher_2'];
-			 $event['Teacher'] = $teachers['Teacher'];
-			 $event['Teacher_2'] = $teachers['Teacher_2'];
-			 $registers[] = $event;
-		 }
-		 return $registers;
-	 }
-         
-         function levelToInt($level) {
-             return array_search($level, $this->levels);
-         }
+			$event['OriginalTeacher'] = $event['Teacher'];
+			$event['OriginalTeacher_2'] = $event['Teacher_2'];
+			$event['Teacher'] = $teachers['Teacher'];
+			$event['Teacher_2'] = $teachers['Teacher_2'];
+			$registers[] = $event;
+		}
+		return $registers;
+	}
+	 
+	function levelToInt($level) {
+		return array_search($level, $this->levels);
+	}
 }
 ?>

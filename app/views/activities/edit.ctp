@@ -26,18 +26,18 @@
 			<thead>
 				<tr>
 					<th style="width:80%">Estudiante</th>
-					<th><?php echo $auth->user('type') == "Administrador"? 'Grupo' : 'Tiene la actividad aprobada'?></th>
+					<th><?php echo $auth->user('type') == "Administrador"? 'Grupo' : ($isEvaluation? 'No se puede presentar' : 'Actividad aprobada') ?></th>
 				</th>
 			</thead>
 			<tbody>
 				<?php foreach ($registrations as $registration): ?>
 					<tr>
-						<td><?php echo "{$registration['Student']['first_name']} {$registration['Student']['last_name']}"?></td>
-                                                <?php if ($auth->user('type') == "Administrador"): ?>
-                                                    <td><?php echo $form->select("Students.{$registration['Student']['id']}.group_id", $groups, $registration['Registration']['group_id']); ?></td>
-                                                <?php else: ?>
-                                                    <td><?php echo $form->checkbox("Students.{$registration['Student']['id']}.group_id", array('value' => '-1', 'checked' => $registration['Registration']['group_id'] == -1)); ?></td>
-                                                <?php endif; ?>
+						<td><?php echo rtrim($registration['Student']['last_name']).', '.$registration['Student']['first_name']; ?></td>
+						<?php if ($auth->user('type') == "Administrador"): ?>
+							<td><?php echo $form->select("Students.{$registration['Student']['id']}.group_id", $groups, $registration['Registration']['group_id']); ?></td>
+						<?php else: ?>
+							<td><?php echo $form->checkbox("Students.{$registration['Student']['id']}.group_id", array('value' => '-1', 'checked' => $registration['Registration']['group_id'] == -1)); ?></td>
+						<?php endif; ?>
 					</tr>
 				<?php endforeach;?>
 			</tbody>
