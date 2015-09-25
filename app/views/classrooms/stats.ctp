@@ -79,6 +79,6 @@
   	</table>
   <?php } else { ?>
     <br />
-    <p>Todavía no existe ninguna estadística para este aula. Es necesario que se graben los registros de asistencia para que aparezca algún valor.</p>
+    <p>No se han encontrado registros de actividades en el Aula.</p>
   <?php } ?>
 <?php } ?>
