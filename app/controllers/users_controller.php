@@ -275,10 +275,15 @@ class UsersController extends AppController {
 		$user = $this->User->read();
 		$subject = $this->User->Subject->findById($subject_id);
 		if (($user != null) && ($subject != null)){
-			$this->User->query("INSERT INTO subjects_users(subject_id, user_id) VALUES({$subject_id}, {$student_id})");
 			$this->set('success', true);
 			$this->set('user', $user);
 			$this->set('subject', $subject);
+			foreach ($user['Subject'] as $subject) {
+				if ($subject['id'] == $subject_id) {
+					return;
+				}
+			}
+			$this->User->query("INSERT INTO subjects_users(subject_id, user_id) VALUES({$subject_id}, {$student_id})");
 		} 
 	}
 	
