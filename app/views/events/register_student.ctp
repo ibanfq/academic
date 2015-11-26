@@ -40,7 +40,7 @@
 						echo "<span class='group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
 						echo "<span>";
-                        if (!isset($student_groups[$activity['id']]) || (!$activity['groups_closed'] && !$group['closed'])) {
+                        if ((!$group['ended'] && !isset($student_groups[$activity['id']])) || (!$activity['groups_closed'] && !$group['closed'])) {
                             $style = $group['free_seats'] > 0 ? '' : 'display:none';
                             echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a>";
                         }

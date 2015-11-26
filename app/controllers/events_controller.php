@@ -254,19 +254,18 @@
 			
 			$this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id))));
 			
-			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
+			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
 			
 			$activities_groups = array();
 			foreach ($events as $event):
 				$busy_capacity = $this->Event->query("SELECT count(*) as busy_capacity FROM registrations WHERE group_id = {$event['Group']['id']} AND activity_id = {$event['Activity']['id']}");
-				$closed = $event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP;
+				$ended = $event[0]['time_to_end'] < 0;
+				$closed = $ended || ($event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP);
 				
-				if (isset($activities_groups[$event['Activity']['id']])){
-					$activities_groups[$event['Activity']['id']]['Groups'][$event['Group']['id']] = array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed);
+				if (!isset($activities_groups[$event['Activity']['id']])){
+					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => false, 'Groups' => array());
 				}
-				else {
-					$activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => false, 'Groups' => array($event['Group']['id'] => array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed)));
-				}
+				$activities_groups[$event['Activity']['id']]['Groups'][$event['Group']['id']] = array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed, 'ended' => $ended);
 			endforeach;
 			
 			$student_groups_activities = $this->Event->query("SELECT activity_id, group_id FROM registrations WHERE student_id = {$this->Auth->user('id')}");
@@ -275,6 +274,7 @@
 			foreach ($student_groups_activities as $sga):
 				$student_groups[$sga['registrations']['activity_id']] = $sga['registrations']['group_id'];
 				if ($sga['registrations']['group_id'] != -1 && isset($activities_groups[$sga['registrations']['activity_id']]['Groups'][$sga['registrations']['group_id']])) {
+					//Close all groups if current group is closed
 					$activities_groups[$sga['registrations']['activity_id']]['groups_closed'] = $activities_groups[$sga['registrations']['activity_id']]['Groups'][$sga['registrations']['group_id']]['closed'];
 				}
 			endforeach;

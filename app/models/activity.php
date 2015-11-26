@@ -46,9 +46,20 @@ class Activity extends AcademicModel {
 	function _existsAndGroupOpened($activity_id, $group_id) {
 		$activity_id = intval($activity_id);
 		$group_id = intval($group_id);
-		$activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Event.activity_id = $activity_id AND Event.group_id = $group_id");
+		$activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Event.activity_id = $activity_id AND Event.group_id = $group_id");
 		if ($activity && $activity[0]['Activity']['id']) {
-			return (!$activity[0]['Activity']['inflexible_groups'] || $activity[0][0]['days_to_start'] > self::DAYS_TO_BLOCK_CHANGING_GROUP);
+			return $activity[0][0]['time_to_end'] >= 0 && (!$activity[0]['Activity']['inflexible_groups'] || $activity[0][0]['days_to_start'] > self::DAYS_TO_BLOCK_CHANGING_GROUP);
+		} else {
+			return false;
+		}
+	}
+	
+	function _existsAndGroupNotEnded($activity_id, $group_id) {
+		$activity_id = intval($activity_id);
+		$group_id = intval($group_id);
+		$activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Event.activity_id = $activity_id AND Event.group_id = $group_id");
+		if ($activity && $activity[0]['Activity']['id']) {
+			return $activity[0][0]['time_to_end'] >= 0;
 		} else {
 			return false;
 		}

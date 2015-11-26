@@ -13,17 +13,15 @@ class RegistrationsController extends AppController {
 		
         if ($actual_group_id) {
 			if ($this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id)) {
-            	$activity_exists = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+            	$group_exists = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
 			} else {
-				$activity_exists = false;
+				$group_exists = false;
 			}
-			$group_exists = $activity_exists;
         } else {
-            $activity_exists = $this->Registration->Activity->_exists($activity_id);
-			$group_exists = $this->Registration->Group->_exists($group_id);
+			$group_exists = $this->Registration->Activity->_existsAndGroupNotEnded($activity_id, $group_id);
         }
 		
-		if ($activity_exists && $group_exists) {
+		if ($group_exists) {
 			$this->Registration->create();
 			
 			$registration = array('Registration' => array('group_id' => $group_id, 'activity_id' => $activity_id, 'student_id' => $this->Auth->user('id'), 'id' => null));
