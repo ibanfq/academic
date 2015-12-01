@@ -41,6 +41,11 @@ a:hover {
 a img {
 	border:none;
 }
+a.disabled, a[disabled] {
+	pointer-events: none;
+	opacity: 0.7;
+        background-color: #ccc;
+}
 h1, h2, h3, h4 {
 	font-weight: normal;
 	margin-bottom:0.5em;
@@ -522,6 +527,10 @@ ul.groups li {
 .selected {
 	font:bold;
 	background-color:#00CC66;
+}
+
+.has_changes_requests .selected {
+	background-color:#c73e14;
 }
 
 .selected a {

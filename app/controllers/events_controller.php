@@ -251,8 +251,9 @@
 		function register_student($subject_id = null) {
 			$this->set("section", "my_subjects");
 			
-			
 			$this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id))));
+			
+			$auth_user_id = $this->Auth->user('id');
 			
 			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
 			
@@ -268,7 +269,7 @@
 				$activities_groups[$event['Activity']['id']]['Groups'][$event['Group']['id']] = array('name' => $event['Group']['name'], 'id' => $event['Group']['id'], 'free_seats' => $event['Group']['capacity'] - $busy_capacity[0][0]['busy_capacity'], 'capacity' => $event['Group']['capacity'], 'closed' => $closed, 'ended' => $ended);
 			endforeach;
 			
-			$student_groups_activities = $this->Event->query("SELECT activity_id, group_id FROM registrations WHERE student_id = {$this->Auth->user('id')}");
+			$student_groups_activities = $this->Event->query("SELECT activity_id, group_id FROM registrations WHERE student_id = $auth_user_id");
 			
 			$student_groups = array();
 			foreach ($student_groups_activities as $sga):
@@ -292,8 +293,33 @@
 				}
 			endforeach;
 			
+			$this->loadModel('GroupRequest');
+			$groups_requests = $this->GroupRequest->getUserRequests($auth_user_id, $subject_id);
+			$changes_requests = array();
+			foreach ($groups_requests as $request) {
+				$request = $request['group_requests'];
+				$closed = $activities_groups[$request['activity_id']]['Groups'][$request['group_id']]['closed'];
+				$closed = $closed || $activities_groups[$request['activity_id']]['Groups'][$request['group_2_id']]['closed'];
+				if (!$closed) {
+					if (!isset($changes_requests[$request['activity_id']])) {
+						$changes_requests[$request['activity_id']] = array();
+					}
+					if ($request['student_id'] == $auth_user_id) {
+						$group = $request['group_2_id'];
+					} else {
+						$group = $request['group_id'];
+					}
+					if (!isset($changes_requests[$request['activity_id']][$group])) {
+						$changes_requests[$request['activity_id']][$group] = array();
+					}
+					$changes_requests[$request['activity_id']][$group][] = $request;
+				}
+			}
+			
+			
 			$this->set('activities_groups', $activities_groups);
 			$this->set('student_groups', $student_groups);
+			$this->set('changes_requests', $changes_requests);
 		}
 		
 		

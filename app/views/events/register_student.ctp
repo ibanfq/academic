@@ -8,6 +8,7 @@
 
 <div class="intro">
 	<p>Para consultar la información sobre un grupo, pase el ratón por encima del nombre y espere a que aparezca el cuadro con la información disponible.</p>
+	<p>Cuando el fondo está rojo es que tiene cambios solicitados, no se puede cambiar de grupo hasta que no aparezca en verde.</p>
 	<p>
             <strong>IMPORTANTE:</strong> Tenga en cuenta que el número de plazas libres puede ir cambiando debido a que los otros estudiantes van seleccionando sus grupos. Siempre puede <a href="javascript:;" onclick="update_subject_free_seats()">actualizar</a> las plazas disponibles.
             No escojas grupo de prácticas si tienes esa actividad aprobada. En caso de escoger erróneamente grupo ponte en contacto con tu profesor para que te borre de esa actividad.
@@ -21,36 +22,47 @@
 	<?php if ((isset($student_groups[$activity['id']])) && ($student_groups[$activity['id']] == -1)) { ?>
 			<span>Tienes esta actividad aprobada</span><br /><br />
     <?php } else { ?>
-		<ul class="groups <?php echo $activity['groups_closed']? 'closed' : 'opened' ?>" id="group_list_<?php echo $activity['id']?>">
+		<?php $activity_has_changes_requests = !empty($changes_requests[$activity['id']]); ?>
+		<ul id="group_list_<?php echo $activity['id']?>" class="groups <?php echo $activity['groups_closed'] || $activity_has_changes_requests? 'closed' : 'opened' ?> <?php echo $activity_has_changes_requests? 'has_changes_requests' : '' ?>">
 		<?php foreach ($activity['Groups'] as $group): ?>
-				<li class="group <?php echo $group['closed']? 'closed' : 'opened' ?>" id="group_<?php echo $activity['id']?>_<?php echo $group['id'] ?>">
-					<?php $free_seats = max(0, $group['free_seats']); ?>
-					<?php if ((isset($student_groups[$activity['id']])) && ($group['id'] == $student_groups[$activity['id']])){
-						echo "<span class='selected group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
-				
-						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
-						echo "<span>";
-                        if (!$group['closed']) {
-                            echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a>";
-                        }
-						echo "</span>";
-						
-					} else {
-					
-						echo "<span class='group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
-						echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
-						echo "<span>";
-                        if ((!$group['ended'] && !isset($student_groups[$activity['id']])) || (!$activity['groups_closed'] && !$group['closed'])) {
-                            $style = $group['free_seats'] > 0 ? '' : 'display:none';
-                            echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='{$style}'>¡Me apunto!</a>";
-                        }
-						echo "</span>";
+			<li class="group <?php echo $group['closed'] || $activity_has_changes_requests? 'closed' : 'opened' ?>" id="group_<?php echo $activity['id']?>_<?php echo $group['id'] ?>">
+				<?php $free_seats = max(0, $group['free_seats']); ?>
+				<?php if ((isset($student_groups[$activity['id']])) && ($group['id'] == $student_groups[$activity['id']])){
+					echo "<span class='selected group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 
-                    } ?>
-				
-				<?php echo $html->link('Ver alumnos apuntados', array('controller' => 'registrations', 'action' => 'view_students_registered', $activity['id'], $group['id'], 'class' => '')) ?>
-				
-				</li>
+					echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
+					echo "<span>";
+					if (!$activity_has_changes_requests) {
+						if (!$group['closed']) {
+							echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a>";
+						}
+					}
+					echo "</span>";
+
+				} else {
+
+					echo "<span class='group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
+					echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
+					echo "<span>";
+					if (!$activity_has_changes_requests && $group['free_seats'] > 0) {
+						if ((!$group['ended'] && !isset($student_groups[$activity['id']])) || (!$activity['groups_closed'] && !$group['closed'])) {
+							echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}'>¡Me apunto!</a>";
+						}
+					}
+					echo "</span>";
+
+				} ?>
+			<?php
+				$total_group_changes_requests = isset($changes_requests[$activity['id']][$group['id']])? count($changes_requests[$activity['id']][$group['id']]) : 0;
+				echo $html->link('Ver alumnos apuntados', array('controller' => 'registrations', 'action' => 'view_students_registered', $activity['id'], $group['id'], 'class' => ''));
+				if ($total_group_changes_requests == 1) {
+					echo ' (Tienes 1 solicitud pendiente)';
+				} else if ($total_group_changes_requests > 1) {
+					echo " (Tienes $total_group_changes_requests solicitudes pendientes)";
+				}
+			?>
+
+			</li>
 		<?php endforeach; ?>
 		</ul>
 	<?php } ?>
@@ -79,6 +91,9 @@
 	});
 	
 	function registerMe(activity_id, group_id){
+		var link = $('#register_me_link_activity_' + activity_id + '_' + group_id);
+		var d = 'disabled';
+		link.attr(d,d).addClass(d);
 		$.ajax({
 			type: "POST", 
 			url: "<?php echo PATH ?>/registrations/add/" + activity_id + "/" + group_id, 
@@ -92,7 +107,6 @@
 					$('#' + activity_id + "_" + group_id).addClass('selected');
 					$('.group.opened .register_me_link_activity_' + activity_id).toggle(!closed);
 					$('.group.closed .register_me_link_activity_' + activity_id).hide();
-					$('#register_me_link_activity_' + activity_id + '_' + group_id).hide();
                     if (closed) {
                         $('#passed_' + activity_id).hide();
                     }
@@ -107,6 +121,7 @@
 					$('#notice').addClass('error');
 					$('#notice').html("Se ha producido algún error que ha impedido apuntarle en este grupo. Por favor, contacte con el administrador del sistema para que le ayude a solucionarlo");
 				}
+				link.hide().removeAttr(d).removeClass(d);
 				update_subject_free_seats();
 			}
 		});

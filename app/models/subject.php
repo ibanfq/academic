@@ -195,7 +195,7 @@ class Subject extends AcademicModel {
 		}
 		return $registers;
 	}
-	 
+	
 	function levelToInt($level) {
 		return array_search($level, $this->levels);
 	}
