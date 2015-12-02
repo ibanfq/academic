@@ -30,7 +30,8 @@ class RegistrationsController extends AppController {
 		
 		if ($group_opened && !$force) {
 			$this->loadModel('GroupRequest');
-			$group_opened = empty($this->GroupRequest->getUserRequests($user_id, null, $activity_id));
+			$requests = $this->GroupRequest->getUserRequests($user_id, null, $activity_id);
+			$group_opened = empty($requests);
 		}
 		
 		if ($group_opened) {
@@ -215,8 +216,9 @@ class RegistrationsController extends AppController {
 					
 					$users = set::combine($users, '{n}.User.id', '{n}');
 					$users[$this->Auth->user('id')] = $this->Auth->user();
+					$auth_user = $this->Auth->user();
 					
-					$this->_notifyRequestAccepted($users[$request['group_requests']['student_id']]['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $this->Auth->user()['User']);
+					$this->_notifyRequestAccepted($users[$request['group_requests']['student_id']]['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $auth_user['User']);
 					foreach ($requests_canceled as $request_canceled) {
 						if (in_array($request_canceled['group_requests']['student_id'], array($auth_user_id, $user_id))) {
 							$user = $users[$request_canceled['group_requests']['student_2_id']];
