@@ -11,7 +11,7 @@ class RegistrationsController extends AppController {
 		}
 	}
 	
-	function _add($user_id, $activity_id, $group_id, $force = false){
+	function _add($user_id, $activity_id, $group_id, $accepting_request = false){
 		$this->set('success', false);
 		
 		$this->Registration->id = null;
@@ -28,18 +28,32 @@ class RegistrationsController extends AppController {
 			$group_opened = $this->Registration->Activity->_existsAndGroupNotEnded($activity_id, $group_id);
         }
 		
-		if ($group_opened && !$force) {
+		$requests_ids = array();
+		if ($group_opened && !$accepting_request) {
 			$this->loadModel('GroupRequest');
 			$requests = $this->GroupRequest->getUserRequests($user_id, null, $activity_id);
-			$group_opened = empty($requests);
+			$requests_groups = array();
+			foreach ($requests as $request) {
+				$requests_ids[] = $request['group_requests']['id'];
+				$requests_groups[$request['group_requests']['group_id']] = $request['group_requests']['group_id'];
+				$requests_groups[$request['group_requests']['group_2_id']] = $request['group_requests']['group_2_id'];
+			}
+			foreach ($requests_groups as $request_group_id) {
+				if ($request_group_id != $group_id && $request_group_id != $actual_group_id) {
+					if ($this->Registration->Activity->_existsAndGroupOpened($activity_id, $request_group_id)) {
+						$group_opened = false;
+						break;
+					}
+				}
+			}
 		}
 		
-		if ($group_opened) {
+		if ($group_opened && ($accepting_request || $this->Registration->enoughFreeSeats($activity_id, $group_id))) {
 			$this->Registration->create();
 			
 			$registration = array('Registration' => array('group_id' => $group_id, 'activity_id' => $activity_id, 'student_id' => $user_id, 'id' => null));
 
- 			if (($force || $this->Registration->enoughFreeSeats($activity_id, $group_id)) && ($this->Registration->save($registration))) {
+ 			if ((empty($requests_ids) || $this->GroupRequest->deleteAll(array('GroupRequest.id' => $requests_ids))) && $this->Registration->save($registration)) {
 				$this->loadModel('AttendanceRegister');
 				$attendanceRegisters = $this->AttendanceRegister->find("all", array(
 					'fields' => array('AttendanceRegister.*'),

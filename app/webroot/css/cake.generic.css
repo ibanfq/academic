@@ -529,8 +529,12 @@ ul.groups li {
 	background-color:#00CC66;
 }
 
-.has_changes_requests .selected {
+.closed .selected {
 	background-color:#c73e14;
+}
+
+.has_changes_requests .group .selected {
+	background-color:#ffcc00;
 }
 
 .selected a {

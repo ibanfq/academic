@@ -8,7 +8,8 @@
 
 <div class="intro">
 	<p>Para consultar la información sobre un grupo, pase el ratón por encima del nombre y espere a que aparezca el cuadro con la información disponible.</p>
-	<p>Cuando el fondo está rojo es que tiene cambios solicitados, no se puede cambiar de grupo hasta que no aparezca en verde.</p>
+	<p>Cuando el fondo está AMARILLO es que tiene cambios solicitados, no se puede cambiar de grupo hasta que no aparezca en VERDE.</p>
+	<p>En el caso de que el fondo esté en ROJO, ya no te puedes cambiar de grupo. Esto puede ser porque la práctica ya se impartió o porque el profesor tiene bloqueado el cambio de grupo 7 días antes de su impartición. En este caso tienes que hablar con el profesor para poder acudir a otro grupo de prácticas.</p>
 	<p>
             <strong>IMPORTANTE:</strong> Tenga en cuenta que el número de plazas libres puede ir cambiando debido a que los otros estudiantes van seleccionando sus grupos. Siempre puede <a href="javascript:;" onclick="update_subject_free_seats()">actualizar</a> las plazas disponibles.
             No escojas grupo de prácticas si tienes esa actividad aprobada. En caso de escoger erróneamente grupo ponte en contacto con tu profesor para que te borre de esa actividad.
