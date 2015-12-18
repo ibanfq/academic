@@ -11,7 +11,7 @@ class RegistrationsController extends AppController {
 		}
 	}
 	
-	function _add($user_id, $activity_id, $group_id, $accepting_request = false){
+	function _add($user_id, $activity_id, $group_id, $is_accepting_request = false){
 		$this->set('success', false);
 		
 		$this->Registration->id = null;
@@ -29,7 +29,7 @@ class RegistrationsController extends AppController {
         }
 		
 		$requests_ids = array();
-		if ($group_opened && !$accepting_request) {
+		if ($group_opened && !$is_accepting_request) {
 			$this->loadModel('GroupRequest');
 			$requests = $this->GroupRequest->getUserRequests($user_id, null, $activity_id);
 			$requests_groups = array();
@@ -48,7 +48,7 @@ class RegistrationsController extends AppController {
 			}
 		}
 		
-		if ($group_opened && ($accepting_request || $this->Registration->enoughFreeSeats($activity_id, $group_id))) {
+		if ($group_opened && ($is_accepting_request || $this->Registration->enoughFreeSeats($activity_id, $group_id))) {
 			$this->Registration->create();
 			
 			$registration = array('Registration' => array('group_id' => $group_id, 'activity_id' => $activity_id, 'student_id' => $user_id, 'id' => null));
@@ -203,12 +203,14 @@ class RegistrationsController extends AppController {
 						if ($id !== $request_id) {
 							$requests_canceled[] = $user_request;
 						}
-						if ($user_request['group_requests']['student_id'] == $auth_user_id) {
-							$user_to_load = $user_request['group_requests']['student_2_id'];
-						} else {
-							$user_to_load = $user_request['group_requests']['student_id'];
+						$student_id = $user_request['group_requests']['student_id'];
+						$student_2_id = $user_request['group_requests']['student_2_id'];
+						if ($student_id != $auth_user_id) {
+							$users_to_load[$student_id] = $student_id;
 						}
-						$users_to_load[$user_to_load] = $user_to_load;
+						if ($student_2_id != $auth_user_id) {
+							$users_to_load[$student_2_id] = $student_2_id;
+						}
 					}
 				}
 				

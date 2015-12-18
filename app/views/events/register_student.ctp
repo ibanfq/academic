@@ -71,21 +71,33 @@
 <?php endforeach; ?>
 
 <script type="text/javascript">
+	var current_group_label_xhr;
 	$('.group_label').tooltip({
 		delay: 500,
 		bodyHandler: function() {
 			activity_id = $('#' + this.id).attr('activity_id');
 			group_id = $('#' + this.id).attr('group_id');
-			$.ajax({
+			if (current_group_label_xhr) {
+				current_group_label_xhr.abort();
+			}
+			$('#tooltip').html('');
+			$('#details').html('');
+			current_group_label_xhr = $.ajax({
 				type: "GET", 
 				url: "<?php echo PATH ?>/events/view_info/" + activity_id + "/" + group_id,
 				asynchronous: false,
 				success: function(data) {
+					current_group_label_xhr = null;
 					$('#tooltip').html(data);
 					$('#details').html(data);
 				}
 			});
-			
+			setTimeout(function() {
+				if (current_group_label_xhr && current_group_label_xhr.readyState < 3) {
+					$('#tooltip').html('Cargando...');
+					$('#details').html('Cargando...');
+				}
+			}, 1500);
 			return $('#details').html();
 		},
 		showURL: false
