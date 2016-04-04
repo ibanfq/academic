@@ -377,7 +377,7 @@ class UsersController extends AppController {
 	  $this->set('courses', $courses);
 	  $this->set('user', $user);
 	}
-
+	
 	/**
 	 * Shows detailed summary about teaching statistics
 	 *
@@ -392,7 +392,7 @@ class UsersController extends AppController {
 	  $subjects_as_practice_responsible = $this->User->query("SELECT Subject.* FROM subjects Subject WHERE Subject.course_id = {$course_id} AND Subject.practice_responsible_id = {$user["User"]["id"]} ORDER BY Subject.code");
 
 		$registrations = $this->User->query("
-			SELECT Subject.code, AttendanceRegister.*, Activity.*
+			SELECT Subject.code, AttendanceRegister.*, Activity.name
 			FROM attendance_registers AttendanceRegister
 			INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id
 			INNER JOIN subjects Subject ON Subject.id = Activity.subject_id
@@ -437,6 +437,33 @@ class UsersController extends AppController {
 	  $this->set('teorical_hours', $theoretical_hours);
 	  $this->set('other_hours', $other_hours);
 	  $this->set('hours_group_by_subject', $hours_group_by_subject);
+	}
+	
+	function teacher_schedule($id = null) {
+	  $this->User->id = $id;
+	  $user = $this->User->read();
+		
+	  $courses = $this->User->Subject->Course->find('all', array('order' => 'initial_date desc'));
+	  $this->set('courses', $courses);
+	  $this->set('user', $user);
+	}
+
+	function teacher_schedule_details($id = null) {
+		$user = $this->User->read(null,$id);
+		$course_id = $this->params['url']['course_id'];
+		
+    $events = $this->User->query("
+			SELECT Subject.code, Event.*, Activity.name
+			FROM events Event
+			INNER JOIN activities Activity ON Activity.id = Event.activity_id
+			INNER JOIN subjects Subject ON Subject.id = Activity.subject_id
+			WHERE (Event.teacher_id = {$user["User"]["id"]} OR Event.teacher_2_id = {$user["User"]["id"]})
+			AND Event.duration > 0 AND Subject.course_id = {$course_id}
+			ORDER BY Event.initial_hour DESC
+		");
+    
+	  $this->set('user', $user);
+    $this->set('events', $events);
 	}
 	
 	function _save_student($args, $subjects, &$imported_subjects){
