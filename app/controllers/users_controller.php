@@ -407,7 +407,7 @@ class UsersController extends AppController {
 		$other_hours = $this->User->teachingHours($user['User']['id'], $course_id, 'other');
 
 		$hours_group_by_activity_type = $this->User->query("
-			SELECT subjects.id, subjects.code, subjects.name, IF(activities.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo', 'Otra presencial'), 'O', 'P')) as `type`, SUM(IFNULL(AttendanceRegister.duration, 0)) as total
+			SELECT subjects.id, subjects.code, subjects.name, IF(activities.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities.type IN ('Tutoría', 'Evaluación', 'Otra presencial'), 'O', 'P')) as `type`, SUM(IFNULL(AttendanceRegister.duration, 0)) as total
 			FROM attendance_registers AttendanceRegister
 			INNER JOIN activities ON activities.id = AttendanceRegister.activity_id
 			INNER JOIN subjects ON subjects.id = activities.subject_id

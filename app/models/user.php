@@ -121,9 +121,9 @@ class User extends AppModel {
 		if ($type === 'theory') {
 			$activityFilter = "AND activities.type IN ('Clase magistral', 'Seminario')";
 		} elseif ($type === 'practice') {
-			$activityFilter = "AND activities.type IN ('Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa')";
+			$activityFilter = "AND activities.type IN ('Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa', 'Taller/trabajo en grupo')";
 		} else if ($type === 'other') {
-			$activityFilter = "AND activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo', 'Otra presencial')";
+			$activityFilter = "AND activities.type IN ('Tutoría', 'Evaluación', 'Otra presencial')";
 		}
 
 		return $this->query("
