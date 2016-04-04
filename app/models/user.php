@@ -123,7 +123,7 @@ class User extends AppModel {
 		} elseif ($type === 'practice') {
 			$activityFilter = "AND activities.type IN ('Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa')";
 		} else if ($type === 'other') {
-			$activityFilter = "AND activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo')";
+			$activityFilter = "AND activities.type IN ('Tutoría', 'Evaluación', 'Taller/trabajo en grupo', 'Otra presencial')";
 		}
 
 		return $this->query("
