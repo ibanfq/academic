@@ -45,7 +45,7 @@
 <fieldset>
   <legend>Resumen de horas</legend>
   <dl>
-    <dt>Nº total de horas impartidas:</dt>
+    <dt>Nº total de horas:</dt>
     <dd><?php 
       if ($total_hours[0][0]['total'] == null)
         echo "0.00";
