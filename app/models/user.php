@@ -136,5 +136,34 @@ class User extends AppModel {
 			$activityFilter
 		");
 	}
+  
+  /**
+	 * Returns the number of scheduled hours
+	 *
+	 * @param integer $teacher ID of a teacher
+	 * @param integer $course ID of a course
+	 * @param string $type Type of the teaching activity
+	 * @return float Number of hours teached
+	 */
+	function ScheduledHours($teacher, $course, $type = 'all') {
+		$activityFilter = null;
+		if ($type === 'theory') {
+			$activityFilter = "AND activities.type IN ('Clase magistral', 'Seminario')";
+		} elseif ($type === 'practice') {
+			$activityFilter = "AND activities.type IN ('Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa', 'Taller/trabajo en grupo')";
+		} else if ($type === 'other') {
+			$activityFilter = "AND activities.type IN ('Tutoría', 'Evaluación', 'Otra presencial')";
+		}
+
+		return $this->query("
+			SELECT SUM(IFNULL(Event.duration, 0)) as total
+			FROM events Event
+			INNER JOIN activities ON activities.id = Event.activity_id
+			INNER JOIN subjects ON subjects.id = activities.subject_id
+			WHERE (Event.teacher_id = $teacher OR Event.teacher_2_id = $teacher)
+			AND subjects.course_id = $course
+			$activityFilter
+		");
+	}
 }
 ?>

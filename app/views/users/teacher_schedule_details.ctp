@@ -1,3 +1,128 @@
+<?php if (count($subjects_as_coordinator) > 0) { ?>
+	<fieldset>
+	  <legend>Asignaturas como coordinador</legend>
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach($subjects_as_coordinator as $subject): ?>
+          <tr>
+            <td><?php echo $html->link($subject["Subject"]['code'], array('controller' => 'subjects', 'action' => 'view', $subject["Subject"]['id'])) ?></td>
+            <td><?php echo $subject["Subject"]["name"] ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+	</fieldset>
+<?php } ?>
+
+<?php if (count($subjects_as_practice_responsible) > 0) { ?>
+	<fieldset>
+	  <legend>Asignaturas como responsable de prácticas</legend>
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach($subjects_as_practice_responsible as $subject): ?>
+          <tr>
+            <td><?php echo $html->link($subject["Subject"]['code'], array('controller' => 'subjects', 'action' => 'view', $subject["Subject"]['id'])) ?></td>
+            <td><?php echo $subject["Subject"]["name"] ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+	</fieldset>
+<?php } ?>
+
+<fieldset>
+  <legend>Resumen de horas</legend>
+  <dl>
+    <dt>Nº total de horas impartidas:</dt>
+    <dd><?php 
+      if ($total_hours[0][0]['total'] == null)
+        echo "0.00";
+      else
+        echo $total_hours[0][0]['total'];
+    ?></dd>
+  </dl>
+  <dl>
+    <dt>Nº de horas teóricas:</dt>
+    <dd><?php 
+      if ($teorical_hours[0][0]['total'] == null)
+        echo "0.00";
+      else
+        echo $teorical_hours[0][0]['total'];
+    ?></dd>
+  </dl>
+  <dl>
+    <dt>Nº de horas prácticas:</dt>
+    <dd><?php 
+      if ($practical_hours[0][0]['total'] == null)
+        echo "0.00";
+      else
+        echo $practical_hours[0][0]['total'];
+    ?></dd>
+  </dl>
+  <dl>
+    <dt>Nº otras horas:</dt>
+    <dd><?php 
+      if ($other_hours[0][0]['total'] == null)
+        echo "0.00";
+      else
+        echo $other_hours[0][0]['total'];
+    ?></dd>
+  </dl>
+</fieldset>
+
+<fieldset>
+  <legend>Desglose de horas por asignatura</legend>
+  
+  <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Nº de horas teóricas</th>
+          <th>Nº de horas prácticas</th>
+          <th>Nº otras horas</th>
+          <th>Nº total de horas</th>
+        </tr>
+      </thead>
+      <tbody>
+          <?php foreach($hours_group_by_subject as $subject): ?>
+              <?php
+                $teorical = $practice = $others = 0;
+                
+                if (isset($subject['T'])) 
+                  $teorical = $subject['T']; 
+                
+                if (isset($subject['P'])) 
+                  $practice = $subject['P'];
+              
+                if (isset($subject['O'])) 
+                  $others = $subject['O'];
+              ?>
+              <tr>
+                <td><?php echo $subject['code']?></td>
+                <td><?php echo $subject['name']?></td>
+                <td><?php echo $teorical ?></td>
+                <td><?php echo $practice ?></td>
+                <td><?php echo $others ?></td>
+                <td><?php echo $teorical + $practice + $others ?></td>
+              </tr>
+          <?php endforeach; ?>
+      </tbody>
+  </table>
+</fieldset>
+
 <fieldset>
   <legend>Horario</legend>
 	<table>

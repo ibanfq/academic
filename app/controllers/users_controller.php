@@ -452,6 +452,9 @@ class UsersController extends AppController {
 		$user = $this->User->read(null,$id);
 		$course_id = $this->params['url']['course_id'];
 		
+    $subjects_as_coordinator = $this->User->query("SELECT Subject.* FROM subjects Subject WHERE Subject.course_id = {$course_id} AND Subject.coordinator_id = {$user["User"]["id"]} ORDER BY Subject.code");
+	  $subjects_as_practice_responsible = $this->User->query("SELECT Subject.* FROM subjects Subject WHERE Subject.course_id = {$course_id} AND Subject.practice_responsible_id = {$user["User"]["id"]} ORDER BY Subject.code");
+    
     $events = $this->User->query("
 			SELECT Subject.code, Event.*, Activity.name
 			FROM events Event
@@ -462,8 +465,42 @@ class UsersController extends AppController {
 			ORDER BY Event.initial_hour DESC
 		");
     
+    $total_hours = $this->User->ScheduledHours($user['User']['id'], $course_id);
+		$theoretical_hours = $this->User->ScheduledHours($user['User']['id'], $course_id, 'theory');
+		$practice_hours = $this->User->ScheduledHours($user['User']['id'], $course_id, 'practice');
+		$other_hours = $this->User->ScheduledHours($user['User']['id'], $course_id, 'other');
+    
+    $hours_group_by_activity_type = $this->User->query("
+			SELECT subjects.id, subjects.code, subjects.name, IF(activities.type IN ('Clase magistral', 'Seminario'), 'T', IF(activities.type IN ('Tutoría', 'Evaluación', 'Otra presencial'), 'O', 'P')) as `type`, SUM(IFNULL(Event.duration, 0)) as total
+			FROM events Event
+			INNER JOIN activities ON activities.id = Event.activity_id
+			INNER JOIN subjects ON subjects.id = activities.subject_id
+			WHERE (Event.teacher_id = {$user["User"]["id"]} OR Event.teacher_2_id = {$user["User"]["id"]})
+			AND subjects.course_id = {$course_id}
+			GROUP BY subjects.id, type
+			ORDER BY subjects.code
+		");
+
+		$hours_group_by_subject = array();
+		foreach($hours_group_by_activity_type as $record) {
+			$id = $record['subjects']['id'];
+			if (!isset($hours_group_by_subject[$id])) {
+				$hours_group_by_subject[$id] = array();
+				$hours_group_by_subject[$id]['code'] = $record['subjects']['code'];
+				$hours_group_by_subject[$id]['name'] = $record['subjects']['name'];
+			}
+			$hours_group_by_subject[$id][$record[0]['type']] = $record[0]['total'];
+		}
+    
 	  $this->set('user', $user);
+	  $this->set('subjects_as_coordinator', $subjects_as_coordinator);
+	  $this->set('subjects_as_practice_responsible', $subjects_as_practice_responsible);
     $this->set('events', $events);
+    $this->set('total_hours', $total_hours);
+	  $this->set('practical_hours', $practice_hours);
+	  $this->set('teorical_hours', $theoretical_hours);
+	  $this->set('other_hours', $other_hours);
+    $this->set('hours_group_by_subject', $hours_group_by_subject);
 	}
 	
 	function _save_student($args, $subjects, &$imported_subjects){
