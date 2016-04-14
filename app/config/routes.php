@@ -37,6 +37,11 @@
 	Router::connect('/calendar_by_subject', array('controller' => 'events', 'action' => 'calendar_by_subject'));
 	Router::connect('/calendar_by_level', array('controller' => 'events', 'action' => 'calendar_by_level'));
 /**
+ * connect api controller's urls.
+ */
+  Router::connect('/api/attendance_registers', array('controller' => 'api_attendance_registers', 'action' => 'add', '[method]' => 'POST'));
+  Router::connect('/api/events', array('controller' => 'api_events', 'action' => 'index', '[method]' => 'GET'));
+/**
  * ...and connect the rest of 'Pages' controller's urls.
  */
 	Router::connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
