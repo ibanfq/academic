@@ -16,6 +16,10 @@ class ApiComponent extends Object {
 
     foreach (explode('.', $name) as $path) {
       if (!isset($value[$path])) {
+        if (in_array('required', $filters)) {
+          $this->addFail($name, 'Required');
+          return null;
+        }
         return $default;
       }
       $value = $value[$path];
@@ -116,7 +120,7 @@ class ApiComponent extends Object {
     switch($this->getStatus()) {
       case 'success';
         $controller->set('status', 'success');
-        $controller->set('data', $this->_sanatizeData($controller, $this->_data));
+        $controller->set('data', $this->_sanitizeData($controller, $this->_data));
         break;
       case 'fail':
         $controller->set('status', 'fail');
@@ -131,13 +135,13 @@ class ApiComponent extends Object {
     }
   }
   
-  function _sanatizeData(&$controller, $data) {
+  function _sanitizeData(&$controller, $data) {
     if (empty($data)) {
       return $data;
     }
     if (is_int(key($data))) {
       foreach ($data as $i => $models) {
-        $data[$i] = $this->_sanatizeData($controller, $models);
+        $data[$i] = $this->_sanitizeData($controller, $models);
       }
     } else {
       foreach ($data as $model => $values) {

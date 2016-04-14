@@ -65,8 +65,7 @@ class ApiEventsController extends AppController {
     }
     
     if ($exists) {
-      $this->Event->id = $id;
-      $event = $this->Event->read();
+      $event = $this->Event->read(null, $id);
       $this->Api->setData($event);
     } else {
       $this->Api->setData(false);

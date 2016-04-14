@@ -56,6 +56,119 @@ class AttendanceRegister extends AcademicModel {
 
 		return true;
 	}
+  
+  function createFromEvent($event, $secret_code = null) {
+    if ($event['AttendanceRegister']['id'] == null) {
+			// Preload a list of students attending to this activity
+			$students = $this->Student->query("
+				SELECT Student.*
+				FROM users Student
+				INNER JOIN registrations Registration ON Student.id = Registration.student_id
+				WHERE Registration.activity_id = {$event['Event']['activity_id']}
+				AND Registration.group_id = {$event['Event']['group_id']}
+				ORDER BY Student.last_name, Student.first_name
+			");
+
+			$ar = array(
+				'AttendanceRegister' => array(
+					'event_id' => $event['Event']['id'],
+					'initial_hour' => $event['Event']['initial_hour'],
+					'final_hour' => $event['Event']['final_hour'],
+					'activity_id' => $event['Activity']['id'],
+					'group_id' => $event['Group']['id'],
+					'teacher_id' => $event['Teacher']['id'],
+					'teacher_2_id' => $event['Teacher_2']['id'],
+				),
+				'Student' => array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id'))),
+			);
+      if (!empty($secret_code)) {
+        $ar['AttendanceRegister']['secret_code'] = $secret_code;
+      }
+			$this->create();
+			$this->saveAll($ar);
+
+			$event['AttendanceRegister'] = $ar;
+			$event['AttendanceRegister']['id'] = $this->id;
+			
+			$attendanceCreatedTimestamp = time();
+		} else {
+			if (!isset($event["Teacher_2"]["id"])) {
+				$event["Teacher_2"]["id"] = -1;
+			}
+      
+      $set_secret_code = '';
+      if (empty($event['AttendanceRegister']['secret_code']) && !empty($secret_code)) {
+        App::import('Sanitize');
+        $set_secret_code = ', secret_code = "' . Sanitize::escape($secret_code) . '"';
+        $event['AttendanceRegister']['secret_code'] = $secret_code;
+      }
+      $event['AttendanceRegister']['teacher_id'] = $event["Teacher"]["id"];
+      $event['AttendanceRegister']['teacher_2_id'] = $event["Teacher_2"]["id"];
+      
+			$this->query("
+				UPDATE attendance_registers
+				SET teacher_id = {$event["Teacher"]["id"]}, teacher_2_id = {$event["Teacher_2"]["id"]} $set_secret_code
+				WHERE id = {$event['AttendanceRegister']['id']}
+			");
+			$this->data = array('AttendanceRegister' => $event['AttendanceRegister']);
+			$this->id = $event['AttendanceRegister']['id'];
+			
+			$attendanceCreatedTimestamp = strtotime($event['AttendanceRegister']['created']);
+
+			/**
+			 * Update users preloaded in attendance register if activity hasn't take place.
+			 *
+			 * This has been added because students can register and unregister in activities
+			 * at any time.
+			 *
+			 * @author Eliezer Talon <elitalon@gmail.com>
+			 * @since 2013-09-20
+			 */
+			$currentTimestamp = time();
+			$activityTimestamp = strtotime($event['Event']['initial_hour']);
+			if ($currentTimestamp < $activityTimestamp) {
+				$students = $this->updateStudents();
+			}
+		}
+
+		if (!isset($students)) {
+			$students = $this->query("
+				SELECT Student.*
+				FROM users Student
+				INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+				WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+				ORDER BY Student.last_name, Student.first_name
+			");
+		}
+		
+		/**
+		 * Temporary fix to reload students from original registrations.
+		 *
+		 * After deleting corrupted registers from `users_attendance_register` table,
+		 * several `attendance_registers` records remained created without associated
+		 * students. Future records will be created correctly, but this is necessary
+		 * to restore previous associations with students.
+		 *
+		 * @author Eliezer Talon <elitalon@gmail.com>
+		 * @since 2012-06-14
+		 */
+		 if (empty($students)) {
+			if ($attendanceCreatedTimestamp < strtotime('2012-08-01 00:00:00')) {
+	 			$students = $this->Student->query("
+	 				SELECT Student.*
+	 				FROM users Student
+	 				INNER JOIN registrations Registration ON Student.id = Registration.student_id
+	 				WHERE Registration.activity_id = {$event['Event']['activity_id']}
+	 				AND Registration.group_id = {$event['Event']['group_id']}
+	 				ORDER BY Student.last_name, Student.first_name
+	 			");
+			}
+ 		}
+    
+    $event['AttendanceRegister']['Student'] = $students;
+    
+    return $event;
+  }
 	
 	function updateStudents(){
 		$activity_id = $this->data['AttendanceRegister']['activity_id'];
@@ -78,7 +191,7 @@ class AttendanceRegister extends AcademicModel {
 			ORDER BY Student.last_name, Student.first_name
 		");
 
-		// Delete from AR those who aren't registered yet
+		// Delete from AR those who aren't registered now
 		$studentsPreloadedToKeep = array();
 		foreach ($students as $student) {
 			$results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);

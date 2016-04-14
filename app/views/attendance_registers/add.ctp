@@ -13,7 +13,7 @@
 		    <dd>
 					<?php echo $this->Form->input('id', array(
 						'type' => 'textarea',
-						'value' => trim($this->data['AttendanceRegister']['id']),
+						'value' => empty($this->data['AttendanceRegister']['id'])? '' : trim($this->data['AttendanceRegister']['id']),
 						'rows' => 1,
 						'div' => false,
 						'label' => false,

@@ -326,103 +326,16 @@ class AttendanceRegistersController extends AppController {
 		}
 
 		$event = $this->AttendanceRegister->Event->findById($event_id);
-		if ($event['AttendanceRegister']['id'] == null) {
-			// Preload a list of students attending to this activity
-			$students = $this->AttendanceRegister->Student->query("
-				SELECT Student.*
-				FROM users Student
-				INNER JOIN registrations Registration ON Student.id = Registration.student_id
-				WHERE Registration.activity_id = {$event['Event']['activity_id']}
-				AND Registration.group_id = {$event['Event']['group_id']}
-				ORDER BY Student.last_name, Student.first_name
-			");
+    if (!$event) {
+      $this->Session->setFlash('No se ha podido crear el registro de asistencia. Por favor, revise que el evento todavía existe');
+      $this->redirect(array('controller' => 'users', 'action' => 'home'));
+    } else {
+      $event = $this->AttendanceRegister->createFromEvent($event);
 
-			$ar = array(
-				'AttendanceRegister' => array(
-					'event_id' => $event_id,
-					'initial_hour' => $event['Event']['initial_hour'],
-					'final_hour' => $event['Event']['final_hour'],
-					'activity_id' => $event['Activity']['id'],
-					'group_id' => $event['Group']['id'],
-					'teacher_id' => $event['Teacher']['id'],
-					'teacher_2_id' => $event['Teacher_2']['id'],
-				),
-				'Student' => array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id'))),
-			);
-			$this->AttendanceRegister->create();
-			$this->AttendanceRegister->saveAll($ar);
-
-			$event['AttendanceRegister'] = $ar;
-			$event['AttendanceRegister']['id'] = $this->AttendanceRegister->id;
-			
-			$attendanceCreatedTimestamp = time();
-		} else {
-			if (!isset($event["Teacher_2"]["id"])) {
-				$event["Teacher_2"]["id"] = -1;
-			}
-			$this->AttendanceRegister->query("
-				UPDATE attendance_registers
-				SET teacher_id = {$event["Teacher"]["id"]}, teacher_2_id = {$event["Teacher_2"]["id"]}
-				WHERE id = {$event['AttendanceRegister']['id']}
-			");
-			$this->AttendanceRegister->data = array('AttendanceRegister' => $event['AttendanceRegister']);
-			$this->AttendanceRegister->id = $event['AttendanceRegister']['id'];
-			
-			$attendanceCreatedTimestamp = strtotime($event['AttendanceRegister']['created']);
-
-			/**
-			 * Update users preloaded in attendance register if activity hasn't take place.
-			 *
-			 * This has been added because students can register and unregister in activities
-			 * at any time.
-			 *
-			 * @author Eliezer Talon <elitalon@gmail.com>
-			 * @since 2013-09-20
-			 */
-			$currentTimestamp = time();
-			$activityTimestamp = strtotime($event['Event']['initial_hour']);
-			if ($currentTimestamp < $activityTimestamp) {
-				$students = $this->AttendanceRegister->updateStudents();
-			}
-		}
-
-		if (!isset($students)) {
-			$students = $this->AttendanceRegister->query("
-				SELECT Student.*
-				FROM users Student
-				INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-				WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
-				ORDER BY Student.last_name, Student.first_name
-			");
-		}
-		
-		/**
-		 * Temporary fix to reload students from original registrations.
-		 *
-		 * After deleting corrupted registers from `users_attendance_register` table,
-		 * several `attendance_registers` records remained created without associated
-		 * students. Future records will be created correctly, but this is necessary
-		 * to restore previous associations with students.
-		 *
-		 * @author Eliezer Talon <elitalon@gmail.com>
-		 * @since 2012-06-14
-		 */
-		 if (empty($students)) {
-			if ($attendanceCreatedTimestamp < strtotime('2012-08-01 00:00:00')) {
-	 			$students = $this->AttendanceRegister->Student->query("
-	 				SELECT Student.*
-	 				FROM users Student
-	 				INNER JOIN registrations Registration ON Student.id = Registration.student_id
-	 				WHERE Registration.activity_id = {$event['Event']['activity_id']}
-	 				AND Registration.group_id = {$event['Event']['group_id']}
-	 				ORDER BY Student.last_name, Student.first_name
-	 			");
-			}
- 		}
-
-		$this->set('event', $event);
-		$this->set('students', $students);
-		$this->set('subject', $this->AttendanceRegister->Event->Activity->Subject->findById($event['Activity']['subject_id']));
+      $this->set('event', $event);
+      $this->set('students', $event['AttendanceRegister']['Student']);
+      $this->set('subject', $this->AttendanceRegister->Event->Activity->Subject->findById($event['Activity']['subject_id']));
+    }
 	}
 
 	/**
