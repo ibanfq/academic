@@ -132,6 +132,9 @@ class ApiComponent extends Object {
   }
   
   function _sanatizeData(&$controller, $data) {
+    if (empty($data)) {
+      return $data;
+    }
     if (is_int(key($data))) {
       foreach ($data as $i => $models) {
         $data[$i] = $this->_sanatizeData($controller, $models);
