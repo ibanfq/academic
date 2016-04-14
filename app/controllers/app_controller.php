@@ -21,6 +21,7 @@ class AppController extends Controller {
         $this->viewPath = 'api/'.Inflector::underscore($this->name);
       }
   	  $this->helpers = array('Api');
+      $this->components []= 'Api';
     }
     
     parent::__construct();
@@ -37,7 +38,17 @@ class AppController extends Controller {
         'realm' => 'academic',
         'login' => '_api_authenticate'
       );
-      if ((isset($headers['Authorization']) && !empty($headers['Authorization'])) || !$this->_authorize()) {
+      
+      $authorization = env('HTTP_AUTHORIZATION');
+      if (empty($authorization)) {
+        $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
+      }
+      if ($authorization || !$this->_authorize()) {
+        if (!env('PHP_AUTH_USER') && preg_match('/Basic\s+(.*)$/i', $authorization, $matches)) {
+          list($name, $password) = explode(':', base64_decode($matches[1]));
+          $_SERVER['PHP_AUTH_USER'] = strip_tags($name);
+          $_SERVER['PHP_AUTH_PW'] = strip_tags($password);
+        }
         $this->Security->requireLogin();
       }
     } else {

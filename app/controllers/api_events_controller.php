@@ -5,93 +5,49 @@
     
     function index()
     {
-      if (!$db =& ConnectionManager::getDataSource($this->{$this->modelClass}->useDbConfig)) {
-        return false;
-      }
-    
-      $filter = isset($this->params['url']['filter'])? (array) $this->params['url']['filter'] : array();
-      $limit = isset($this->params['url']['limit'])? $this->params['url']['limit'] : 100;
-      $offset = isset($this->params['url']['offset'])? $this->params['url']['offset'] : 0;
       $where = array();
       
-      // Limit
-      if (!is_int($limit) && $limit !== (string) intval($limit)) {
-        $this->set('status', 'fail');
-        $this->set('data', array('limit' => 'Invalid'));
-        return;
-      } elseif ($limit > 100) {
-        $this->set('status', 'fail');
-        $this->set('data', array('limit' => 'The maximum value is 100'));
-        return;
-      } elseif (empty($limit) || $limit < 1) {
-        $this->set('status', 'fail');
-        $this->set('data', array('limit' => 'The minimum value is 1'));
-        return;
-      }
-      $limit = $db->value($limit, 'integer');
+      $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
+      $offset = $this->Api->getParameter('offset', array('integer', '>=0'), 0);
       
-      // Offset
-      if (!is_int($offset) && $offset !== (string) intval($offset)) {
-        $this->set('status', 'fail');
-        $this->set('data', array('offset' => 'Invalid'));
-        return;
-      } elseif (($offset !== 0 && empty($offset)) || $offset < 0) {
-        $this->set('status', 'fail');
-        $this->set('data', array('offset' => 'The minimum value is 0'));
-        return;
+      if (isset($this->params['url']['filter']['user']) && $this->params['url']['filter']['user'] === 'me') {
+        $user = $this->Auth->user('id');
+      } else {
+        $user_default = $this->Auth->user('type') === "Estudiante"? $this->Auth->user('id') : null;
+        $user = $this->Api->getParameter('filter.user', array('integer', '>=0'), $user_default);
       }
-      $offset = $db->value($offset, 'integer');
-      
-      // User filter
-      if (isset($filter['user'])) {
-        if ($filter['user'] !== (string) intval($filter['user'])) {
-          if ($filter['user'] === 'me') {
-            $filter['user'] = $this->Auth->user('id');
-          } else {
-            $this->set('status', 'fail');
-            $this->set('data', array('user' => 'Invalid'));
-            return;
-          }
-        }
-      }
-      if ($this->Auth->user('type') === "Estudiante") {
-        if (empty($filter['user'])) {
-          $filter['user'] = $this->Auth->user('id');
-        } elseif ($filter['user'] != $this->Auth->user('id')) {
-          $this->set('status', 'fail');
-          $this->set('data', array('user' => 'Not authorized'));
-          return;
-        }
-      }
-      if (!empty($filter['user'])) {
-        $user = $db->value($user, 'integer');
+      if (!empty($user)) {
         $where []= "(Event.teacher_id = {$user} OR Event.teacher_2_id = {$user})";
       }
       
-      // Date filter
-      if (isset($filter['date'])) {
-        if ($filter['date'] === 'today') {
+      $date = $this->Api->getParameter('filter.date');
+      if (!empty($date)) {
+        if ($date === 'today') {
           $where []= 'Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)';
         } else {
-          $this->set('status', 'fail');
-          $this->set('data', array('date' => 'Not supported yet'));
-          return;
+          $this->Api->AddFail('filter.date', 'Not supported yet');
         }
       }
       
-      $where []= 'Event.duration > 0';
+      if ($this->Api->getStatus() === 'success') {
+        if ($this->Auth->user('type') === "Estudiante" && $user != $this->Auth->user('id')) {
+          $this->Api->AddFail('filter.date', 'Not authorized');
+        } else {
+          $where []= 'Event.duration > 0';
+          $events = $this->Event->query(
+            'SELECT Event.*, Activity.*, Subject.*, `Group`.*, Classroom.*' .
+            ' FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id' .
+            ' INNER JOIN subjects Subject ON Subject.id = Activity.subject_id'.
+            ' INNER JOIN groups `Group` ON `Group`.id = Event.group_id' .
+            ' INNER JOIN classrooms Classroom ON Classroom.id = Event.classroom_id' .
+            ' WHERE ' . implode(' AND ', $where) .
+            " ORDER BY Event.initial_hour DESC LIMIT $limit OFFSET $offset"
+          );
+          $this->Api->setData($events);
+        }
+      }
       
-      $events = $this->Event->query(
-        'SELECT Event.*, Activity.*, Subject.*, `Group`.*, Classroom.*' .
-        ' FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id' .
-        ' INNER JOIN subjects Subject ON Subject.id = Activity.subject_id'.
-        ' INNER JOIN groups `Group` ON `Group`.id = Event.group_id' .
-        ' INNER JOIN classrooms Classroom ON Classroom.id = Event.classroom_id' .
-        ' WHERE ' . implode(' AND ', $where) .
-			  " ORDER BY Event.initial_hour DESC LIMIT $limit OFFSET $offset"
-      );
-      
-      $this->set('status', 'success');
-      $this->set('data', $events);
-    }
+      $this->Api->setTemplateVars($this);
   }
+}
+  
