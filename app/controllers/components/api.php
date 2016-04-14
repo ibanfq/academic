@@ -112,11 +112,11 @@ class ApiComponent extends Object {
     }
   }
   
-  function setTemplateVars(&$controller) {
+  function setViewVars(&$controller) {
     switch($this->getStatus()) {
       case 'success';
         $controller->set('status', 'success');
-        $controller->set('data', $this->_data);
+        $controller->set('data', $this->_sanatizeData($controller, $this->_data));
         break;
       case 'fail':
         $controller->set('status', 'fail');
@@ -129,5 +129,23 @@ class ApiComponent extends Object {
         $controller->set('data', $this->_error_data);
         break;
     }
+  }
+  
+  function _sanatizeData(&$controller, $data) {
+    if (is_int(key($data))) {
+      foreach ($data as $i => $models) {
+        $data[$i] = $this->_sanatizeData($controller, $models);
+      }
+    } else {
+      foreach ($data as $model => $values) {
+        if (array_key_exists('password', $values)) {
+          unset($data[$model]['password']);
+        }
+        if (array_key_exists('dni', $values) && $controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id']) {
+          unset($data[$model]['dni']);
+        }
+      }
+    }
+    return $data;
   }
 }

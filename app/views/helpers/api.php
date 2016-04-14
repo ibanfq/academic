@@ -28,6 +28,9 @@ class ApiHelper extends AppHelper {
  * @return string A JSON code block
  */
 	function respond($data = null, $status = 'success', $code = null, $message = null) {
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+    header('Content-type: application/json');
     $response = array('status' => $status);
     
     if (!empty($data) || $status === 'success' || $status === 'fail') {
