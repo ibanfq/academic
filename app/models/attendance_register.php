@@ -176,10 +176,10 @@ class AttendanceRegister extends AcademicModel {
         $students = array();
       } else {
         $students = $this->query("
-          SELECT Student.*
+          SELECT Student.*, UserAttendanceRegister.user_id, UserAttendanceRegister.attendance_register_id, UserAttendanceRegister.user_gone
           FROM users Student
-          INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id AND UAR.user_gone
-          WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+          INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+          WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
           ORDER BY Student.last_name, Student.first_name
         ");
       }
