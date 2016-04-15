@@ -51,7 +51,7 @@ class ApiAttendanceRegistersController extends AppController {
           $secret_code = strtoupper(substr(base_convert(uniqid(mt_rand(), true), 10, 36), 0, 6));
         }
         $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
-        $attendance_register['AttendanceRegister']['Students'] = &$attendance_register['AttendanceRegister']['Student'];
+        $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];
         unset($attendance_register['AttendanceRegister']['Student']);
         $this->Api->setData($attendance_register);
       } else {
