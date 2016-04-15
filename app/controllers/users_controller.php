@@ -1,7 +1,7 @@
 <?php
 class UsersController extends AppController {
 	var $name = 'Users';
-	var $paginate = array('limit' => 10, 'order' => array('User.last_name' => 'asc'));
+	var $paginate = array('limit' => 10, 'order' => array('User.last_name' => 'asc', 'User.first_name' => 'asc'));
 	var $helpers = array('UserModel', 'activityHelper');
 
 	function beforeFilter() 

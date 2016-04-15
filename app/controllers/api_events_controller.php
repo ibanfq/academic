@@ -2,6 +2,18 @@
 class ApiEventsController extends AppController {
   var $name = 'Events';
   var $isApi = true;
+  
+  function _authorize(){
+		parent::_authorize();
+    
+    $private_actions = array("delete", "add", "post");
+
+    if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
+			return false;
+    }
+
+		return true;
+	}
 
   function index()
   {
