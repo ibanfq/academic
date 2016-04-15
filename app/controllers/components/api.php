@@ -13,6 +13,7 @@ class ApiComponent extends Object {
   
   function getParameter($name, $filters = null, $default = null) {
     $value = $_REQUEST;
+    $filters = (array)$filters;
 
     foreach (explode('.', $name) as $path) {
       if (!isset($value[$path])) {
@@ -25,7 +26,7 @@ class ApiComponent extends Object {
       $value = $value[$path];
     }
     
-    foreach ((array) $filters as $filter) {
+    foreach ($filters as $filter) {
       switch ($filter) {
         case 'required':
           if ($value === null || $value === '') {
@@ -150,6 +151,11 @@ class ApiComponent extends Object {
         }
         if (array_key_exists('dni', $values) && $controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id']) {
           unset($data[$model]['dni']);
+        }
+        foreach ($values as $field => $value) {
+          if (is_array($value)) {
+            $data[$model][$field] = $this->_sanitizeData($controller, $value);
+          }
         }
       }
     }

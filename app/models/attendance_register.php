@@ -57,8 +57,10 @@ class AttendanceRegister extends AcademicModel {
 		return true;
 	}
   
-  function createFromEvent($event, $secret_code = null) {
+  function createFromEvent($event, $is_printing_attendance_file = true, $secret_code = null) {
+    $is_new = false;
     if ($event['AttendanceRegister']['id'] == null) {
+      $is_new = true;
 			// Preload a list of students attending to this activity
 			$students = $this->Student->query("
 				SELECT Student.*
@@ -115,57 +117,74 @@ class AttendanceRegister extends AcademicModel {
 			
 			$attendanceCreatedTimestamp = strtotime($event['AttendanceRegister']['created']);
 
-			/**
-			 * Update users preloaded in attendance register if activity hasn't take place.
-			 *
-			 * This has been added because students can register and unregister in activities
-			 * at any time.
-			 *
-			 * @author Eliezer Talon <elitalon@gmail.com>
-			 * @since 2013-09-20
-			 */
-			$currentTimestamp = time();
-			$activityTimestamp = strtotime($event['Event']['initial_hour']);
-			if ($currentTimestamp < $activityTimestamp) {
-				$students = $this->updateStudents();
-			}
+      if ($is_printing_attendance_file) {
+        /**
+         * Update users preloaded in attendance register if activity hasn't take place.
+         *
+         * This has been added because students can register and unregister in activities
+         * at any time.
+         *
+         * @author Eliezer Talon <elitalon@gmail.com>
+         * @since 2013-09-20
+         */
+        $currentTimestamp = time();
+        $activityTimestamp = strtotime($event['Event']['initial_hour']);
+        if ($currentTimestamp < $activityTimestamp) {
+          $students = $this->updateStudents();
+        }
+      }
 		}
 
-		if (!isset($students)) {
-			$students = $this->query("
-				SELECT Student.*
-				FROM users Student
-				INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-				WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
-				ORDER BY Student.last_name, Student.first_name
-			");
-		}
-		
-		/**
-		 * Temporary fix to reload students from original registrations.
-		 *
-		 * After deleting corrupted registers from `users_attendance_register` table,
-		 * several `attendance_registers` records remained created without associated
-		 * students. Future records will be created correctly, but this is necessary
-		 * to restore previous associations with students.
-		 *
-		 * @author Eliezer Talon <elitalon@gmail.com>
-		 * @since 2012-06-14
-		 */
-		 if (empty($students)) {
-			if ($attendanceCreatedTimestamp < strtotime('2012-08-01 00:00:00')) {
-	 			$students = $this->Student->query("
-	 				SELECT Student.*
-	 				FROM users Student
-	 				INNER JOIN registrations Registration ON Student.id = Registration.student_id
-	 				WHERE Registration.activity_id = {$event['Event']['activity_id']}
-	 				AND Registration.group_id = {$event['Event']['group_id']}
-	 				ORDER BY Student.last_name, Student.first_name
-	 			");
-			}
- 		}
-    
-    $event['AttendanceRegister']['Student'] = $students;
+    if ($is_printing_attendance_file) {
+      if (!isset($students)) {
+        $students = $this->query("
+          SELECT Student.*
+          FROM users Student
+          INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+          WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+          ORDER BY Student.last_name, Student.first_name
+        ");
+      }
+
+      /**
+       * Temporary fix to reload students from original registrations.
+       *
+       * After deleting corrupted registers from `users_attendance_register` table,
+       * several `attendance_registers` records remained created without associated
+       * students. Future records will be created correctly, but this is necessary
+       * to restore previous associations with students.
+       *
+       * @author Eliezer Talon <elitalon@gmail.com>
+       * @since 2012-06-14
+       */
+       if (empty($students)) {
+        if ($attendanceCreatedTimestamp < strtotime('2012-08-01 00:00:00')) {
+          $students = $this->Student->query("
+            SELECT Student.*
+            FROM users Student
+            INNER JOIN registrations Registration ON Student.id = Registration.student_id
+            WHERE Registration.activity_id = {$event['Event']['activity_id']}
+            AND Registration.group_id = {$event['Event']['group_id']}
+            ORDER BY Student.last_name, Student.first_name
+          ");
+        }
+      }
+
+      $event['AttendanceRegister']['Student'] = $students;
+    } else {
+      if ($is_new) {
+        $students = array();
+      } else {
+        $students = $this->query("
+          SELECT Student.*
+          FROM users Student
+          INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id AND UAR.user_gone
+          WHERE UAR.attendance_register_id = {$event['AttendanceRegister']['id']}
+          ORDER BY Student.last_name, Student.first_name
+        ");
+      }
+      $event['AttendanceRegister']['Student'] = $students;
+    }
     
     return $event;
   }
