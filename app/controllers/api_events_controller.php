@@ -63,12 +63,14 @@ class ApiEventsController extends AppController {
         " WHERE e.id = $id LIMIT 1"
       );
     }
+    if ($exists) {
+      $exists = (bool) $event = $this->Event->read(null, $id);
+    }
     
     if ($exists) {
-      $event = $this->Event->read(null, $id);
       $this->Api->setData($event);
     } else {
-      $this->Api->setData(false);
+      $this->Api->setError('No se ha podido acceder a la información del evento');
     }
     $this->Api->setViewVars($this);
   }
