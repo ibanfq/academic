@@ -4,7 +4,9 @@ class ApiEventsController extends AppController {
   var $isApi = true;
   
   function _authorize(){
-		parent::_authorize();
+		if (!parent::_authorize()) {
+      return false;
+    }
     
     $private_actions = array("delete", "add", "post");
 
@@ -82,7 +84,7 @@ class ApiEventsController extends AppController {
     if ($exists) {
       $this->Api->setData($event);
     } else {
-      $this->Api->setError('No se ha podido acceder a la información del evento');
+      $this->Api->setError('No se ha podido acceder al evento');
     }
     $this->Api->setViewVars($this);
   }

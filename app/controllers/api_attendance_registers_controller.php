@@ -4,7 +4,9 @@ class ApiAttendanceRegistersController extends AppController {
   var $isApi = true;
 
   function _authorize(){
-		parent::_authorize();
+		if (!parent::_authorize()) {
+      return false;
+    }
     
     $private_actions = array("index", "delete");
 
@@ -44,14 +46,15 @@ class ApiAttendanceRegistersController extends AppController {
       unset($attendance_register['Student']);
       $this->Api->setData($attendance_register);
     } else {
-      $this->Api->setError('No se ha podido acceder a la información de la hoja de asistencia');
+      $this->Api->setError('No se ha podido acceder a la la hoja de asistencia');
     }
     
     $this->Api->setViewVars($this);
   }
   
   function add(){
-    $event_id = $this->Api->getParameter('Event.id', array('required', 'integer'));
+    $event_id = $this->Api->getParameter('Event.id', array('integer'));
+    $event_id = $this->Api->getParameter('AttendanceRegister.event_id', array('required', 'integer'), $event_id);
 
     if ($event_id) {
       $this->AttendanceRegister->Event->unbindModel(array('belongsTo' => array('Parent'), 'hasMany' => array('Events')));
@@ -63,20 +66,16 @@ class ApiAttendanceRegistersController extends AppController {
       }
       
       if ($event) {
-        if (empty($event['AttendanceRegister']['duration']) || !floatval($event['AttendanceRegister']['duration'])) {
-          $secret_code = null;
-          if (empty($event['AttendanceRegister']['secret_code'])) {
-            $secret_code = strtoupper(substr(base_convert(uniqid(mt_rand(), true), 10, 36), 0, 6));
-          }
-          $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
-          $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];
-          unset($attendance_register['AttendanceRegister']['Student']);
-          $this->Api->setData($attendance_register);
-        } else {
-          $this->Api->setError('La hoja de asistencia ya ha sido registrada');
+        $secret_code = null;
+        if (empty($event['AttendanceRegister']['secret_code'])) {
+          $secret_code = strtoupper(substr(base_convert(uniqid(mt_rand(), true), 10, 36), 0, 6));
         }
+        $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
+        $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];
+        unset($attendance_register['AttendanceRegister']['Student']);
+        $this->Api->setData($attendance_register);
       } else {
-        $this->Api->setError('No se ha podido acceder a la información del evento');
+        $this->Api->setError('No se ha podido acceder al evento');
       }
     }
 

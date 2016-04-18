@@ -4,7 +4,9 @@ class ApiUsersController extends AppController {
   var $isApi = true;
 
   function _authorize(){
-		parent::_authorize();
+		if (!parent::_authorize()) {
+      return false;
+    }
 
 		$administrator_actions = array('delete',);
 		$administrative_actions = array('edit', 'add');

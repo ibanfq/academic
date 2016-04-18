@@ -43,13 +43,18 @@ class AppController extends Controller {
       if (empty($authorization)) {
         $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
       }
+      
       if ($authorization || !$this->_authorize()) {
         if (!env('PHP_AUTH_USER') && preg_match('/Basic\s+(.*)$/i', $authorization, $matches)) {
-          list($name, $password) = explode(':', base64_decode($matches[1]));
+          $name_and_password = explode(':', base64_decode($matches[1]));
+          $name = $name_and_password[0];
+          $password = isset($name_and_password[1])? $name_and_password[1] : '';
           $_SERVER['PHP_AUTH_USER'] = strip_tags($name);
           $_SERVER['PHP_AUTH_PW'] = strip_tags($password);
         }
         $this->Security->requireLogin();
+      } else {
+        $this->Auth->allow($this->params['action']);
       }
     } else {
       $this->Auth->loginAction = array('controller' => 'users', 'action' => 'login');
@@ -87,6 +92,7 @@ class AppController extends Controller {
   }
 
 	function _authorize() {
+    
 		if ($this->Auth->user('id') != null) {
 			$this->set("auth", $this->Auth);
       return true;

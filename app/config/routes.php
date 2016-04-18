@@ -44,6 +44,7 @@
   Router::connect('/api/events/:id', array('controller' => 'api_events', 'action' => 'view', '[method]' => 'GET'), array('id' => '[0-9]+', 'pass' => array('id')));
   Router::connect('/api/attendance_registers', array('controller' => 'api_attendance_registers', 'action' => 'add', '[method]' => 'POST'));
   Router::connect('/api/attendance_registers/:id', array('controller' => 'api_attendance_registers', 'action' => 'view', '[method]' => 'GET'), array('id' => '[0-9]+', 'pass' => array('id')));
+  Router::connect('/api/users_attendance_register', array('controller' => 'api_users_attendance_register', 'action' => 'add', '[method]' => 'POST'));
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */

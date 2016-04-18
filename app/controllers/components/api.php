@@ -17,7 +17,7 @@ class ApiComponent extends Object {
 
     foreach (explode('.', $name) as $path) {
       if (!isset($value[$path])) {
-        if (in_array('required', $filters)) {
+        if (($default === null || $value === '') && in_array('required', $filters)) {
           $this->addFail($name, 'Required');
           return null;
         }
@@ -105,6 +105,16 @@ class ApiComponent extends Object {
     $this->_error_message = $message;
     $this->_error_code = $code;
     $this->_error_data = $data;
+  }
+  
+  function clearFails() {
+    $this->_fail_data = array();
+  }
+  
+  function clearError() {
+    $this->_error_message = null;
+    $this->_error_code = null;
+    $this->_error_data = null;
   }
   
   function getStatus() {

@@ -89,7 +89,7 @@ class AttendanceRegister extends AcademicModel {
 			$this->create();
 			$this->saveAll($ar);
 
-			$event['AttendanceRegister'] = $ar;
+			$event['AttendanceRegister'] = $ar['AttendanceRegister'];
 			$event['AttendanceRegister']['id'] = $this->id;
 			
 			$attendanceCreatedTimestamp = time();
@@ -117,21 +117,23 @@ class AttendanceRegister extends AcademicModel {
 			
 			$attendanceCreatedTimestamp = strtotime($event['AttendanceRegister']['created']);
 
+      /**
+       * Update users preloaded in attendance register if activity hasn't take place.
+       *
+       * This has been added because students can register and unregister in activities
+       * at any time.
+       *
+       * @author Eliezer Talon <elitalon@gmail.com>
+       * @since 2013-09-20
+       */
       if ($is_printing_attendance_file) {
-        /**
-         * Update users preloaded in attendance register if activity hasn't take place.
-         *
-         * This has been added because students can register and unregister in activities
-         * at any time.
-         *
-         * @author Eliezer Talon <elitalon@gmail.com>
-         * @since 2013-09-20
-         */
         $currentTimestamp = time();
         $activityTimestamp = strtotime($event['Event']['initial_hour']);
         if ($currentTimestamp < $activityTimestamp) {
           $students = $this->updateStudents();
         }
+      } else if (empty($event['AttendanceRegister']['duration']) || !floatval($event['AttendanceRegister']['duration'])) {
+        $students = $this->updateStudents();
       }
 		}
 
@@ -194,10 +196,10 @@ class AttendanceRegister extends AcademicModel {
 		$group_id = $this->data['AttendanceRegister']['group_id'];
 		
 		$students = $this->query("
-			SELECT Student.*
+			SELECT Student.*, UsersAttendanceRegister.user_gone
 			FROM users Student
-			INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-			WHERE UAR.attendance_register_id = {$this->id}
+			INNER JOIN users_attendance_register UsersAttendanceRegister ON UsersAttendanceRegister.user_id = Student.id
+			WHERE UsersAttendanceRegister.attendance_register_id = {$this->id}
 			ORDER BY Student.last_name, Student.first_name
 		");
 
@@ -209,16 +211,19 @@ class AttendanceRegister extends AcademicModel {
 			AND Registration.group_id = {$group_id}
 			ORDER BY Student.last_name, Student.first_name
 		");
-
-		// Delete from AR those who aren't registered now
+    
+		// Delete from AR those who aren't registered now and user_gone == false
 		$studentsPreloadedToKeep = array();
 		foreach ($students as $student) {
-			$results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
-			$isStudentRegistered = count($results);
-
-			if ($isStudentRegistered) {
-				$studentsPreloadedToKeep[] = $student;
-			}
+      if (!empty($student['UsersAttendanceRegister']['user_gone'])) {
+        $studentsPreloadedToKeep[] = $student;
+      } else {
+        $results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
+        $isStudentRegistered = count($results);
+        if ($isStudentRegistered) {
+          $studentsPreloadedToKeep[] = $student;
+        }
+      }
 		}
 		$students = $studentsPreloadedToKeep;
 
