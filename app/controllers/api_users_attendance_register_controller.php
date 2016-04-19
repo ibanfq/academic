@@ -14,7 +14,8 @@ class ApiUsersAttendanceRegisterController extends AppController {
       return false;
     }
     
-    $private_actions = array("index", "delete");
+    $private_actions = array("index");
+    $private_or_teacher_actions = array("delete");
     
     if (($this->Auth->user('type') !== "Estudiante") && ($this->Auth->user('type') !== "Profesor") && ($this->Auth->user('type') !== "Administrador") && ($this->Auth->user('type') !== "Administrativo") && ($this->Auth->user('type') !== "Becario")) {
 			return false;
@@ -23,13 +24,17 @@ class ApiUsersAttendanceRegisterController extends AppController {
     if ((array_search($this->params['action'], $private_actions) !== false) && (($this->Auth->user('type') === "Estudiante") || $this->Auth->user('type') === "Profesor")) {
 			return false;
     }
+    
+    if ((array_search($this->params['action'], $private_or_teacher_actions) !== false) && ($this->Auth->user('type') === "Estudiante")) {
+			return false;
+    }
 
 		return true;
 	}
   
   function add(){
     $attendance_id = false;
-    $attendance_register = false;
+    $attendanceRegister = false;
     $student_id = false;
     $student = false;
     
@@ -51,18 +56,18 @@ class ApiUsersAttendanceRegisterController extends AppController {
     $secret_code = $this->Api->getParameter('AttendanceRegister.secret_code', ($is_anonymous || $is_student? array('required') : array()));
     
     if ($attendance_id) {
-      $attendance_register = $this->UserAttendanceRegister->AttendanceRegister->read(null, $attendance_id);
-      if ($attendance_register && $is_teacher) {
-        if ($attendance_register['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendance_register['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
-          $attendance_register = false;
+      $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->read(null, $attendance_id);
+      if ($attendanceRegister && $is_teacher) {
+        if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
+          $attendanceRegister = false;
         }
       }
     } else if (strlen($secret_code)) {
-      $attendance_register = $this->UserAttendanceRegister->AttendanceRegister->findBySecretCode($secret_code);
+      $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->findBySecretCode($secret_code);
     }
     
-    if ($attendance_register) {
-      $attendance_id = $attendance_register['AttendanceRegister']['id'];
+    if ($attendanceRegister) {
+      $attendance_id = $attendanceRegister['AttendanceRegister']['id'];
       
       if ($student_id) {
         $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findById($student_id);
@@ -76,12 +81,12 @@ class ApiUsersAttendanceRegisterController extends AppController {
         $this->Api->clearFails();
         $student_id = $student['Student']['id'];
         
-        if (($is_anonymous || $is_student || $is_teacher) && empty($attendance_register['AttendanceRegister']['secret_code'])) {
+        if (($is_anonymous || $is_student || $is_teacher) && empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
           $this->Api->setError('No se ha podido registar al estudiante debido a que la hoja de asistencia ya ha sido finalizada');
         } else {
           $conditions = array(
             'UserAttendanceRegister.user_id' => $student_id,
-            'UserAttendanceRegister.attendance_register_id' => $attendance_register['AttendanceRegister']['id'],
+            'UserAttendanceRegister.attendance_register_id' => $attendanceRegister['AttendanceRegister']['id'],
           );
           $userAttendanceRegister = $this->UserAttendanceRegister->find('first', array('conditions' => $conditions, 'recursive' => -1));
 
@@ -97,7 +102,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
             $userAttendanceRegister = array(
               'UserAttendanceRegister' => array(
                 'user_id' => $student_id,
-                'attendance_register_id' => $attendance_register['AttendanceRegister']['id'],
+                'attendance_register_id' => $attendanceRegister['AttendanceRegister']['id'],
                 'user_gone' => 1
               )
             );
@@ -107,9 +112,9 @@ class ApiUsersAttendanceRegisterController extends AppController {
           }
 
           if ($userAttendanceRegister) {
-            $attendance_register['Student'] = $student['Student'];
-            $attendance_register['UserAttendanceRegister'] = $userAttendanceRegister['UserAttendanceRegister'];
-            $this->Api->setData($attendance_register);
+            $attendanceRegister['Student'] = $student['Student'];
+            $attendanceRegister['UserAttendanceRegister'] = $userAttendanceRegister['UserAttendanceRegister'];
+            $this->Api->setData($attendanceRegister);
           } else {
             $this->Api->setError('No se ha podido registar al usuario debido a un error con el servidor');
           }
@@ -122,5 +127,57 @@ class ApiUsersAttendanceRegisterController extends AppController {
     }
     
     $this->Api->setViewVars($this);
+  }
+  
+  function delete($user_id, $attendance_id) {
+    $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->findById(
+      $attendance_id,
+      array(), // Fields
+      array(), // Order
+      -1 // Recursive
+    );
+    
+    if ($attendanceRegister && $this->Auth->user('type') === "Profesor") {
+      if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
+        $attendanceRegister = false;
+      } else if (empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
+        $attendanceRegister = false;
+        $this->Api->setError('No se ha podido quitar al estudiante debido a que la hoja de asistencia ya ha sido finalizada');
+      }
+    }
+    
+    if ($attendanceRegister) {
+      $conditions = array(
+        'UserAttendanceRegister.user_id' => $user_id,
+        'UserAttendanceRegister.attendance_register_id' => $attendance_id,
+      );
+      $userAttendanceRegister = $this->UserAttendanceRegister->find(
+        'first',
+        array('conditions' => $conditions, 'recursive' => -1)
+      );
+      
+      if ($userAttendanceRegister && !empty($userAttendanceRegister['UserAttendanceRegister']['user_gone'])) {
+        $this->loadModel('Registration');
+        $registration = $this->Registration->findByGroupIdAndActivityIdAndStudentId(
+          $attendanceRegister['AttendanceRegister']['group_id'],
+          $attendanceRegister['AttendanceRegister']['activity_id'],
+          $user_id,
+          array(), // Fields
+          array(), // Order
+          -1 // Recursive
+        );
+        
+        if ($registration) {
+          $userAttendanceRegister['UserAttendanceRegister']['user_gone'] = 0;
+          $this->UserAttendanceRegister->updateAll(array('UserAttendanceRegister.user_gone' => 0), $conditions);
+        } else {
+          $this->UserAttendanceRegister->query(
+            "DELETE FROM users_attendance_register WHERE user_id = $user_id AND attendance_register_id = $attendance_id"
+          );
+        }
+      }
+    } else if ($this->Api->getStatus() === 'success') {
+      $this->Api->setError('No se ha podido acceder a la hoja de asistencias');
+    }
   }
 }

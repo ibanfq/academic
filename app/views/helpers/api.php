@@ -27,7 +27,11 @@ class ApiHelper extends AppHelper {
  * @param string $message A meaningful, end-user-readable (or at the least log-worthy) message, explaining what went wrong.
  * @return string A JSON code block
  */
-	function respond($data = null, $status = 'success', $code = null, $message = null) {
+	function respond($data = null, $status = null, $code = null, $message = null) {
+    if (empty($status)) {
+      $status = 'success';
+    }
+    
     header('Cache-Control: no-cache, must-revalidate');
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
     header('Content-type: application/json');
