@@ -81,8 +81,16 @@ class AttendanceRegister extends AcademicModel {
 					'teacher_id' => $event['Teacher']['id'],
 					'teacher_2_id' => $event['Teacher_2']['id'],
 				),
-				'Student' => array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id'))),
+				'Student' => array()
 			);
+      foreach ($students as $student) {
+        $ar['Student'][$student['Student']['id']] = array(
+            'UserAttendanceRegister' => array(
+              'user_id' => $student['Student']['id'],
+              'attendance_register_id' => $this->id
+            )
+        );
+      }
       if (!empty($secret_code)) {
         $ar['AttendanceRegister']['secret_code'] = $secret_code;
       }
@@ -130,10 +138,11 @@ class AttendanceRegister extends AcademicModel {
         $currentTimestamp = time();
         $activityTimestamp = strtotime($event['Event']['initial_hour']);
         if ($currentTimestamp < $activityTimestamp) {
-          $students = $this->updateStudents();
+          $this->updateStudents();
+          $students = $this->data['Student'];
         }
       } else if (empty($event['AttendanceRegister']['duration']) || !floatval($event['AttendanceRegister']['duration'])) {
-        $students = $this->updateStudents();
+        $this->updateStudents();
       }
 		}
 
@@ -174,17 +183,13 @@ class AttendanceRegister extends AcademicModel {
 
       $event['AttendanceRegister']['Student'] = $students;
     } else {
-      if ($is_new) {
-        $students = array();
-      } else {
-        $students = $this->query("
-          SELECT Student.*, UserAttendanceRegister.user_id, UserAttendanceRegister.attendance_register_id, UserAttendanceRegister.user_gone
-          FROM users Student
-          INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
-          WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
-          ORDER BY Student.last_name, Student.first_name
-        ");
-      }
+      $students = $this->query("
+        SELECT Student.*, UserAttendanceRegister.*
+        FROM users Student
+        INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+        WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
+        ORDER BY Student.last_name, Student.first_name
+      ");
       $event['AttendanceRegister']['Student'] = $students;
     }
     
@@ -194,57 +199,50 @@ class AttendanceRegister extends AcademicModel {
 	function updateStudents(){
 		$activity_id = $this->data['AttendanceRegister']['activity_id'];
 		$group_id = $this->data['AttendanceRegister']['group_id'];
-		
-		$students = $this->query("
-			SELECT Student.*, UsersAttendanceRegister.user_gone
+    
+		$studentsWithUserGone = $this->query("
+			SELECT Student.user_id as id
+			FROM users_attendance_register Student
+      WHERE Student.attendance_register_id = {$this->id} AND Student.user_gone
+		");
+
+		$studentsRegistered = $this->Student->query("
+			SELECT Student.student_id as id
+			FROM registrations Student
+			WHERE Student.activity_id = {$activity_id} AND Student.group_id = {$group_id}
+		");
+    
+    $this->data['Student'] = array();
+    
+    foreach ($studentsWithUserGone as $student) {
+      $this->data['Student'][$student['Student']['id']] = array(
+          'UserAttendanceRegister' => array(
+            'user_id' => $student['Student']['id'],
+            'attendance_register_id' => $this->id,
+            'user_gone' => 1
+          )
+      );
+    }
+    
+    foreach ($studentsRegistered as $student) {
+      if (!isset($this->data['Student'][$student['Student']['id']])) {
+        $this->data['Student'][$student['Student']['id']] = array(
+            'UserAttendanceRegister' => array(
+              'user_id' => $student['Student']['id'],
+              'attendance_register_id' => $this->id
+            )
+        );
+      }
+    }
+		$this->saveAll();
+    
+    $this->data['Student'] = (array) $this->query("
+			SELECT Student.*
 			FROM users Student
 			INNER JOIN users_attendance_register UsersAttendanceRegister ON UsersAttendanceRegister.user_id = Student.id
 			WHERE UsersAttendanceRegister.attendance_register_id = {$this->id}
 			ORDER BY Student.last_name, Student.first_name
-		");
-
-		$studentsRegistered = $this->Student->query("
-			SELECT Student.*
-			FROM users Student
-			INNER JOIN registrations Registration ON Student.id = Registration.student_id
-			WHERE Registration.activity_id = {$activity_id}
-			AND Registration.group_id = {$group_id}
-			ORDER BY Student.last_name, Student.first_name
-		");
-    
-		// Delete from AR those who aren't registered now and user_gone == false
-		$studentsPreloadedToKeep = array();
-		foreach ($students as $student) {
-      if (!empty($student['UsersAttendanceRegister']['user_gone'])) {
-        $studentsPreloadedToKeep[] = $student;
-      } else {
-        $results = Set::extract(sprintf('/Student[id=%d]', $student['Student']['id']), $studentsRegistered);
-        $isStudentRegistered = count($results);
-        if ($isStudentRegistered) {
-          $studentsPreloadedToKeep[] = $student;
-        }
-      }
-		}
-		$students = $studentsPreloadedToKeep;
-
-		// Add to preloaded attendance registers the newly registered students
-		foreach ($studentsRegistered as $studentRegistered) {
-			$results = Set::extract(sprintf('/Student[id=%d]', $studentRegistered['Student']['id']), $students);
-			$isStudentPreloaded = count($results);
-
-			if ($isStudentPreloaded) {
-				continue;
-			}
-			if (!is_array($students)) {
-				$students = array();
-			}
-			array_push($students, $studentRegistered);
-		}
-
-		// Update database
-		$this->data['Student'] = array('Student' => array_unique(Set::classicExtract($students, '{n}.Student.id')));
-		$this->saveAll();
-		return $students;
+    ");
 	}
 	
 	function initialHourNotEmpty(){

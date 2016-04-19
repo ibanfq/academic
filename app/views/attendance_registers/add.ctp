@@ -118,7 +118,7 @@
 					<label for="AttendanceRegisterNumStudents">Nº de asistentes</label>
 				</dt>
 				<dd>
-					<?php echo $this->Form->input('AttendanceRegister.num_students', array('label' => false, 'div' => false)) ?>
+					<?php echo $this->Form->input('AttendanceRegister.num_students', array('label' => false, 'div' => false, 'readonly' => 'readonly', 'class' => 'disabled')) ?>
 				</dd>
 			</dl>
 		</div>

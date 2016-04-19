@@ -193,9 +193,17 @@ class AttendanceRegistersController extends AppController {
 				}
 
 				if (isset($this->data['AttendanceRegister']['students'])) {
-					$selected_students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
-					$this->data['Student']['Student'] = $selected_students;
-					$this->data['AttendanceRegister']['num_students'] = count($selected_students);
+          $this->data['Student'] = array();
+          foreach ($this->data['AttendanceRegister']['students'] as $student_id => $check_value) {
+            $this->data['Student'][] = array(
+                'UserAttendanceRegister' => array(
+                  'user_id' => $student_id,
+                  'attendance_register_id' => $id,
+                  'user_gone' => 1
+                )
+            );
+          }
+					$this->data['AttendanceRegister']['num_students'] = count($this->data['Student']);
 					unset($this->data['AttendanceRegister']['students']);
 				}
 
@@ -291,8 +299,17 @@ class AttendanceRegistersController extends AppController {
 			$this->data['AttendanceRegister']['final_hour'] = $this->data['AttendanceRegister']['final_hour']['hour'].":".$this->data['AttendanceRegister']['final_hour']['minute'];
 
 			if (isset($this->data['AttendanceRegister']['students'])){
-				$students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
-				$this->data['Student']['Student'] = $students;
+        $this->data['Student'] = array();
+        foreach ($this->data['AttendanceRegister']['students'] as $student_id => $check_value) {
+          $this->data['Student'][] = array(
+              'UserAttendanceRegister' => array(
+                'user_id' => $student_id,
+                'attendance_register_id' => $id,
+                'user_gone' => 1
+              )
+          );
+        }
+        $this->data['AttendanceRegister']['num_students'] = count($this->data['Student']);
 				unset($this->data['AttendanceRegister']['students']);
 			}
 
@@ -306,9 +323,16 @@ class AttendanceRegistersController extends AppController {
 			}
 
 		} else {
+      $students = $this->AttendanceRegister->Student->query("SELECT Student.*
+        FROM users Student
+        INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+        WHERE UAR.attendance_register_id = {$id}
+        ORDER BY Student.last_name, Student.first_name
+      ");
 			$this->data = $this->AttendanceRegister->read(null, $id);
 			$this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($this->data['Activity']['subject_id']));
 			$this->set('ar', $this->data);
+      $this->set('students', $students);
 		}
 	}
 

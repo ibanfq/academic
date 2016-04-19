@@ -86,10 +86,10 @@
 				<dt><label for="AttendanceRegisterNumStudents">Nº de asistentes</label></dt>
 				<dd><input type="input" id="AttendanceRegisterNumStudents" name="data[AttendanceRegister][num_students]" value="<?php 
 				    if ($ar['AttendanceRegister']['num_students'] == 0)
-				      echo count($ar['Student']);
+				      echo count($students);
 				    else
 				      echo $ar['AttendanceRegister']['num_students'];
-			    ?>"/></dd>
+			    ?>" readonly class="disabled"/></dd>
 			</dl>
 		</div>
 		
@@ -110,10 +110,10 @@
 			</tfoot>
 			<tbody id="students">
 				<?php $i = 0 ?>
-				<?php foreach ($ar['Student'] as $student): ?>
+				<?php foreach ($students as $student): ?>
 					<tr id="row_<?php echo $i?>">
-						<td><?php echo "{$student['first_name']} {$student['last_name']}"?></td>
-						<td><input type="checkbox" name="data[AttendanceRegister][students][<?php echo $student['id'] ?>]" value="1" id="students_<?php echo $student['id'] ?>" checked /></td>
+						<td><?php echo "{$student['Student']['first_name']} {$student['Student']['last_name']}"?></td>
+						<td><input type="checkbox" name="data[AttendanceRegister][students][<?php echo $student['Student']['id'] ?>]" value="1" id="students_<?php echo $student['Student']['id'] ?>" checked /></td>
 					</tr>
 					<?php $i++; ?>
 				<?php endforeach;?>

@@ -31,6 +31,10 @@ class ApiHelper extends AppHelper {
     header('Cache-Control: no-cache, must-revalidate');
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
     header('Content-type: application/json');
+    if ($status !== 'success') {
+      header('HTTP/1.1 400 Bad Request');
+    }
+    
     $response = array('status' => $status);
     
     if (!empty($data) || $status === 'success' || $status === 'fail') {

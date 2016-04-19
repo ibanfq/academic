@@ -34,13 +34,11 @@ class ApiAttendanceRegistersController extends AppController {
     if ($attendance_register) {
       $attendance_register['Students'] = array();
       foreach ($attendance_register['Student'] as $value) {
-        $user_attendance_register = $value['UsersAttendanceRegister'];
-        unset($user_attendance_register['created']);
-        unset($user_attendance_register['modified']);
-        unset($value['UsersAttendanceRegister']);
+        $user_attendance_register = $value['UserAttendanceRegister'];
+        unset($value['UserAttendanceRegister']);
         $attendance_register['Students'][] = array(
             'Student' => $value,
-            'UsersAttendanceRegister' => $user_attendance_register
+            'UserAttendanceRegister' => $user_attendance_register
         );
       }
       unset($attendance_register['Student']);
