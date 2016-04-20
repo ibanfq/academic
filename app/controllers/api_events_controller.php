@@ -84,7 +84,7 @@ class ApiEventsController extends AppController {
     if ($exists) {
       $this->Api->setData($event);
     } else {
-      $this->Api->setError('No se ha podido acceder al evento');
+      $this->Api->setError('No se ha podido acceder al evento.');
     }
     $this->Api->setViewVars($this);
   }

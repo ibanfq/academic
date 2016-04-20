@@ -206,6 +206,7 @@ class AttendanceRegistersController extends AppController {
 					$this->data['AttendanceRegister']['num_students'] = count($this->data['Student']);
 					unset($this->data['AttendanceRegister']['students']);
 				}
+        $this->data['AttendanceRegister']['secret_code'] = null;
 
 				if ($this->AttendanceRegister->save($this->data)) {
 					$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
@@ -312,6 +313,7 @@ class AttendanceRegistersController extends AppController {
         $this->data['AttendanceRegister']['num_students'] = count($this->data['Student']);
 				unset($this->data['AttendanceRegister']['students']);
 			}
+      $this->data['AttendanceRegister']['secret_code'] = null;
 
 			if ($this->AttendanceRegister->save($this->data)){
 				$this->Session->setFlash('El registro de impartición se ha creado correctamente.');

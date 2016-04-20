@@ -58,6 +58,11 @@
   );
   Router::connect(
     '/api/attendance_registers/:id',
+    array('controller' => 'api_attendance_registers', 'action' => 'edit', '[method]' => 'POST'),
+    array('id' => '[0-9]+', 'pass' => array('id'))
+  );
+  Router::connect(
+    '/api/attendance_registers/:id',
     array('controller' => 'api_attendance_registers', 'action' => 'view', '[method]' => 'GET'),
     array('id' => '[0-9]+', 'pass' => array('id'))
   );
