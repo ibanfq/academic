@@ -186,10 +186,25 @@ class AttendanceRegister extends AcademicModel {
       $students = $this->query("
         SELECT Student.*, UserAttendanceRegister.*
         FROM users Student
-        INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
-        WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
+        INNER JOIN (
+          SELECT UserAttendanceRegister.user_id
+            FROM users_attendance_register UserAttendanceRegister
+            WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
+          UNION SELECT Registration.student_id as user_id
+            FROM registrations Registration
+            WHERE Registration.activity_id = {$event['Event']['activity_id']}
+              AND Registration.group_id = {$event['Event']['group_id']}
+          ) subquery ON subquery.user_id = Student.id
+        LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
         ORDER BY Student.last_name, Student.first_name
       ");
+      foreach ($students as $i => $student) {
+        if (empty($student['UserAttendanceRegister']['user_id'])) {
+          $students[$i]['UserAttendanceRegister']['user_id'] = $student['Student']['id'];
+          $students[$i]['UserAttendanceRegister']['attendance_register_id'] = $event['AttendanceRegister']['id'];
+          $students[$i]['UserAttendanceRegister']['user_gone'] = '0';
+        }
+      }
       $event['AttendanceRegister']['Student'] = $students;
     }
     
