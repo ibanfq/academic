@@ -49,6 +49,22 @@ class ApiAttendanceRegistersController extends AppController {
         -1 // Recursive
       );
       
+      if ($attendanceRegister && ($this->Auth->user('type') === "Profesor")) {
+        $event = $this->AttendanceRegister->Event->findById(
+          $attendanceRegister['AttendanceRegister']['event_id'],
+          array(), // Fields
+          array(), // Order
+          -1 // Recursive
+        );
+        if ($event) {
+          if ($event['Event']['teacher_id'] !== $this->Auth->user('id') && $event['Event']['teacher_2_id'] !== $this->Auth->user('id')) {
+            $attendanceRegister = false;
+          } else if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
+            $attendanceRegister = false;
+          }
+        }
+      }
+      
       if ($attendanceRegister) {
         switch (strtolower($status)) {
           case 'opened':
@@ -60,6 +76,7 @@ class ApiAttendanceRegistersController extends AppController {
               SELECT Student.*, UserAttendanceRegister.*
               FROM users Student
               INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+                AND UserAttendanceRegister.user_gone
               WHERE UserAttendanceRegister.attendance_register_id = {$id}
               ORDER BY Student.last_name, Student.first_name
             ");
@@ -71,11 +88,9 @@ class ApiAttendanceRegistersController extends AppController {
             } else {
               $attendanceRegister['Student'] = array();
               foreach ($students as $student) {
-                if (!empty($student['UserAttendanceRegister']['user_gone'])) {
-                  $attendanceRegister['Student'][] = array(
-                      'UserAttendanceRegister' => $student['UserAttendanceRegister']
-                  );
-                }
+                $attendanceRegister['Student'][] = array(
+                    'UserAttendanceRegister' => $student['UserAttendanceRegister']
+                );
               }
               $initial_date = date_create($attendanceRegister['AttendanceRegister']['initial_hour']);
               $final_date = date_create($attendanceRegister['AttendanceRegister']['final_hour']);
@@ -88,6 +103,24 @@ class ApiAttendanceRegistersController extends AppController {
 
               if ($this->AttendanceRegister->save($attendanceRegister)) {
                 $this->_view($id);
+                $attendanceRegister = $this->Api->getStatus() === 'success'? $this->Api->getData() : false;
+                
+                if ($attendanceRegister) {
+                  if ($this->Auth->user('type') === "Profesor" && $attendanceRegister['Event']['teacher_2_id'] === $this->Auth->user('id')) {
+                    $teacher = $attendanceRegister['Teacher_2'];
+                  } else {
+                    $teacher = $attendanceRegister['Teacher'];
+                  }
+                  $this->Email->reset();
+                  $this->Email->from = 'Academic <noreply@ulpgc.es>';
+                  $this->Email->to = $teacher['username'];
+                  $this->Email->subject = "Evento registrado";
+                  $this->Email->sendAs = 'both';
+                  $this->Email->template = 'attendance_register_closed';
+                  $this->set('teacher', $teacher);
+                  $this->set('attendanceRegister', $attendanceRegister);
+                  $this->Email->send();
+                }
               } else {
                 $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.');
               }
@@ -106,6 +139,12 @@ class ApiAttendanceRegistersController extends AppController {
   }
   
   function _view($id) {
+    $this->AttendanceRegister->bindModel(array('belongsTo' => array(
+      'Classroom' => array(
+        'foreignKey' => false,
+        'conditions' => array('Classroom.id = Event.classroom_id')
+      )
+    )));
     $attendance_register = $this->AttendanceRegister->read(null, $id);
     if ($attendance_register && ($this->Auth->user('type') === "Profesor")) {
       if ($attendance_register['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendance_register['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {

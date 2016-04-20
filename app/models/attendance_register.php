@@ -23,6 +23,7 @@ class AttendanceRegister extends AcademicModel {
 					'joinTable'				=> 'users_attendance_register',
 					'foreignKey'			=> 'attendance_register_id',
 					'associationForeignKey'	=> 'user_id',
+          'order'         => array('Student.last_name' => 'ASC', 'Student.first_name' => 'ASC'),
 					'unique'				=> true
 				)
 		);

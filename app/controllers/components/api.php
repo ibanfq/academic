@@ -127,6 +127,18 @@ class ApiComponent extends Object {
     }
   }
   
+  function getData() {
+    switch($this->getStatus()) {
+      case 'success';
+        return $this->_data;
+      case 'fail':
+        return $this->_fail_data;
+      case 'error':
+        return $this->_error_data;
+        break;
+    }
+  }
+  
   function setViewVars(&$controller) {
     switch($this->getStatus()) {
       case 'success';
