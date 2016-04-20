@@ -84,8 +84,11 @@ class AppController extends Controller {
 	}
   
   function _api_authenticate($login) {
+    $this->Auth->sessionKey = 'Api.Auth.User';
+    
     $data[ $this->Auth->fields['username'] ] = $login['username'];  
     $data[ $this->Auth->fields['password'] ] = $this->Auth->password($login['password']);
+    
     if (!$this->Auth->login($data) || !$this->_authorize()) {
       $this->Security->blackHole($this, 'login');
     }

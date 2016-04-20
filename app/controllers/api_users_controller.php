@@ -8,11 +8,11 @@ class ApiUsersController extends AppController {
       return false;
     }
 
-		$administrator_actions = array('delete',);
+		$administrator_actions = array('delete');
 		$administrative_actions = array('edit', 'add');
 		$neither_student_nor_concierge = array('index', 'view');
 		$student_actions = array();
-		
+    
 		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
 			return false;
     }
