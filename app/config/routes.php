@@ -71,7 +71,7 @@
     array('controller' => 'api_users_attendance_register', 'action' => 'add', '[method]' => 'POST')
   );
   Router::connect(
-    '/api/users_attendance_register/:user_id/:attendance_id',
+    '/api/users/:user_id/attendance_registers/:attendance_id',
     array('controller' => 'api_users_attendance_register', 'action' => 'delete', '[method]' => 'DELETE'),
     array('user_id' => '[0-9]+', 'attendance_id' => '[0-9]+', 'pass' => array('user_id', 'attendance_id'))
   );
