@@ -454,6 +454,7 @@ div.code-coverage-results span.result-good {
 div.short_calendar { float:left; width:60%;}
 
 .tabs{
+   clear: both;
    width: 650px;
 }
 .tabs ul{

@@ -43,6 +43,12 @@ class ApiUsersAttendanceRegisterController extends AppController {
     $is_teacher = $this->Auth->user('type') === "Profesor";
     
     $this->UserAttendanceRegister->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('User')), false);
+    $this->UserAttendanceRegister->AttendanceRegister->bindModel(array('belongsTo' => array(
+      'Classroom' => array(
+        'foreignKey' => false,
+        'conditions' => array('Classroom.id = Event.classroom_id')
+      )
+    )));
     
     if (!$is_anonymous && !$is_student) {
       $attendance_id = $this->Api->getParameter('AttendanceRegister.id', array('integer'));
@@ -157,6 +163,12 @@ class ApiUsersAttendanceRegisterController extends AppController {
   
   function delete($user_id, $attendance_id) {
     $this->UserAttendanceRegister->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('User')), false);
+    $this->UserAttendanceRegister->AttendanceRegister->bindModel(array('belongsTo' => array(
+      'Classroom' => array(
+        'foreignKey' => false,
+        'conditions' => array('Classroom.id = Event.classroom_id')
+      )
+    )));
     $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->read(null, $attendance_id);
     
     if ($attendanceRegister && $this->Auth->user('type') === "Profesor") {
