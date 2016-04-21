@@ -59,9 +59,7 @@ class AttendanceRegister extends AcademicModel {
 	}
   
   function createFromEvent($event, $is_printing_attendance_file = true, $secret_code = null) {
-    $is_new = false;
     if ($event['AttendanceRegister']['id'] == null) {
-      $is_new = true;
 			// Preload a list of students attending to this activity
 			$students = $this->Student->query("
 				SELECT Student.*
@@ -84,6 +82,7 @@ class AttendanceRegister extends AcademicModel {
 				),
 				'Student' => array()
 			);
+      
       foreach ($students as $student) {
         $ar['Student'][$student['Student']['id']] = array(
             'UserAttendanceRegister' => array(
@@ -92,9 +91,12 @@ class AttendanceRegister extends AcademicModel {
             )
         );
       }
+      $ar['Student'] = array_values($student['Student']);
+      
       if (!empty($secret_code)) {
         $ar['AttendanceRegister']['secret_code'] = $secret_code;
       }
+      
 			$this->create();
 			$this->saveAll($ar);
 
@@ -184,29 +186,11 @@ class AttendanceRegister extends AcademicModel {
 
       $event['AttendanceRegister']['Student'] = $students;
     } else {
-      $students = $this->query("
-        SELECT Student.*, UserAttendanceRegister.*
-        FROM users Student
-        INNER JOIN (
-          SELECT UserAttendanceRegister.user_id
-            FROM users_attendance_register UserAttendanceRegister
-            WHERE UserAttendanceRegister.attendance_register_id = {$event['AttendanceRegister']['id']}
-          UNION SELECT Registration.student_id as user_id
-            FROM registrations Registration
-            WHERE Registration.activity_id = {$event['Event']['activity_id']}
-              AND Registration.group_id = {$event['Event']['group_id']}
-          ) subquery ON subquery.user_id = Student.id
-        LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
-        ORDER BY Student.last_name, Student.first_name
-      ");
-      foreach ($students as $i => $student) {
-        if (empty($student['UserAttendanceRegister']['user_id'])) {
-          $students[$i]['UserAttendanceRegister']['user_id'] = $student['Student']['id'];
-          $students[$i]['UserAttendanceRegister']['attendance_register_id'] = $event['AttendanceRegister']['id'];
-          $students[$i]['UserAttendanceRegister']['user_gone'] = '0';
-        }
-      }
-      $event['AttendanceRegister']['Student'] = $students;
+      $event['AttendanceRegister']['Student'] = $this->getStudentsForApi(
+        $event['AttendanceRegister']['id'],
+        $event['Event']['activity_id'],
+        $event['Event']['group_id']
+      );
     }
     
     return $event;
@@ -250,6 +234,7 @@ class AttendanceRegister extends AcademicModel {
         );
       }
     }
+    $this->data['Student'] = array_values($this->data['Student']);
 		$this->saveAll();
     
     $this->data['Student'] = (array) $this->query("
@@ -260,6 +245,32 @@ class AttendanceRegister extends AcademicModel {
 			ORDER BY Student.last_name, Student.first_name
     ");
 	}
+  
+  function getStudentsForApi($attendance_id, $activity_id, $group_id){
+    $students = $this->query("
+      SELECT Student.*, UserAttendanceRegister.*
+      FROM users Student
+      INNER JOIN (
+        SELECT UserAttendanceRegister.user_id
+          FROM users_attendance_register UserAttendanceRegister
+          WHERE UserAttendanceRegister.attendance_register_id = {$attendance_id}
+        UNION SELECT Registration.student_id as user_id
+          FROM registrations Registration
+          WHERE Registration.activity_id = {$activity_id}
+            AND Registration.group_id = {$group_id}
+        ) subquery ON subquery.user_id = Student.id
+      LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+      ORDER BY Student.last_name, Student.first_name
+    ");
+    foreach ($students as $i => $student) {
+      if (empty($student['UserAttendanceRegister']['user_id'])) {
+        $students[$i]['UserAttendanceRegister']['user_id'] = $student['Student']['id'];
+        $students[$i]['UserAttendanceRegister']['attendance_register_id'] = $attendance_id;
+        $students[$i]['UserAttendanceRegister']['user_gone'] = '0';
+      }
+    }
+    return $students;
+  }
 	
 	function initialHourNotEmpty(){
 		return ($this->data['AttendanceRegister']['initial_hour'] != null);

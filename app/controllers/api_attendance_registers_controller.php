@@ -139,6 +139,7 @@ class ApiAttendanceRegistersController extends AppController {
   }
   
   function _view($id) {
+    $this->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('Student')));
     $this->AttendanceRegister->bindModel(array('belongsTo' => array(
       'Classroom' => array(
         'foreignKey' => false,
@@ -153,16 +154,11 @@ class ApiAttendanceRegistersController extends AppController {
     }
     
     if ($attendance_register) {
-      $attendance_register['Students'] = array();
-      foreach ($attendance_register['Student'] as $value) {
-        $user_attendance_register = $value['UserAttendanceRegister'];
-        unset($value['UserAttendanceRegister']);
-        $attendance_register['Students'][] = array(
-            'Student' => $value,
-            'UserAttendanceRegister' => $user_attendance_register
-        );
-      }
-      unset($attendance_register['Student']);
+      $attendance_register['Students'] = $this->AttendanceRegister->getStudentsForApi(
+        $id,
+        $attendance_register['AttendanceRegister']['activity_id'],
+        $attendance_register['AttendanceRegister']['group_id']
+      );
       $this->Api->setData($attendance_register);
     } else {
       $this->Api->setError('No se ha podido acceder a la la hoja de asistencia.');
