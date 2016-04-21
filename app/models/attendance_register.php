@@ -261,7 +261,7 @@ class AttendanceRegister extends AcademicModel {
         ) subquery ON subquery.user_id = Student.id
       LEFT JOIN users_attendance_register UserAttendanceRegister
         ON UserAttendanceRegister.user_id = Student.id
-        AND UserAttendanceRegister.attendance_id = {$attendance_id}
+        AND UserAttendanceRegister.attendance_register_id = {$attendance_id}
       ORDER BY Student.last_name, Student.first_name
     ");
     foreach ($students as $i => $student) {
