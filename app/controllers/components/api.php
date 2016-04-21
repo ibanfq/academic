@@ -9,10 +9,38 @@ class ApiComponent extends Object {
   var $_error_message = null;
   var $_error_code = null;
   var $_error_data = null;
+  var $_request = null;
   
+  function call($verb, $url, $data = null) {
+    $old_request_method = $_SERVER['REQUEST_METHOD'];
+    $old_get = &$_GET;
+    $old_post = &$_POST;
+    $old_request = &$_REQUEST;
+
+    $url = parse_url($url);
+    $_SERVER['REQUEST_METHOD'] = $verb;
+    if (isset($url['query'])) {
+      parse_str($url['query'], $_GET);
+    } else {
+      $_GET = array();
+    }
+    $_POST = (array) $data;
+    $_REQUEST = array_merge($_GET, $_POST);
+    
+    $dispatcher = new Dispatcher();
+    $content = $dispatcher->dispatch($url['path'], array('return' => true));
+    
+    $_REQUEST = &$old_request;
+    $_POST = &$old_post;
+    $_GET = &$old_get;
+    $_SERVER['REQUEST_METHOD'] = $old_request_method;
+    $this->_request = null;
+    
+    return $content;
+  }
   
   function getParameter($name, $filters = null, $default = null) {
-    $value = $_REQUEST;
+    $value = $this->_request !== null? $this->_request : $_REQUEST;
     $filters = (array)$filters;
 
     foreach (explode('.', $name) as $path) {
@@ -139,22 +167,35 @@ class ApiComponent extends Object {
     }
   }
   
-  function setViewVars(&$controller) {
-    switch($this->getStatus()) {
+  function respond(&$controller) {
+    $response = array('status' => $this->getStatus());
+    
+    switch($response['status']) {
       case 'success';
-        $controller->set('status', 'success');
-        $controller->set('data', $this->_sanitizeData($controller, $this->_data));
+        $response['data'] = $this->_sanitizeData($controller, $this->_data);
         break;
       case 'fail':
-        $controller->set('status', 'fail');
-        $controller->set('data', $this->_fail_data);
+        $response['data'] =  $this->_fail_data;
         break;
       case 'error':
-        $controller->set('status', 'error');
-        $controller->set('message', $this->_error_message);
-        $controller->set('code', $this->_error_code);
-        $controller->set('data', $this->_error_data);
+        $response['message'] = $this->_error_message;
+        $response['code'] = $this->_error_code;
+        $response['data'] = $this->_error_data;
         break;
+    }
+    
+    if (empty($controller->params['return'])) {
+      header('Cache-Control: no-cache, must-revalidate');
+      header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+      header('Content-type: application/json');
+      if ($response['status'] !== 'success') {
+        header('HTTP/1.1 400 Bad Request');
+      }
+      App::import('Helper', 'Javascript');
+      $javascript = new JavascriptHelper();
+      $controller->output = $javascript->object($response);
+    } else {
+      $controller->output = $response;
     }
   }
   
@@ -171,8 +212,11 @@ class ApiComponent extends Object {
         if (array_key_exists('password', $values)) {
           unset($data[$model]['password']);
         }
-        if (array_key_exists('dni', $values) && $controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id']) {
-          unset($data[$model]['dni']);
+        if (array_key_exists('dni', $values) || array_key_exists('phone', $values)) {
+          if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id'])) {
+            unset($data[$model]['dni']);
+            unset($data[$model]['phone']);
+          }
         }
         foreach ($values as $field => $value) {
           if (is_array($value)) {

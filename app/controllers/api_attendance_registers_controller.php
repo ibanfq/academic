@@ -24,7 +24,7 @@ class ApiAttendanceRegistersController extends AppController {
   function view($id){
     $this->_view($id);
     
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
   function add(){
@@ -35,7 +35,7 @@ class ApiAttendanceRegistersController extends AppController {
       $this->_openByEvent($event_id);
     }
 
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
   function edit($id){
@@ -135,7 +135,7 @@ class ApiAttendanceRegistersController extends AppController {
       }
     }
 
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
   function _view($id) {

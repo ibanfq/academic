@@ -63,7 +63,7 @@ class ApiEventsController extends AppController {
       }
     }
 
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
   function view($id) {
@@ -86,6 +86,6 @@ class ApiEventsController extends AppController {
     } else {
       $this->Api->setError('No se ha podido acceder al evento.');
     }
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
 }

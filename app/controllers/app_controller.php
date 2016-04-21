@@ -3,7 +3,7 @@ class AppController extends Controller {
 	/**
 	 * Application wide controllers
 	 */
-	var $components = array('Security', 'Session', 'Auth', 'RequestHandler', 'Email');
+	var $components = array('Security', 'Session', 'Auth', 'RequestHandler', 'Email', 'Api');
   
 	/**
 	 * Application wide helpers
@@ -16,12 +16,7 @@ class AppController extends Controller {
 
   function __construct() {
     if ($this->isApi) {
-      $this->autoLayout = false;
-      if ($this->viewPath == null) {
-        $this->viewPath = 'api/'.Inflector::underscore($this->name);
-      }
-  	  $this->helpers = array('Api');
-      $this->components []= 'Api';
+      $this->autoRender = false;
     }
     
     parent::__construct();

@@ -152,7 +152,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
       $this->Api->setError('No se ha podido acceder a la hoja de asistencias.');
     }
     
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
   function delete($user_id, $attendance_id) {
@@ -216,12 +216,13 @@ class ApiUsersAttendanceRegisterController extends AppController {
         );
         
         $this->Api->setData($attendanceRegister);
-        $this->Api->setViewVars($this);
       } else if ($this->Api->getStatus() === 'success') {
         $this->Api->setError('No se ha encontrado al usuario.');
       }
     } else if ($this->Api->getStatus() === 'success') {
       $this->Api->setError('No se ha podido acceder a la hoja de asistencias.');
     }
+    
+    $this->Api->respond($this);
   }
 }

@@ -54,7 +54,7 @@ class ApiUsersController extends AppController {
       $this->Api->setData($users);
     }
 
-    $this->Api->setViewVars($this);
+    $this->Api->respond($this);
   }
   
 }
