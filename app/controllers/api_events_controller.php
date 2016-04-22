@@ -19,7 +19,7 @@ class ApiEventsController extends AppController {
 
   function index()
   {
-    $extra_joins = '';
+    $joins_for_where = '';
     $where = array();
 
     $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
@@ -32,8 +32,29 @@ class ApiEventsController extends AppController {
       $user = $this->Api->getParameter('filter.user', array('integer', '>=0'), $user_default);
     }
     if (!empty($user)) {
-      $extra_joins .= " LEFT JOIN registrations Registration ON Activity.id = Registration.activity_id AND Registration.student_id = {$user}";
-      $where []= "(Event.teacher_id = {$user} OR Event.teacher_2_id = {$user} OR Registration.id)";
+      if ($user === $this->Auth->user('id')) {
+        $type = $this->Auth->user('type');
+      } else {
+        $type = $this->Event->Teacher->find(
+          'first',
+          array(
+            'conditions' => array('Teacher.id' => $user),
+            'recursive' => -1,
+            'fields' => array('Teacher.type')
+          )
+        );
+        if ($type) {
+          $type = $type['Teacher']['type'];
+        } else {
+          $this->Api->setError('No se ha podido encontrar al usuario');
+        }
+      }
+      
+      if ($type === "Estudiante") {
+        $joins_for_where .= " INNER JOIN registrations Registration ON Registration.activity_id = Event.activity_id AND Registration.student_id = {$user}";
+      } else {
+        $where []= "(Event.teacher_id = {$user} OR Event.teacher_2_id = {$user})";
+      }
     }
 
     $date = $this->Api->getParameter('filter.date');
@@ -50,14 +71,17 @@ class ApiEventsController extends AppController {
         $this->Api->AddFail('filter.date', 'Not authorized');
       } else {
         $where []= 'Event.duration > 0';
+        $where = implode(' AND ', $where);
+        $order = ' ORDER BY Event.initial_hour DESC, Event.id';
+        $limit = " LIMIT $limit OFFSET $offset";
         $events = $this->Event->query(
           'SELECT distinct Event.*, Activity.*, Subject.*, `Group`.*, Classroom.*' .
-          ' FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id' .
+          " FROM (SELECT Event.* from events Event $joins_for_where WHERE $where $order $limit) Event" .
+          ' INNER JOIN activities Activity ON Activity.id = Event.activity_id' .
           ' INNER JOIN subjects Subject ON Subject.id = Activity.subject_id' .
           ' INNER JOIN groups `Group` ON `Group`.id = Event.group_id' .
           ' INNER JOIN classrooms Classroom ON Classroom.id = Event.classroom_id' .
-          " $extra_joins WHERE " . implode(' AND ', $where) .
-          " ORDER BY Event.initial_hour DESC LIMIT $limit OFFSET $offset"
+          $order
         );
         $this->Api->setData($events);
       }
