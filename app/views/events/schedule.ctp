@@ -5,8 +5,10 @@
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('Programar curso', "/events/schedule/{$course['Course']['id']}"); ?>
 
+<div id="mobile-query" class="visible-block-phone"></div>
+
 <script type="text/javascript">
-	
+
 	var subjects = [
 		<?php 
 		$array = array();
@@ -19,6 +21,10 @@
 	
 	var currentEvent = null;
 	
+  function isMobile() {
+      return $('#mobile-query').css('display') !== 'none';
+  }
+  
 	function delete_event(event_id, parent_id) {
 		if (parent_id == '')
 			confirmated = confirm("¿Está seguro de que desea eliminar este evento? Al eliminarlo se eliminarán también todos los eventos de la misma serie.");
@@ -159,9 +165,9 @@
 			header: {
 				right: 'prev,next today',
 				center: 'title',
-				left: 'month,agendaWeek'
+				left: 'title,month,agendaWeek'
 			},
-			defaultView: 'agendaWeek',
+			defaultView: isMobile()? 'basicDay' : 'agendaWeek',
 			defaultEventMinutes: 60,
 			editable: true,
             selectable: {
@@ -210,6 +216,15 @@
 				});
 			},
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
+      windowResize: function(view) {
+          if (isMobile()) {
+              if (view.name !== 'basicDay') {
+                  $('#calendar').fullCalendar('changeView', 'basicDay');
+              }
+          } else if (view.name === 'basicDay') {
+              $('#calendar').fullCalendar('changeView', 'agendaWeek');
+          }
+      },
 			eventClick: function(event, jsEvent, view) {
 				var model = event.className == 'booking'? 'bookings' : 'events';
 				var action = event.className == 'booking'? 'view' : 'edit';
@@ -456,13 +471,15 @@
 						?>
 						<label for="EventInitialHour" style="display:inline">Desde</label>
 						<?php echo $form->hour('initial_hour', true, "07", array('timeFormat' => '24')); ?>
-						:<select id="EventInitialHourMin" name="data[Event][initial_hour][minute]">
+						:
+            <select id="EventInitialHourMin" name="data[Event][initial_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>
 						<label for="EventFinalHour" style="display:inline">Hasta</label>
 						<?php echo $form->hour('final_hour', true, "07", array('timeFormat' => '24')); ?>
-						:<select id="EventFinalHourMin" name="data[Event][final_hour][minute]">
+						:
+            <select id="EventFinalHourMin" name="data[Event][final_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>

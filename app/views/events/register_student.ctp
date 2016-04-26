@@ -32,13 +32,12 @@
 					echo "<span class='selected group_label activity_{$activity['id']}' id='{$activity['id']}_{$group['id']}' activity_id='{$activity['id']}' group_id='{$group['id']}'><a href='javascript:;'>{$group['name']} [?]</a></span>";
 
 					echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
-					echo "<span>";
+          
 					if (!$activity_has_changes_requests) {
 						if (!$group['closed']) {
-							echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a>";
+							echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
 						}
 					}
-					echo "</span>";
 
 				} else {
 
@@ -55,12 +54,14 @@
 				} ?>
 			<?php
 				$total_group_changes_requests = isset($changes_requests[$activity['id']][$group['id']])? count($changes_requests[$activity['id']][$group['id']]) : 0;
+        echo "<span>";
 				echo $html->link('Ver alumnos apuntados', array('controller' => 'registrations', 'action' => 'view_students_registered', $activity['id'], $group['id'], 'class' => ''));
-				if ($total_group_changes_requests == 1) {
-					echo ' (Tienes 1 solicitud pendiente)';
+				if (1 || $total_group_changes_requests == 1) {
+					echo ' <span>(Tienes 1 solicitud pendiente)</span>';
 				} else if ($total_group_changes_requests > 1) {
-					echo " (Tienes $total_group_changes_requests solicitudes pendientes)";
+					echo " <span>(Tienes $total_group_changes_requests solicitudes pendientes)</span>";
 				}
+        echo "</span>";
 			?>
 
 			</li>

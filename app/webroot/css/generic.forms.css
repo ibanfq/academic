@@ -18,6 +18,10 @@ dd {
         min-height: 2em;
 	vertical-align: top;
 }
+dl + .help-text {
+        display: inline-block;
+        margin-left: 17em;
+}
 
 /** Forms **/
 form {
@@ -99,7 +103,7 @@ option {
 input[type=checkbox] {
 	clear: left;
 	float: left;
-	margin: 0px 6px 7px 2px;
+	margin: 0px 6px 2px 2px;
 	width: auto;
 }
 div.checkbox label {
@@ -142,4 +146,46 @@ form .submit input[type=submit]:hover {
 }
 .search dd {
 	margin-left:13em;
+}
+
+/* Phones-S, less than 375px */
+@media (max-width: 374px) {
+}
+
+/* Phones, less than 768px */
+@media (max-width: 767px) {
+    dl {
+        width: 100%;
+    }
+    dl + dl {
+        margin-top: 0.5em;
+    }
+    dl + .help-text {
+        margin-left: 0;
+    }
+    dt {
+        padding-left: 0;
+    }
+    dd {
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+    }
+    label {
+        display: block !important;
+    }
+    input, select, textarea {
+        box-sizing: border-box;
+        width: 100%;
+    }
+    td select {
+        width: auto;
+    }
+    select[name$="[hour]"], select[name$="[minute]"] {
+        width: 3em;
+    }
+}
+
+/* Tablets, less than 992px */
+@media (max-width: 991) {
+    
 }

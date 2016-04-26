@@ -82,7 +82,7 @@ ul, li {
 }
 
 #header{
-	padding: 10px 20px;
+	padding: 10px 20px 0;
 	background: #572931;
 }
 
@@ -110,22 +110,23 @@ ul, li {
 
 #header .left {
 	float:left;
-	width:70%;
 }
 
 #header .right {
 	float: right;
-	width: 30%;
-	text-align:right;
-	padding-top:1em;
+        margin-top: 0.5em;
+        margin-bottom: 1em;
+        text-align: right;
 }
 
 #header .right a {
+        display: inline-block;
+	margin-top: 0.5em;
 	color:#fff;
 }
 
-#header .right .profile {
-	margin-right: 2em;
+#header .right .logout {
+	margin-left: 2em;
 }
 
 .nav { margin: 0.5em 0 0.5em; font-size: 80%;}
@@ -142,6 +143,10 @@ ul, li {
 	clear: both;
 	padding: 6px 10px;
 	text-align: right;
+}
+#footer .logo {
+	margin: 1em 0;
+	text-align: center;
 }
 
 /** containers **/
@@ -455,16 +460,16 @@ div.short_calendar { float:left; width:60%;}
 
 .tabs{
    clear: both;
-   width: 650px;
 }
 .tabs ul{
-   margin:0px;
+   overflow:hidden;
+   margin:0 0 -6px;
    padding:0px;
    list-style: none;
 }
 .tabs li{
    float:left;
-   margin:0px 6px 0px 0px;
+   margin:0px 6px 6px 0px;
    padding:4px 6px 4px 6px;
    background-color: #4c7dbd;
    color: #fff;
@@ -513,8 +518,16 @@ ul.groups li {
 }
 
 .groups span {
+        display: inline-block;
 	margin-left:1em;
 	padding:0.5em 0.3em 0.5em 0.3em;
+}
+.groups span:nth-child(1) {
+        margin-left: 0;
+}
+.groups span span {
+        margin-left: 0;
+        padding: 0;
 }
 
 .intro {
@@ -545,4 +558,157 @@ ul.groups li {
 
 .small_link {
 	font-size:80%;
+}
+
+/* Phones-S, less than 375px */
+.visible-block-phone-s {
+    display: none !important;
+}
+@media (max-width: 374px) {
+    a.disabled-phone-s {
+        pointer-events: none;
+        opacity: 0.7;
+        background-color: #ccc;
+    }
+    .hidden-phone-s {
+        display: none !important;
+    }
+    .visible-block-phone-s {
+        display: block !important;
+    }
+
+    .fc-button-today {
+        display: none !important;
+    }
+}
+
+/* Phones, less than 768px */
+.visible-block-phone {
+    display: none !important;
+}
+.fc-header-left .fc-header-title {
+    display: none !important;
+}
+.ui-widget-overlay {
+    position: fixed !important;
+    z-index: 1000;
+    display: none !important;
+}
+@media (max-width: 767px) {
+    #header {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    #header ul.logo {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #header ul.logo li {
+	float: none;
+ 	margin-left: 0;
+        margin-right: 0;
+    }
+    #header .tabs ul {
+ 	margin-left: -10px;
+        margin-right: -10px;
+    }
+    #content {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    div.actions {
+        max-width: 300px;
+    }
+    div.actions, div.view {
+        float: none;
+        width: auto;
+        padding-left: 0;
+        padding-right: 0;
+        border: 0;
+    }
+    
+    .group span {
+        display: block;
+    }
+    
+    a.disabled-phone {
+        pointer-events: none;
+        opacity: 0.7;
+        background-color: #ccc;
+    }
+    .hidden-phone {
+        display: none !important;
+    }
+    .visible-block-phone {
+        display: block !important;
+    }
+    
+    .ui-dialog {
+        box-sizing: border-box;
+        width: 100% !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+    .ui-dialog-content {
+        height: 0 !important;
+    }
+    .ui-dialog-content.ui-dialog-last {
+        height: inherit !important;
+    }
+    .ui-dialog .ui-resizable-handle {
+        display: none !important;
+    }
+    .ui-draggable .ui-dialog-titlebar {
+        cursor: inherit !important;
+    }
+    .ui-widget-overlay {
+        display: block !important;
+    }
+
+    #legend #legend_left, #legend #legend_right {
+        float: none;
+        width: auto;
+    }
+    .fc-view-basicDay .fc-day-content {
+        padding-bottom: 40px !important;
+    }
+    .fc-event a {
+        padding: 1.5em 0;
+    }
+    .fc-event a span {
+        margin: 0 10px;
+    }
+    .fc-event a .fc-event-time {
+        float: left;
+    }
+    .fc-event a .fc-event-title {
+        margin-right: 10px;
+        display: block;
+        overflow: hidden;
+    }
+    .fc-header-left .fc-header-title {
+        display: block !important;
+    }
+    .fc-header-center, .fc-button-month, .fc-button-agendaWeek {
+        display: none !important;
+    }
+}
+
+/* Tablets, less than 992px */
+.visible-block-tablet {
+    display: none !important;
+}
+@media (max-width: 991) {
+    a.disabled-tablet {
+        pointer-events: none;
+        opacity: 0.7;
+        background-color: #ccc;
+    }
+    .hidden-tablet {
+        display: none !important;
+    }
+    .visible-block-tablet {
+        display: block !important;
+    }
 }

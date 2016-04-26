@@ -4,42 +4,25 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <title>Academic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
 <link rel="shortcut icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
-<?php 
-	echo $scripts_for_layout;
-	echo $javascript->link('jquery'); 
-	echo $javascript->link('jquery-ui');
-	echo $javascript->link('jquery.autocomplete');
-	echo $javascript->link('jquery.tooltip');
-	echo $javascript->link('fullcalendar');
-
-	echo $html->css('cake.generic.css');
-
-	if (isset($events_schedule) || isset($bookings_schedule))
-		echo $html->css('events.forms.css');
-	else
-		echo $html->css('generic.forms.css');
-		
-	echo $html->css('jquery-ui');
-	echo $html->css('jquery.autocomplete');
-	echo $html->css('fullcalendar.css');
-	echo $html->css('jquery.tooltip');
-?>
-
-
+<?php echo $this->element('scripts', array(
+    'scripts_for_layout' => $scripts_for_layout,
+    'forms_type' => isset($events_schedule) || isset($bookings_schedule)? 'events' : 'generic'
+)); ?>
 </head>
 <body>
 <div id="container">
 	<div id="header">
 			<div class="left">
 				<ul class="logo">
-					<li>
+					<li class="hidden-phone">
 						<a href="<?php echo PATH?>/courses">
 							<img src="<?php echo PATH?>/img/logo.jpg">
 						</a>
 					</li>
-					<li>
+					<li class="hidden-phone">
 						<img src="<?php echo PATH?>/img/divider.jpg">
 					</li>
 					<li>
@@ -99,6 +82,11 @@
 	</div>
 
 	<div id="footer">
+    <p class="logo visible-block-phone">
+      <a href="<?php echo PATH?>/courses">
+        <img src="<?php echo PATH?>/img/logo.jpg">
+      </a>
+    </p>
 		<?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
 	</div>
 

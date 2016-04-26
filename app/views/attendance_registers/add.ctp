@@ -103,7 +103,8 @@
 
 				<dd>
 					<?php echo $form->hour('final_hour', true, isset($final_date) ? $final_date->format('H') : "07", array('timeFormat' => '24')) ?>
-					:<select id="AttendanceRegisterFinalHourMin" name="data[AttendanceRegister][final_hour][minute]">
+					:
+          <select id="AttendanceRegisterFinalHourMin" name="data[AttendanceRegister][final_hour][minute]">
 						<?php $selected = isset($final_date) ? $final_date->format('i') : '00' ?>
 						<option value="00" <?php echo ($selected === '00') ? 'selected' : '' ?> >00</option>
 						<option value="30" <?php echo ($selected === '30') ? 'selected' : '' ?> >30</option>

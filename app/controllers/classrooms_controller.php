@@ -117,7 +117,7 @@ class ClassroomsController extends AppController {
     }
     
     $classrooms = array();
-		foreach($this->Classroom->find('all', array('order' => array('Classroom.name'))) as $classroom):
+		foreach($this->Classroom->find('all', array('order' => array('Classroom.name'), 'recursive' => -1)) as $classroom):
 			$classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
 		endforeach;
 		$this->set('classrooms', $classrooms);

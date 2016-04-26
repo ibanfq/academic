@@ -57,7 +57,8 @@
 				</dt>
 				<dd>
 					<?php echo $form->hour('initial_hour', true, "07", array('timeFormat' => '24')); ?>
-					:<select id="AttendanceRegisterInitialHourMin" name="data[AttendanceRegister][initial_hour][minute]">
+					:
+          <select id="AttendanceRegisterInitialHourMin" name="data[AttendanceRegister][initial_hour][minute]">
 						<option value="00">00</option>
 						<option value="30">30</option>
 					</select>
@@ -73,7 +74,8 @@
 				
 				<dd>
 					<?php echo $form->hour('final_hour', true, "07", array('timeFormat' => '24')); ?>
-					:<select id="AttendanceRegisterFinalHourMin" name="data[AttendanceRegister][final_hour][minute]">
+					:
+          <select id="AttendanceRegisterFinalHourMin" name="data[AttendanceRegister][final_hour][minute]">
 						<option value="00">00</option>
 						<option value="30">30</option>
 					</select>

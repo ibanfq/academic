@@ -19,6 +19,7 @@
 				</tr>
 			<?php endforeach; ?>
 		</tbody>
+  </table>
 <?php } else { ?>
 	<p>Actualmente no figura matriculado en ninguna asignatura. Si considera que estos datos son incorrectos, le rogamos que se ponga en contacto con la dirección del centro.</p>
 <?php } ?>

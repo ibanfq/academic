@@ -1,4 +1,10 @@
+<div id="mobile-query" class="visible-block-phone"></div>
+
 <script type="text/javascript">
+function isMobile() {
+    return $('#mobile-query').css('display') !== 'none';
+}
+
 var events;
 
 function update_content() {
@@ -11,9 +17,9 @@ $(document).ready(function() {
 		header: {
 			right: 'prev,next today',
 			center: 'title',
-			left: 'month,agendaWeek'
+			left: 'title,month,agendaWeek'
 		},
-		defaultView: 'agendaWeek',
+		defaultView: isMobile()? 'basicDay' : 'agendaWeek',
 		defaultEventMinutes: 60,
 		editable: false,
 		minTime: 7,
@@ -30,6 +36,15 @@ $(document).ready(function() {
 		dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
 		dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
 		buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
+                windowResize: function(view) {
+                    if (isMobile()) {
+                        if (view.name !== 'basicDay') {
+                            $('#calendar').fullCalendar('changeView', 'basicDay');
+                        }
+                    } else if (view.name === 'basicDay') {
+                        $('#calendar').fullCalendar('changeView', 'agendaWeek');
+                    }
+                },
 		<?php if (isset($auth)) { ?>
 		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
 		    eventClick: function(event, jsEvent, view) {

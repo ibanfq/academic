@@ -1,14 +1,18 @@
-
+<div id="mobile-query" class="visible-block-phone"></div>
 
 <script type="text/javascript">
+function isMobile() {
+    return $('#mobile-query').css('display') !== 'none';
+}
+
 $(document).ready(function() {
 	$('#calendar').fullCalendar({
 		header: {
 			right: 'prev,next today',
 			center: 'title',
-			left: 'month,agendaWeek'
+			left: 'title,month,agendaWeek'
 		},
-		defaultView: 'agendaWeek',
+		defaultView: isMobile()? 'basicDay' : 'agendaWeek',
 		defaultEventMinutes: 60,
 		editable: false,
 		minTime: 7,
@@ -38,6 +42,15 @@ $(document).ready(function() {
 		dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
 		dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
 		buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
+                windowResize: function(view) {
+                    if (isMobile()) {
+                        if (view.name !== 'basicDay') {
+                            $('#calendar').fullCalendar('changeView', 'basicDay');
+                        }
+                    } else if (view.name === 'basicDay') {
+                        $('#calendar').fullCalendar('changeView', 'agendaWeek');
+                    }
+                },
 		<?php if (($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrador")) { ?>
 		eventClick: function(event, jsEvent, view) {
 			if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))

@@ -1,6 +1,11 @@
 <?php $html->addCrumb('Reservas', '/bookings'); ?>
 
+<div id="mobile-query" class="visible-block-phone"></div>
+
 <script type="text/javascript">
+function isMobile() {
+    return $('#mobile-query').css('display') !== 'none';
+}
 
 	var currentEvent = null;
 
@@ -73,9 +78,9 @@
 			header: {
 				right: 'prev,next today',
 				center: 'title',
-				left: 'month,agendaWeek'
+				left: 'title,month,agendaWeek'
 			},
-			defaultView: 'agendaWeek',
+			defaultView: isMobile()? 'basicDay' : 'agendaWeek',
 			defaultEventMinutes: 60,
 			editable: true,
 			selectable: {
@@ -131,6 +136,15 @@
 				}
 			},
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
+      windowResize: function(view) {
+          if (isMobile()) {
+              if (view.name !== 'basicDay') {
+                  $('#calendar').fullCalendar('changeView', 'basicDay');
+              }
+          } else if (view.name === 'basicDay') {
+              $('#calendar').fullCalendar('changeView', 'agendaWeek');
+          }
+      },
 			eventClick: function(event, jsEvent, view) {
 				id = event.id.match(/\d+/);
 				var url;
@@ -336,13 +350,15 @@
 					<dl>
 						<label for="BookingInitialHour" style="display:inline">Desde</label>
 						<?php echo $form->hour('initial_hour', true, "07", array('timeFormat' => '24')); ?>
-						:<select id="BookingInitialHourMin" name="data[Booking][initial_hour][minute]">
+						:
+            <select id="BookingInitialHourMin" name="data[Booking][initial_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>
 						<label for="BookingFinalHour" style="display:inline">Hasta</label>
 						<?php echo $form->hour('final_hour', true, "07", array('timeFormat' => '24')); ?>
-						:<select id="BookingFinalHourMin" name="data[Booking][final_hour][minute]">
+						:
+            <select id="BookingFinalHourMin" name="data[Booking][final_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>
