@@ -9,10 +9,10 @@
 <link rel="shortcut icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
 <?php 
 	echo $scripts_for_layout;
-	echo $javascript->link('jquery'); 
+	echo $javascript->link('jquery');
 
 	echo $html->css('cake.generic.css');
-    echo $html->css('board.css');
+  echo $html->css('board.css');
 ?>
 </head>
 <body>

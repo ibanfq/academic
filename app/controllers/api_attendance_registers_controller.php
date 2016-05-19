@@ -72,57 +72,59 @@ class ApiAttendanceRegistersController extends AppController {
             break;
 
           case 'closed':
-            $students = $this->AttendanceRegister->query("
-              SELECT Student.*, UserAttendanceRegister.*
-              FROM users Student
-              INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
-                AND UserAttendanceRegister.user_gone
-              WHERE UserAttendanceRegister.attendance_register_id = {$id}
-              ORDER BY Student.last_name, Student.first_name
-            ");
-            
-            if ($students === false) {
-              $this->Api->setError('No se ha podido finalizar el evento debido a un error con el servidor.');
-            } else if (empty($students)) {
-              $this->Api->setError('No se puede registrar un evento sin alumnos.');
-            } else {
-              $attendanceRegister['Student'] = array();
-              foreach ($students as $student) {
-                $attendanceRegister['Student'][] = array(
-                    'UserAttendanceRegister' => $student['UserAttendanceRegister']
-                );
-              }
-              $initial_date = date_create($attendanceRegister['AttendanceRegister']['initial_hour']);
-              $final_date = date_create($attendanceRegister['AttendanceRegister']['final_hour']);
+            if (!empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
+              $students = $this->AttendanceRegister->query("
+                SELECT Student.*, UserAttendanceRegister.*
+                FROM users Student
+                INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+                  AND UserAttendanceRegister.user_gone
+                WHERE UserAttendanceRegister.attendance_register_id = {$id}
+                ORDER BY Student.last_name, Student.first_name
+              ");
 
-              $attendanceRegister['AttendanceRegister']['secret_code'] = null;
-              $attendanceRegister['AttendanceRegister']['date'] = $initial_date->format('d-m-Y');
-              $attendanceRegister['AttendanceRegister']['initial_hour'] = $initial_date->format('H:i');
-              $attendanceRegister['AttendanceRegister']['final_hour'] = $final_date->format('H:i');
-              $attendanceRegister['AttendanceRegister']['num_students'] = count($attendanceRegister['Student']);
-
-              if ($this->AttendanceRegister->save($attendanceRegister)) {
-                $this->_view($id);
-                $attendanceRegister = $this->Api->getStatus() === 'success'? $this->Api->getData() : false;
-                
-                if ($attendanceRegister) {
-                  if ($this->Auth->user('type') === "Profesor" && $attendanceRegister['Event']['teacher_2_id'] === $this->Auth->user('id')) {
-                    $teacher = $attendanceRegister['Teacher_2'];
-                  } else {
-                    $teacher = $attendanceRegister['Teacher'];
-                  }
-                  $this->Email->reset();
-                  $this->Email->from = 'Academic <noreply@ulpgc.es>';
-                  $this->Email->to = $teacher['username'];
-                  $this->Email->subject = "Evento registrado";
-                  $this->Email->sendAs = 'both';
-                  $this->Email->template = 'attendance_register_closed';
-                  $this->set('teacher', $teacher);
-                  $this->set('attendanceRegister', $attendanceRegister);
-                  $this->Email->send();
-                }
+              if ($students === false) {
+                $this->Api->setError('No se ha podido finalizar el evento debido a un error con el servidor.');
+              } else if (empty($students)) {
+                $this->Api->setError('No se puede registrar un evento sin alumnos.');
               } else {
-                $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.');
+                $attendanceRegister['Student'] = array();
+                foreach ($students as $student) {
+                  $attendanceRegister['Student'][] = array(
+                      'UserAttendanceRegister' => $student['UserAttendanceRegister']
+                  );
+                }
+                $initial_date = date_create($attendanceRegister['AttendanceRegister']['initial_hour']);
+                $final_date = date_create($attendanceRegister['AttendanceRegister']['final_hour']);
+
+                $attendanceRegister['AttendanceRegister']['secret_code'] = null;
+                $attendanceRegister['AttendanceRegister']['date'] = $initial_date->format('d-m-Y');
+                $attendanceRegister['AttendanceRegister']['initial_hour'] = $initial_date->format('H:i');
+                $attendanceRegister['AttendanceRegister']['final_hour'] = $final_date->format('H:i');
+                $attendanceRegister['AttendanceRegister']['num_students'] = count($attendanceRegister['Student']);
+
+                if ($this->AttendanceRegister->save($attendanceRegister)) {
+                  $this->_view($id);
+                  $attendanceRegister = $this->Api->getStatus() === 'success'? $this->Api->getData() : false;
+
+                  if ($attendanceRegister) {
+                    $this->Email->reset();
+                    $this->Email->from = 'Academic <noreply@ulpgc.es>';
+                    $this->Email->to = $attendanceRegister['Teacher']['username'];
+                    $this->Email->subject = "Evento registrado";
+                    $this->Email->sendAs = 'both';
+                    $this->Email->template = 'attendance_register_closed';
+                    $this->set('teacher', $attendanceRegister['Teacher']);
+                    $this->set('attendanceRegister', $attendanceRegister);
+                    $this->Email->send();
+                    if (!empty($attendanceRegister['Teacher_2']['username'])) {
+                      $this->Email->to = $attendanceRegister['Teacher_2']['username'];
+                      $this->set('teacher', $attendanceRegister['Teacher_2']);
+                      $this->Email->send();
+                    }
+                  }
+                } else {
+                  $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.');
+                }
               }
             }
             break;
@@ -175,14 +177,21 @@ class ApiAttendanceRegistersController extends AppController {
     }
 
     if ($event) {
-      $secret_code = null;
-      if (empty($event['AttendanceRegister']['secret_code'])) {
-        $secret_code = strtoupper(substr(base_convert(uniqid(mt_rand(), true), 10, 36), 0, 6));
+      $today = new DateTime("today");
+      $initial_date = date_create($event['Event']['initial_hour']);
+      $initial_date->setTime(0, 0, 0);
+      if ($today->format('Ymd') === $initial_date->format('Ymd')) {
+        $secret_code = null;
+        if (empty($event['AttendanceRegister']['secret_code'])) {
+          $secret_code = strtoupper(substr(base_convert(uniqid(mt_rand(), true), 10, 36), 0, 6));
+        }
+        $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
+        $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];
+        unset($attendance_register['AttendanceRegister']['Student']);
+        $this->Api->setData($attendance_register);
+      } else {
+        $this->Api->setError('Sólo puedes crear las asistencias de los eventos que impartes hoy.');
       }
-      $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
-      $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];
-      unset($attendance_register['AttendanceRegister']['Student']);
-      $this->Api->setData($attendance_register);
     } else {
       $this->Api->setError('No se ha podido acceder al evento.');
     }

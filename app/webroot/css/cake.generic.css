@@ -163,6 +163,11 @@ div.actions {
 	width:18%;
 	padding:10px 1.5%;
 }
+form div.actions {
+	float:none;
+	width:auto;
+	padding:0;
+}
 div.actions h3 {
 	padding-top:0;
 	color:#777;
@@ -338,6 +343,11 @@ td.actions a {
 	text-decoration:none;
 	text-shadow: #fff 0px 1px 0px;
 	min-width: 0;
+        cursor:pointer;
+}
+a.button {
+    border-width: 2px;
+    border-style: outset;
 }
 input[type=submit]:hover,
 div.actions ul li a:hover,
@@ -560,6 +570,10 @@ ul.groups li {
 	font-size:80%;
 }
 
+#tooltip form {
+    display: none;
+}
+
 /* Phones-S, less than 375px */
 .visible-block-phone-s {
     display: none !important;
@@ -619,6 +633,9 @@ ul.groups li {
     
     div.actions {
         max-width: 300px;
+    }
+    form div.actions {
+        max-width: inherit;
     }
     div.actions, div.view {
         float: none;

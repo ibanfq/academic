@@ -119,30 +119,34 @@ class Subject extends AcademicModel {
 		$subject = $this->findById($id, array('Subject.id', 'Course.initial_date', 'Course.final_date'));
 		$groups = Set::extract('/Group/id', $subject);
 		$activities = Set::extract('/Activity/id', $subject);
-
-		$this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
-		$registers = $this->Group->AttendanceRegister->query(sprintf(
-			"SELECT `Activity`.`id`, `Activity`.`name`, SUM(`AttendanceRegister`.`duration`) / `Group`.`total` as `activity_total`, `Teacher`.`first_name`, `Teacher`.`last_name`, `AttendanceRegister`.*
-			FROM `attendance_registers` `AttendanceRegister`
-			INNER JOIN `activities` `Activity` ON `Activity`.`id` = `AttendanceRegister`.`activity_id`
-			LEFT JOIN (
-				SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
-				FROM `events` `Event`
-				LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
-				WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
-				GROUP BY `Event`.`activity_id`
-			) `Group` ON `Group`.`activity_id` = `Activity`.`id`
-			INNER JOIN `users` `Teacher` ON `Teacher`.`id` = `AttendanceRegister`.`teacher_id`
-			WHERE `AttendanceRegister`.`group_id` IN (%s)
-			AND `AttendanceRegister`.`activity_id` IN (%s)
-			AND `AttendanceRegister`.`initial_hour` >= '%s'
-			AND `AttendanceRegister`.`initial_hour` <= '%s'
-			GROUP BY `Activity`.`id`
-			ORDER BY `Activity`.`id` ASC",
-				implode(',', $groups), implode(',', $activities),
-				date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
-				date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date']))
-		));
+    
+    if (!empty($groups) && !empty($activities)) {
+      $this->Group->bindModel(array('hasMany' => array('AttendanceRegister')));
+      $registers = $this->Group->AttendanceRegister->query(sprintf(
+        "SELECT `Activity`.`id`, `Activity`.`name`, SUM(`AttendanceRegister`.`duration`) / `Group`.`total` as `activity_total`, `Teacher`.`first_name`, `Teacher`.`last_name`, `AttendanceRegister`.*
+        FROM `attendance_registers` `AttendanceRegister`
+        INNER JOIN `activities` `Activity` ON `Activity`.`id` = `AttendanceRegister`.`activity_id`
+        LEFT JOIN (
+          SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
+          FROM `events` `Event`
+          LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
+          WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
+          GROUP BY `Event`.`activity_id`
+        ) `Group` ON `Group`.`activity_id` = `Activity`.`id`
+        INNER JOIN `users` `Teacher` ON `Teacher`.`id` = `AttendanceRegister`.`teacher_id`
+        WHERE `AttendanceRegister`.`group_id` IN (%s)
+        AND `AttendanceRegister`.`activity_id` IN (%s)
+        AND `AttendanceRegister`.`initial_hour` >= '%s'
+        AND `AttendanceRegister`.`initial_hour` <= '%s'
+        GROUP BY `Activity`.`id`
+        ORDER BY `Activity`.`id` ASC",
+          implode(',', $groups), implode(',', $activities),
+          date('Y-m-d 00:00:00', strtotime($subject['Course']['initial_date'])),
+          date('Y-m-d 23:59:59', strtotime($subject['Course']['final_date']))
+      ));
+    } else {
+      $registers = array();
+    }
 		return $registers;
 	}
 

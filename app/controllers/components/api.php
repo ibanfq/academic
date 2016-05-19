@@ -34,13 +34,12 @@ class ApiComponent extends Object {
     $_POST = &$old_post;
     $_GET = &$old_get;
     $_SERVER['REQUEST_METHOD'] = $old_request_method;
-    $this->_request = null;
     
     return $content;
   }
   
   function getParameter($name, $filters = null, $default = null) {
-    $value = $this->_request !== null? $this->_request : $_REQUEST;
+    $value = $_REQUEST;
     $filters = (array)$filters;
 
     foreach (explode('.', $name) as $path) {
@@ -95,6 +94,12 @@ class ApiComponent extends Object {
           } else {
             $this->addFail($name, 'Invalid');
             return null;
+          }
+          break;
+        
+        case 'password':
+          if ($value !== null) {
+            $value = Security::hash($value, null, true);
           }
           break;
           

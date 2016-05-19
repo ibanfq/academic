@@ -1,5 +1,5 @@
 <?php 
-	$html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers"); 
+	$html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers/$course_id"); 
 ?>
 
 <h1>Registros de asistencia</h1>
@@ -17,7 +17,13 @@
       $date = date_create($register['Event']['initial_hour']);
     ?>
       <tr>
-				<td><?php echo $html->link($date->format('d-m-Y'), array('action' => 'edit_student_attendance', $register['Event']['id'])) ?></td>
+				<td><?php
+            if (empty($register['AttendanceRegister']['secret_code'])) {
+              echo $html->link($date->format('d-m-Y'), array('action' => 'edit_student_attendance', $register['Event']['id']));
+            } else {
+              echo $html->link($date->format('d-m-Y'), array('action' => 'view', $register['AttendanceRegister']['id']));
+            }
+        ?></td>
 				<td><?php echo $register['Activity']['name'] ?></td>
 				<td><?php echo $register['Subject']['name'] ?></td>
 				<td><?php echo $register[0]['num_students'] ?></td>  

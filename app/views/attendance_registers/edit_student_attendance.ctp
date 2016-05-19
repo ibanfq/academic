@@ -1,3 +1,12 @@
+<?php 
+	$html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers/{$subject['Subject']['course_id']}"); 
+  if ($students === false) {
+    $html->addCrumb($event['Activity']['name'], "/attendance_registers/edit_student_attendance/{$event['Event']['id']}"); 
+  } else {
+    $html->addCrumb($ar['Activity']['name'], "/attendance_registers/edit_student_attendance/{$ar['Event']['id']}"); 
+  }
+?>
+
 <?php if ($students === false): // Edition is blocked, show subject information ?>
 <?php echo $this->Html->css('attendance_registers', null, array('inline' => false)) ?>
 <?php $initial_hour = date_create($event['Event']['initial_hour']) ?>
@@ -23,7 +32,7 @@
 	<div class="input">
 		<dl>
 			<dt><label for="teacher">Profesor</label></dt>
-			<dd><input type="input" id="teacher" readonly disabled value="<?php echo "{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}" ?>"/></dd>
+			<dd><input type="input" id="teacher" readonly disabled class="disabled" value="<?php echo "{$event['Teacher']['first_name']} {$event['Teacher']['last_name']}" ?>"/></dd>
 		</dl>
 	</div>
 
@@ -31,7 +40,7 @@
 		<dl>
 			<dt><label for="teacher_2">2º Profesor</label></dt>
 			<dd>
-			  <input type="input" id="teacher_2" readonly disabled value="<?php
+			  <input type="input" id="teacher_2" readonly disabled class="disabled" value="<?php
 			    if (isset($event['Teacher_2']['id']))
 			      echo "{$event['Teacher_2']['first_name']} {$event['Teacher_2']['last_name']}"
 			    ?>"
@@ -43,10 +52,14 @@
 	<div class="input">
 		<dl>
 			<dt><label for="teacher">Fecha y hora</label></dt>
-			<dd><input type="input" readonly disabled value="<?php echo $initial_hour->format('d/m/Y H:i')."-".$final_hour->format('H:i') ?>"/></dd>
+			<dd><input type="input" readonly disabled class="disabled" value="<?php echo $initial_hour->format('d/m/Y H:i')."-".$final_hour->format('H:i') ?>"/></dd>
 		</dl>
 	</div>
-	<p class="info-message">No es posible editar el registro de asistencia hasta que la hoja de firmas no se haya imprimido.</p>
+  <?php if ($auth->user('type') != "Profesor"): ?>
+    <p class="info-message">No es posible editar el registro de asistencia hasta que la hoja de firmas no se haya imprimido.</p>
+  <?php else: ?>
+    <p class="info-message">No es posible editar el registro de asistencia hasta que el evento haya sido marcado como impartido.</p>
+  <?php endif; ?>
 </fieldset>
 <?php echo $form->end(); ?>
 <?php else: ?>
@@ -75,7 +88,7 @@
 		<div class="input">
 			<dl>
 				<dt><label for="teacher">Profesor</label></dt>
-				<dd><input type="input" id="teacher" readonly disabled value="<?php echo "{$ar['Teacher']['first_name']} {$ar['Teacher']['last_name']}" ?>"/></dd>
+				<dd><input type="input" id="teacher" readonly disabled class="disabled" value="<?php echo "{$ar['Teacher']['first_name']} {$ar['Teacher']['last_name']}" ?>"/></dd>
 			</dl>
 		</div>
 
@@ -83,7 +96,7 @@
 			<dl>
 				<dt><label for="teacher_2">2º Profesor</label></dt>
 				<dd>
-				  <input type="input" id="teacher_2" readonly disabled value="<?php
+				  <input type="input" id="teacher_2" readonly disabled class="disabled" value="<?php
 				    if (isset($ar['Teacher_2']['id']))
 				      echo "{$ar['Teacher_2']['first_name']} {$ar['Teacher_2']['last_name']}"
 				    ?>"
@@ -95,7 +108,7 @@
 		<div class="input">
 			<dl>
 				<dt><label for="teacher">Fecha y hora</label></dt>
-				<dd><input type="input" readonly disabled value="<?php echo $initial_hour->format('d/m/Y H:i')."-".$final_hour->format('H:i') ?>"/></dd>
+				<dd><input type="input" readonly disabled class="disabled" value="<?php echo $initial_hour->format('d/m/Y H:i')."-".$final_hour->format('H:i') ?>"/></dd>
 			</dl>
 		</div>
 
@@ -117,9 +130,10 @@
 			<tbody id="students">
 				<?php $i = 0 ?>
 				<?php foreach ($students as $student): ?>
+          <?php $checked = empty($ar['AttendanceRegister']['secret_code'])? 'checked' : ''; ?>
 					<tr id="row_<?php echo $i?>">
 						<td><?php echo "{$student['first_name']} {$student['last_name']}"?></td>
-						<td><input type="checkbox" name="data[AttendanceRegister][students][<?php echo $student['id'] ?>]" value="1" id="students_<?php echo $student['id'] ?>" checked /></td>
+						<td><input type="checkbox" name="data[AttendanceRegister][students][<?php echo $student['id'] ?>]" value="1" id="students_<?php echo $student['id'] ?>" <?php echo $checked ?> /></td>
 					</tr>
 					<?php $i++; ?>
 				<?php endforeach;?>

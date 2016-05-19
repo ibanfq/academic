@@ -19,3 +19,21 @@
 <p><strong>Aula:</strong> <?php echo $event['Classroom']['name'] ?></p>
 <p><strong>Observaciones:</strong> <?php echo $event['Activity']['notes'] ?>
 <br>
+<?php if (isset($auth) && in_array($auth->user('type'), array("Profesor", "Administrador", "Administrativo", "Becario"))): ?>
+    <?php echo $this->Form->create('AttendanceRegister', array('action' => 'add_by_event/'.$event['Event']['id'])) ?>
+    <?php echo $form->input('Event.id', array('type' => 'hidden', 'value' => $event['Event']['id'])); ?>
+    <div class="actions">
+        <ul>
+            <li><a class="button" target="_blank" href="<?php echo PATH ?>/attendance_registers/print_attendance_file/<?php echo $event['Event']['id'] ?>">Imprimir hoja de asistencia</a></li>
+            <?php
+              $today = new DateTime("today");
+              $isToday = $today->format('Ymd') === $initial_date->format('Ymd');
+              $teachers = array($event['Event']['teacher_id'], $event['Event']['teacher_2_id']);
+              if ($isToday && ($auth->user('type') !== "Profesor" || in_array($auth->user('id'), $teachers))):
+            ?>
+                <li><input type="submit" value="Crear asistencias" /></li>
+            <?php endif; ?>
+        </ul>
+    </div>
+  <?php echo $this->Form->end() ?>
+<?php endif; ?>

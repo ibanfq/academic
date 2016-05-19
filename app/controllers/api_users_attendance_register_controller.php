@@ -57,7 +57,9 @@ class ApiUsersAttendanceRegisterController extends AppController {
       $student_id = $this->Api->getParameter('UserAttendanceRegister.user_id', array('required', 'integer'), $student_id);
     }
     
-    $dni = $this->Api->getParameter('User.dni', ($is_anonymous? array('required', 'integer') : array('integer')));
+    $username = $this->Api->getParameter('User.username');
+    $dni = $this->Api->getParameter('User.dni', ($is_anonymous && empty($username)? array('required', 'integer') : array('integer')));
+    $password = $this->Api->getParameter('User.password', ($is_anonymous? array('required', 'password') : array('password')));
     $secret_code = $this->Api->getParameter('AttendanceRegister.secret_code', ($is_anonymous || $is_student? array('required') : array()));
     
     if ($attendance_id) {
@@ -65,10 +67,23 @@ class ApiUsersAttendanceRegisterController extends AppController {
       if ($attendanceRegister && $is_teacher) {
         if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
           $attendanceRegister = false;
+        } else {
+          $students_count = $this->UserAttendanceRegister->query("
+            SELECT count('') as total
+            FROM users_attendance_register
+            WHERE attendance_register_id = {$attendanceRegister['AttendanceRegister']['id']} AND user_gone
+          ");
+          if ($students_count && intval($students_count[0][0]['total']) === 0) {
+            $this->Api->setError('No puedes añadir estudiantes hasta que al menos uno se haya registrado ya usando el código de acceso.');
+            $attendanceRegister = false;
+          }
         }
       }
     } else if (strlen($secret_code)) {
       $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->findBySecretCode($secret_code);
+      if (!$attendanceRegister) {
+        $this->Api->setError('No existe ningún evento con ese código.');
+      }
     }
     
     if ($attendanceRegister) {
@@ -82,14 +97,24 @@ class ApiUsersAttendanceRegisterController extends AppController {
           -1 // Recursive
         );
       } else if (strlen($dni)) {
-        $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByDni(
+        $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByDniAndPassword(
           $dni,
+          $password,
+          array(), // Fields
+          array(), // Order
+          -1 // Recursive
+        );
+      } else if (strlen($username)) {
+        $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByUsernameAndPassword(
+          $username,
+          $password,
           array(), // Fields
           array(), // Order
           -1 // Recursive
         );
       } else if ($is_student) {
-        $student = array('Student' => $this->Auth->user());
+        $user = $this->Auth->user();
+        $student = array('Student' => $user['User']);
       }
       
       if ($student && ($is_anonymous || $is_student)) {

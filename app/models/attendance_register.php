@@ -91,7 +91,7 @@ class AttendanceRegister extends AcademicModel {
             )
         );
       }
-      $ar['Student'] = array_values($student['Student']);
+      $ar['Student'] = array_values($ar['Student']);
       
       if (!empty($secret_code)) {
         $ar['AttendanceRegister']['secret_code'] = $secret_code;

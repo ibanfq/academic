@@ -1,7 +1,5 @@
-<p>
-	Hola:<br />
-	Desde Academic te informarmos que uno de tus eventos ha sido registrado como impartido.
-</p>
+<p>Hola</p>
+<p>Desde Academic te informarmos que uno de tus eventos ha sido registrado como impartido.</p>
 <p>
   <?php $initial_date = date_create($attendanceRegister['AttendanceRegister']['initial_hour']); ?>
   Fecha: <?php echo $initial_date->format('d/m/Y H:i') ?><br />

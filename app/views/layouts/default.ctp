@@ -38,10 +38,11 @@
 					<a href="<?php echo PATH?>/users/logout" class="logout">Salir</a>
 				<?php } ?>
 			</div>
-			<?php if (isset($auth)) { ?>
-				<div class="tabs">
-					<ul>
-						<li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Mi agenda</li>
+      <div class="tabs">
+        <ul>
+          <?php $section = isset($section)? $section : null ?>
+    			<?php if (isset($auth)) { ?>
+            <li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Mi agenda</a></li>
 						<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
 							<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
 								<li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
@@ -54,21 +55,25 @@
 							if ($auth->user('type') == "Estudiante") {
 						?>
 							<li class="<?php echo ($section == 'my_subjects' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users/my_subjects">Mis asignaturas</a></li>
+              <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
 						<?php }} ?>
 						<?php if (($auth->user('type') == 'Administrador') || ($auth->user('type') == 'Becario') || ($auth->user('type') == 'Administrativo')) { ?>
 							<li class="<?php echo ($section == 'attendance_registers' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/attendance_registers">Registros de impartición</a></li>
 						<?php } ?>
 						
 						<?php if ($auth->user('type') == 'Conserje') { ?>
-						    <li class="<?php echo ($section == 'classrools' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
+						    <li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
 						<?php } ?>
 						
 						<?php if (($auth->user('type') == 'Conserje') || ($auth->user('type') == 'Administrador')) { ?>
 							<li class="<?php echo ($section == 'bookings' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/bookings">Gestión de aulas</a></li>
 						<?php }?>
-					</ul>
-				</div>
-			<?php }?>
+          <?php } else { ?>
+              <li class="<?php echo ($section == 'users' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Identificarse</a></li>
+              <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
+          <?php } ?>
+        </ul>
+      </div>
 	</div>
 	
 	<div id="content">

@@ -53,8 +53,23 @@ $(document).ready(function() {
                 },
 		<?php if (($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrador")) { ?>
 		eventClick: function(event, jsEvent, view) {
-			if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
-				window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+                    var id = event.id.match(/\d+/);
+                    $.ajax({
+                        cache: false,
+                        type: "GET",
+                        url: "<?php echo PATH ?>/events/view/" + id, 
+                        success: function(data) {
+                            if (data == "false")
+                                alert("Usted no tiene permisos para editar este evento");
+                            else{
+                                $('#edit_form').html(data);
+                                $('#edit_form').dialog({
+                                    width:500, 
+                                    position:'top'
+                                });
+                            }
+                        }
+                    });
 		},
 		<?php } ?>
 		eventMouseover: function(event, jsEvent, view) {
@@ -83,6 +98,9 @@ $(document).ready(function() {
 </script>
 <div id="calendar_container">
 	<div id="calendar" class="fc" style="margin: 1em 0pt; font-size: 13px;"></div>
+</div>
+<div id="edit_form">
+		
 </div>
 <div id="EventDetails" style="display:none">
 	
