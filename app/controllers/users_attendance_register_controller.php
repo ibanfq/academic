@@ -24,7 +24,7 @@ class UsersAttendanceRegisterController extends AppController {
           $this->UserAttendanceRegister->User->invalidate('password', 'Por favor, introduzca su contraseña');
           $error = true;
         } else {
-          $data['User']['password'] = $this->data['User']['password'];
+          $data['User']['password'] = $_POST['data']['User']['password'];
         }
       }
       
