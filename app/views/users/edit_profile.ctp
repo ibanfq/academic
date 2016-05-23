@@ -19,6 +19,9 @@
 			echo $form->input('dni', array('label' => 'DNI sin letra', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 			echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
                     }
+      if ($auth->user('type') == "Profesor") {
+        echo $form->input('notify_all', array('label' => 'Activar el envío de correos automáticos si olvida pasar la asistencia'));
+      }
 		?>
 	</fieldset>
 	

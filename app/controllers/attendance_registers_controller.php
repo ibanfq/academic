@@ -312,11 +312,15 @@ class AttendanceRegistersController extends AppController {
         $this->Email->template = 'attendance_register_forgotten';
         $this->set('teacher', $event['Teacher']);
         $this->set('event', $event);
-        $this->Email->send();
+        if ($event['Teacher']['notify_all']) {
+          $this->Email->send();
+        }
         if (!empty($event['Teacher_2']['username'])) {
           $this->Email->to = $event['Teacher_2']['username'];
           $this->set('teacher', $event['Teacher_2']);
-          $this->Email->send();
+          if ($event['Teacher_2']['notify_all']) {
+            $this->Email->send();
+          }
         }
       }
     }

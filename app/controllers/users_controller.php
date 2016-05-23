@@ -197,7 +197,7 @@ class UsersController extends AppController {
                     if (in_array($this->Auth->user('type'), array('Estudiante', 'Profesor'))) {
                         $this->data['User'] = array_intersect_key(
                             $this->data['User'],
-                            array_flip(array('old_password', 'new_password', 'password_confirmation'))
+                            array_flip(array('old_password', 'new_password', 'password_confirmation', 'notify_all'))
                         );
                     }
 			if (($this->_changePasswordValidation()) && ($this->User->save($this->data))) {
