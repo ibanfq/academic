@@ -29,7 +29,7 @@
 	<?php if (isset($ar['Teacher_2']['id'])) {?>
   	
   	$('#teacher_2').val("<?php echo "{$ar['Teacher_2']['first_name']} {$ar['Teacher_2']['last_name']}"?>");
-  	$('#AttendanceRegisterTeacher_2Id').val("<?php echo "{$ar['Event']['teacher_2_id']}"?>");
+  	$('#AttendanceRegisterTeacher2Id').val("<?php echo "{$ar['Event']['teacher_2_id']}"?>");
   	
 	<?php }?>
 	

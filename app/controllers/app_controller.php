@@ -25,6 +25,10 @@ class AppController extends Controller {
 	function beforeFilter() {
 		$this->layout = 'default';
     
+    if (Configure::read('debug') > 0) {
+      $this->Email->delivery = 'debug';
+    }
+    
     $this->Security->validatePost = false;
     
     if ($this->isApi) {

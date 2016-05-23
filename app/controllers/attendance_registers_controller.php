@@ -188,6 +188,7 @@ class AttendanceRegistersController extends AppController {
 	 */
 	function add() {
 		if (!empty($this->data)) {
+      $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
 			list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
 			if ($id != null) {
 				$ar = $this->AttendanceRegister->read(null, $id);
@@ -238,7 +239,7 @@ class AttendanceRegistersController extends AppController {
         // Clean up secret code
         $this->data['AttendanceRegister']['secret_code'] = null;
 
-				if ($this->AttendanceRegister->save($this->data)) {
+				if ($this->AttendanceRegister->saveAll($this->data)) {
 					$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
 					$this->redirect(array('action' => 'add'));
 				}
@@ -411,6 +412,7 @@ class AttendanceRegistersController extends AppController {
 	 */
 	function edit($id = null){
 		if (!empty($this->data)){
+      $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
 			$this->data['AttendanceRegister']['id'] = $id;
 			$this->data['AttendanceRegister']['initial_hour'] = $this->data['AttendanceRegister']['initial_hour']['hour'].":".$this->data['AttendanceRegister']['initial_hour']['minute'];
 			$this->data['AttendanceRegister']['final_hour'] = $this->data['AttendanceRegister']['final_hour']['hour'].":".$this->data['AttendanceRegister']['final_hour']['minute'];
@@ -434,7 +436,7 @@ class AttendanceRegistersController extends AppController {
       // Clean up secret code
       $this->data['AttendanceRegister']['secret_code'] = null;
 
-			if ($this->AttendanceRegister->save($this->data)){
+			if ($this->AttendanceRegister->saveAll($this->data)){
 				$this->Session->setFlash('El registro de impartición se ha creado correctamente.');
 				$this->redirect(array('action' => 'view', $id));
 			}
@@ -518,6 +520,7 @@ class AttendanceRegistersController extends AppController {
 	function edit_student_attendance($event_id = null) {
 		// Preload student attendance by saving an attendance register
 		if (!empty($this->data)) {
+      $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
 			list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
 
 			$ar = $this->AttendanceRegister->read(null, $id);
@@ -538,7 +541,7 @@ class AttendanceRegistersController extends AppController {
           unset($this->data['AttendanceRegister']['students']);
         }
 
-        if ($this->AttendanceRegister->save($this->data)) {
+        if ($this->AttendanceRegister->saveAll($this->data)) {
           $this->Session->setFlash('El registro de asistencia se ha creado correctamente.');
           $course = $this->AttendanceRegister->Activity->Subject->Course->current();
           $this->redirect(array('action' => 'view_my_registers', $course['id']));
