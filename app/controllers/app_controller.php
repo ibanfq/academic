@@ -89,7 +89,7 @@ class AppController extends Controller {
     $data[ $this->Auth->fields['password'] ] = $this->Auth->password($login['password']);
     
     if (!$this->Auth->login($data) || !$this->_authorize()) {
-      $this->Security->blackHole($this, 'login');
+      $this->redirect(null, 401, true);
     }
   }
 
