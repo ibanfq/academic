@@ -72,7 +72,7 @@ class ApiEventsController extends AppController {
       } else {
         $where []= 'Event.duration > 0';
         $where = implode(' AND ', $where);
-        $order = ' ORDER BY Event.initial_hour DESC, Event.id';
+        $order = ' ORDER BY Event.initial_hour ASC, Event.id';
         $limit = " LIMIT $limit OFFSET $offset";
         $events = $this->Event->query(
           'SELECT distinct Event.*, Activity.*, Subject.*, `Group`.*, Classroom.*' .

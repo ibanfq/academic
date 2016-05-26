@@ -22,15 +22,17 @@
 <div class="actions">
 <?php if ($auth->user('type') === 'Profesor'): ?>
   <ul>
-    <?php if (!$hasSecretCode): ?>
-      <li><?php echo $html->link('Modificar registro', array('action' => 'edit_student_attendance', $ar['Event']['id'])) ?></li>
-    <?php else: ?>
+    <li><?php echo $html->link('Modificar registro', array('action' => 'edit_student_attendance', $ar['Event']['id']), array('id' => 'btn-edit', 'style' => $hasSecretCode? 'display:none' : '')) ?></li>
+    <?php if ($hasSecretCode): ?>
       <li><?php echo $html->link('Finalizar registro', array('action' => 'finalize', $ar['AttendanceRegister']['id']), array('id' => 'btn-finalize', 'class' => $has_students_with_user_gone? '': 'disabled')) ?></li>
     <?php endif; ?>
   </ul>
 <?php else: ?>
   <ul>
     <li><?php echo $html->link('Modificar registro', array('action' => 'edit', $ar['AttendanceRegister']['id'])) ?></li>
+    <?php if ($hasSecretCode): ?>
+      <li><?php echo $html->link('Finalizar registro', array('action' => 'finalize', $ar['AttendanceRegister']['id']), array('id' => 'btn-finalize', 'class' => $has_students_with_user_gone? '': 'disabled')) ?></li>
+    <?php endif; ?>
     <li><?php echo $html->link('Eliminar registro', array('action' => 'delete', $ar['AttendanceRegister']['id'])) ?></li>
   </ul>
 <?php endif; ?>
@@ -85,9 +87,13 @@
 		<?php }?>
 		
     <?php if ($isTeacherOfEvent && $hasSecretCode): ?>
-      <dl>
+      <dl id="secretCodeWrapper">
         <dt>Código de acceso</dt>
         <dd><?php echo $ar['AttendanceRegister']['secret_code'] ?></dd>
+      </dl>
+      <dl id="durationWrapper" style="display:none;">
+        <dt>Duración</dt>
+        <dd id="duration"></dd>
       </dl>
     <?php else: ?>
       <dl>
@@ -104,7 +110,7 @@
 	
 	<fieldset>
 	<legend>Estudiantes</legend>
-		<table>
+		<table id="studentsTable">
 			<thead>
 				<tr>
 					<th style="width:80%;">Estudiante</th>
@@ -114,7 +120,7 @@
 				</tr>
 			</thead>
       <?php if ($isTeacherOfEvent && $hasSecretCode): ?>
-        <tfoot>
+        <tfoot id="studentsFoot">
           <tr><td colspan=2 ><a id="btn-add" class="<?php echo $has_students_with_user_gone? '' : 'disabled' ?>" href="#" onclick="addRow(); return false;" title="Haga click para añadir un estudiante">Añadir estudiante</a></td></tr>
         </tfoot>
       <?php endif; ?>
@@ -136,9 +142,55 @@
 
 <?php if ($isTeacherOfEvent && $hasSecretCode): ?>
 <script type="text/javascript">
+  function refresh() {
+    $.ajax({
+      type: "GET",
+      url: "<?php echo PATH ?>/api/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
+      dataType: "json",
+      success: function (response) {
+        var index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
+        var total = response.data.Students.length;
+        $('#students tr[data-id]').addClass('refreshing');
+        var registered = response.data.Students.reduce(function (sum, student) {
+          if (student.UserAttendanceRegister.user_gone == true) {
+            if (!$('#students tr[data-id=' + student.Student.id + ']').removeClass('refreshing').length) {
+              var row = $('<tr id="row_' + index + '" data-id="' + student.Student.id + '"><td></td><td></td></tr>');
+              row.find('td:first').html(student.Student.first_name + ' ' + student.Student.last_name);
+              row.find('td:last').html('<a onclick="deleteRow(' + index + '); return false;" href="#">Eliminar</a>');
+              $('#students').append(row);
+            }
+            return sum + 1;
+          }
+          return sum;
+        }, 0);
+        $('#students tr.refreshing').remove();
+        $('#students-count').text(registered + ' / ' + total);
+        if (!$('#students tr[data-id]').length) {
+          $('#students tr').remove();
+          $('#btn-finalize, #btn-add').addClass('disabled');
+        } else {
+          $('#btn-finalize, #btn-add').removeClass('disabled');
+        }
+        if (!response.data.AttendanceRegister.secret_code) {
+          $('#duration').text(response.data.AttendanceRegister.duration);
+          $('#btn-finalize').remove();
+          $('#studentsFoot').remove();
+          $('#studentsTable th:last').remove();
+          $('#students tr td:last').remove();
+          $('#secretCodeWrapper').remove();
+          $('#durationWrapper').show();
+          $('#btn-edit').show();
+        } else {
+          setTimeout(refresh, 5000);
+        }
+      } 
+    });
+  }
+  setTimeout(refresh, 5000);
+  
   function addRow(){
-    index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
-    $('#students').append("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td style='vertical-align:middle'></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo PATH ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ addStudent(" + index + ", item[1]); });<\/script></tr>");
+    var index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
+    $('#students').append("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo PATH ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ addStudent(" + index + ", item[1]); });<\/script></tr>");
     $('#row_'+index+' input').focus();
   }
   
@@ -152,7 +204,7 @@
         type: "POST", 
         url: "<?php echo PATH ?>/api/users_attendance_register/",
         data: {'User[id]': id, 'AttendanceRegister[id]': <?php echo $ar['AttendanceRegister']['id'] ?>},
-        dataType: 'json',
+        dataType: "json",
         success: function (response) {
           var total = response.data.Students.length;
           var registered = response.data.Students.reduce(function (sum, student) {
