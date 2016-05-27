@@ -72,7 +72,9 @@ class ApiAttendanceRegistersController extends AppController {
             break;
 
           case 'closed':
-            if (!empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
+            if (empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
+              $this->_view($id);
+            } else {
               $students = $this->AttendanceRegister->query("
                 SELECT Student.*, UserAttendanceRegister.*
                 FROM users Student
