@@ -175,8 +175,8 @@
           $('#duration').text(response.data.AttendanceRegister.duration);
           $('#btn-finalize').remove();
           $('#studentsFoot').remove();
-          $('#studentsTable th:last').remove();
-          $('#students tr td:last').remove();
+          $('#studentsTable thead th:last').remove();
+          $('#students > tr td:last-child').remove();
           $('#secretCodeWrapper').remove();
           $('#durationWrapper').show();
           $('#btn-edit').show();
