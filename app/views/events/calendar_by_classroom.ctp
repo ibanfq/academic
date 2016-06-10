@@ -46,7 +46,7 @@ $(document).ready(function() {
 			
 			$.ajax({
 				type: "GET", 
-				url: url + event.id,
+				url: url + event.id.match(/\d+/),
 				asynchronous: false,
 				success: function(data) {
 					$('#tooltip').html(data);
