@@ -8,9 +8,13 @@ Aula: <?php echo $attendanceRegister['Classroom']['name'] ?><br />
 
 Con los siguientes asistentes:
 
-<?php foreach ($attendanceRegister['Students'] as $student): ?>
-<?php echo "{$student['Student']['last_name']} {$student['Student']['first_name']}\n"; ?>
-<?php endforeach; ?>
+<?php
+  foreach ($attendanceRegister['Students'] as $student) {
+    if (!empty($student['UserAttendanceRegister']['user_gone'])) {
+      echo "{$student['Student']['last_name']} {$student['Student']['first_name']}\n";
+    }
+  }
+?>
 
 Un saludo,
 El equipo de Academic.

@@ -8,8 +8,12 @@
 </p>
 <p>Con los siguientes asistentes:</p>
 <p>
-  <?php foreach ($attendanceRegister['Students'] as $student): ?>
-    <?php echo "{$student['Student']['last_name']} {$student['Student']['first_name']}<br />"; ?>
-  <?php endforeach; ?>
+  <?php
+    foreach ($attendanceRegister['Students'] as $student) {
+      if (!empty($student['UserAttendanceRegister']['user_gone'])) {
+        echo "{$student['Student']['last_name']} {$student['Student']['first_name']}<br />";
+      }
+    }
+  ?>
 </p>
 <p>Un saludo,<br />El equipo de Academic.</p>
