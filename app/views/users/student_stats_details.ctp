@@ -11,6 +11,7 @@
     return ($timestamp_a - $timestamp_b) / 3600.0;
   }
 ?>
+<h1>Estadísticas del estudiante <?php echo "{$user['User']['first_name']} {$user['User']['last_name']}" ?></h1>
 <table>
   <thead>
     <tr>
@@ -31,7 +32,12 @@
 			<tr>
 				<td><?php echo $initial_hour->format('d-m-Y') ?></td>
 				<td><?php echo $register['Activity']['name'] ?></td>
-				<td><?php echo "{$register['User']['first_name']} {$register['User']['last_name']}" ?></td>
+				<td><?php
+          echo "{$register['Teacher']['first_name']} {$register['Teacher']['last_name']}";
+          if (!empty($register['Teacher2']['first_name'])) {
+            echo " | {$register['Teacher2']['first_name']} {$register['Teacher2']['last_name']}";
+          }
+        ?></td>
 				<td><?php echo $duration ?></td>
 				<?php $total += $duration ?>
 			</tr>

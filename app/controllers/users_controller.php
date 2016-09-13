@@ -363,10 +363,11 @@ class UsersController extends AppController {
 	}
 	
 	function student_stats_details($id = null){
+    $this->User->id = $id;
 	  $subject_id = $this->params['url']['subject_id'];
-	  $registers = $this->User->query("SELECT AttendanceRegister.*, Event.*, Activity.name, User.first_name, User.last_name FROM attendance_registers AttendanceRegister INNER JOIN users_attendance_register uat ON uat.attendance_register_id = AttendanceRegister.id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id INNER JOIN users User ON User.id = uat.user_id WHERE uat.user_id = {$id} AND Activity.subject_id = {$subject_id} ORDER BY AttendanceRegister.initial_hour DESC");
-	  
-	  $this->set('registers', $registers);
+    $registers = $this->User->query("SELECT AttendanceRegister.*, Event.*, Activity.name, Teacher.first_name, Teacher.last_name, Teacher2.first_name, Teacher2.last_name FROM attendance_registers AttendanceRegister INNER JOIN users_attendance_register uat ON uat.attendance_register_id = AttendanceRegister.id AND uat.user_gone INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id LEFT JOIN users Teacher ON Teacher.id = AttendanceRegister.teacher_id LEFT JOIN users Teacher2 ON Teacher2.id = AttendanceRegister.teacher_2_id WHERE uat.user_id = {$id} AND Activity.subject_id = {$subject_id} ORDER BY AttendanceRegister.initial_hour DESC");
+    $this->set('user', $this->User->read());
+    $this->set('registers', $registers);
 	}
 	
 	function teacher_stats($id = null) {
