@@ -46,7 +46,7 @@
 			<dd><?php echo $user['User']['last_name']?></dd>
 		</dl>
 		<dl>
-			<dt>DNI</dt>
+			<dt>DNI (sin letra)</dt>
 			<dd><?php echo $user['User']['dni']?></dd>
 		</dl>
 		<dl>
