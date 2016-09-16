@@ -58,7 +58,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
     }
     
     $username = $this->Api->getParameter('User.username');
-    $dni = $this->Api->getParameter('User.dni', ($is_anonymous && empty($username)? array('required', 'integer') : array('integer')));
+    $dni = $this->Api->getParameter('User.dni', ($is_anonymous && empty($username)? array('required') : array()));
     $password = $this->Api->getParameter('User.password', ($is_anonymous? array('required', 'password') : array('password')));
     $secret_code = $this->Api->getParameter('AttendanceRegister.secret_code', ($is_anonymous || $is_student? array('required') : array()));
     
@@ -98,7 +98,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
         );
       } else if (strlen($dni)) {
         $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByDniAndPassword(
-          $dni,
+          strtoupper($dni),
           $password,
           array(), // Fields
           array(), // Order

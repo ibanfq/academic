@@ -14,7 +14,7 @@ class UsersAttendanceRegisterController extends AppController {
         if (empty($this->data['User']['username'])) {
           $this->UserAttendanceRegister->User->invalidate('username', 'Por favor, introduzca su correo electrónico o DNI');
           $error = true;
-        } elseif (is_numeric($this->data['User']['username'])) {
+        } elseif (strpos($this->data['User']['username'], '@') === false) {
           $data['User']['dni'] = $this->data['User']['username'];
         } else {
           $data['User']['username'] = $this->data['User']['username'];
