@@ -95,7 +95,7 @@ class MassiveAttendanceRegistersController extends AppController {
 			foreach($events as $event) {
 				$delete_query = "DELETE FROM attendance_registers WHERE event_id = {$event['Event']['id']} AND initial_hour = '0000-00-00 00:00:00'";
 				$this->MassiveAttendanceRegister->query($delete_query);
-				array_push($values, "({$event['Event']['id']}, '{$event['Event']['initial_hour']}', '{$event['Event']['final_hour']}', {$event['Event']['duration']}, {$event['Event']['teacher_id']}, {$event['Event']['activity_id']}, {$event['Event']['group_id']})");
+				array_push($values, "({$event['Event']['id']}, '{$event['Event']['initial_hour']}', '{$event['Event']['final_hour']}', 0, {$event['Event']['teacher_id']}, {$event['Event']['activity_id']}, {$event['Event']['group_id']})");
 			}
 			$query .= implode($values, ",");
 			$this->MassiveAttendanceRegister->query($query);
