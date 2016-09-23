@@ -52,7 +52,7 @@
     	        <td>
 								<?php
 									$duration = $register['Event']['duration'];
-									if ($register['AttendanceRegister']['duration'] != $register['Event']['duration'] && $register['AttendanceRegister']['duration'] >= 0) {
+									if ($register['AttendanceRegister']['duration'] != $register['Event']['duration'] && $register['AttendanceRegister']['duration'] > 0) {
 										$duration = $register['AttendanceRegister']['duration'];
 									}
 								?>

@@ -69,6 +69,7 @@ class MassiveAttendanceRegistersController extends AppController {
 			LEFT JOIN users User2 ON User2.id = AttendanceRegister.teacher_2_id
 			INNER JOIN subjects Subject ON Subject.id = Activity.subject_id AND Subject.id = `Group`.subject_id
 			WHERE DATE_FORMAT(AttendanceRegister.initial_hour, '%Y-%m-%d') = '{$date->format("Y-m-d")}'
+      AND AttendanceRegister.duration = 0
 			AND Event.classroom_id = {$classroom_id}
 			ORDER BY AttendanceRegister.initial_hour, Subject.name, Activity.name
 		");
