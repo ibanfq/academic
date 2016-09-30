@@ -273,6 +273,57 @@ class AttendanceRegister extends AcademicModel {
     }
     return $students;
   }
+  
+  function getStudentsWithUserGone($id) {
+    return $this->query("
+      SELECT Student.*, UserAttendanceRegister.*
+      FROM users Student
+      INNER JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.user_id = Student.id
+        AND UserAttendanceRegister.user_gone
+      WHERE UserAttendanceRegister.attendance_register_id = {$id}
+      ORDER BY Student.last_name, Student.first_name
+    ");
+  }
+  
+  function close($attendanceRegister, $studentsToRegister) {
+    if (empty($studentsToRegister)) {
+      return false;
+    }
+    
+    $attendanceRegister['Student'] = array();
+    foreach ($studentsToRegister as $student) {
+      $attendanceRegister['Student'][] = array(
+          'UserAttendanceRegister' => $student['UserAttendanceRegister']
+      );
+    }
+    $initial_date = date_create($attendanceRegister['AttendanceRegister']['initial_hour']);
+    $final_date = date_create($attendanceRegister['AttendanceRegister']['final_hour']);
+
+    $attendanceRegister['AttendanceRegister']['secret_code'] = null;
+    $attendanceRegister['AttendanceRegister']['date'] = $initial_date->format('d-m-Y');
+    $attendanceRegister['AttendanceRegister']['initial_hour'] = $initial_date->format('H:i');
+    $attendanceRegister['AttendanceRegister']['final_hour'] = $final_date->format('H:i');
+    $attendanceRegister['AttendanceRegister']['num_students'] = count($attendanceRegister['Student']);
+    
+    return $this->save($attendanceRegister);
+  }
+  
+  function notifyAttendanceRegisterClosed($attendanceRegister, $controller) {
+    $controller->Email->reset();
+    $controller->Email->from = 'Academic <noreply@ulpgc.es>';
+    $controller->Email->to = $attendanceRegister['Teacher']['username'];
+    $controller->Email->subject = "Evento registrado";
+    $controller->Email->sendAs = 'both';
+    $controller->Email->template = 'attendance_register_closed';
+    $controller->set('teacher', $attendanceRegister['Teacher']);
+    $controller->set('attendanceRegister', $attendanceRegister);
+    $controller->Email->send();
+    if (!empty($attendanceRegister['Teacher_2']['username'])) {
+      $controller->Email->to = $attendanceRegister['Teacher_2']['username'];
+      $controller->set('teacher', $attendanceRegister['Teacher_2']);
+      $controller->Email->send();
+    }
+  }
 	
 	function initialHourNotEmpty(){
 		return ($this->data['AttendanceRegister']['initial_hour'] != null);

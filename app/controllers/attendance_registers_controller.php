@@ -270,6 +270,8 @@ class AttendanceRegistersController extends AppController {
   }
   
   function clean_up_day() {
+    touch(dirname(dirname(__FILE__)).'/tmp/clean_up_day');
+    
     if (intval(date('H') < 8)) {
       $today_filter = '"' . date('Y-m-d', strtotime('yesterday')) . '" AND "' . date('Y-m-d') . '"';
     } else {
@@ -297,7 +299,28 @@ class AttendanceRegistersController extends AppController {
     foreach ($events as $event) {
       if ($event['AttendanceRegister']['secret_code'] && $event[0]['total_students']) {
         $id = $event['AttendanceRegister']['id'];
-        $this->Api->call('POST', "/api/attendance_registers/$id", array('AttendanceRegister' => array('status' => 'closed')));
+        $students = $this->AttendanceRegister->getStudentsWithUserGone($id);
+        $attendance_register = array('AttendanceRegister' => $event['AttendanceRegister']);
+        
+        if ($this->AttendanceRegister->close($attendance_register, $students)) {
+          $this->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('Student')));
+          $this->AttendanceRegister->bindModel(array('belongsTo' => array(
+            'Classroom' => array(
+              'foreignKey' => false,
+              'conditions' => array('Classroom.id = Event.classroom_id')
+            )
+          )));
+          $attendance_register = $this->AttendanceRegister->read(null, $id);
+          
+          if ($attendance_register) {
+            $attendance_register['Students'] = $this->AttendanceRegister->getStudentsForApi(
+              $id,
+              $attendance_register['AttendanceRegister']['activity_id'],
+              $attendance_register['AttendanceRegister']['group_id']
+            );
+            $this->AttendanceRegister->notifyAttendanceRegisterClosed($attendance_register, $this);
+          }
+        }
       } elseif ($event['AttendanceRegister']['secret_code']) {
         $this->AttendanceRegister->query("
           UPDATE attendance_registers
