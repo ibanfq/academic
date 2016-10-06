@@ -270,12 +270,13 @@ class AttendanceRegistersController extends AppController {
   }
   
   function clean_up_day() {
-    touch(dirname(dirname(__FILE__)).'/tmp/clean_up_day');
+    $log_file = dirname(dirname(__FILE__)) . '/tmp/clean_up_day_' . date('l');
+    file_put_contents($log_file, 'init: ' . date('c'));
     
-    if (intval(date('H') < 8)) {
+    if (intval(date('H') < 20)) {
       $today_filter = '"' . date('Y-m-d', strtotime('yesterday')) . '" AND "' . date('Y-m-d') . '"';
     } else {
-      $today_filter = '"' . date('Y-m-d') . '" AND "' . date('Y-m-d', strtotime('tomorrow')) . '"';
+      $today_filter = '"' . date('Y-m-d') . '" AND "' . date('Y-m-d H:i:s') . '"';
     }
     
     $events = $this->AttendanceRegister->query("
@@ -319,6 +320,7 @@ class AttendanceRegistersController extends AppController {
               $attendance_register['AttendanceRegister']['group_id']
             );
             $this->AttendanceRegister->notifyAttendanceRegisterClosed($attendance_register, $this);
+            file_put_contents($log_file, "\nAttendance Register with id {$event['AttendanceRegister']['id']} closed", FILE_APPEND);
           }
         }
       } elseif ($event['AttendanceRegister']['secret_code']) {
@@ -327,7 +329,9 @@ class AttendanceRegistersController extends AppController {
           SET duration = 0, secret_code = NULL
           WHERE id = {$event['AttendanceRegister']['id']}
         ");
+        file_put_contents($log_file, "\nAttendance Register with id {$event['AttendanceRegister']['id']} closed with duration 0", FILE_APPEND);
       } elseif (empty($event['AttendanceRegister']['id'])) {
+        
         $this->Email->reset();
         $this->Email->from = 'Academic <noreply@ulpgc.es>';
         $this->Email->to = $event['Teacher']['username'];
@@ -338,16 +342,20 @@ class AttendanceRegistersController extends AppController {
         $this->set('event', $event);
         if ($event['Teacher']['notify_all']) {
           $this->Email->send();
+          file_put_contents($log_file, "\nNotify id {$event['AttendanceRegister']['id']} not registed to {$event['Teacher']['username']}", FILE_APPEND);
         }
         if (!empty($event['Teacher_2']['username'])) {
           $this->Email->to = $event['Teacher_2']['username'];
           $this->set('teacher', $event['Teacher_2']);
           if ($event['Teacher_2']['notify_all']) {
             $this->Email->send();
+            file_put_contents($log_file, "\nNotify id {$event['AttendanceRegister']['id']} not registed to {$event['Teacher_2']['username']}", FILE_APPEND);
           }
         }
       }
     }
+    
+    file_put_contents($log_file, "\nend: " . date('c'), FILE_APPEND);
     exit;
   }
 
