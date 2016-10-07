@@ -1,4 +1,4 @@
-<div id="mobile-query" class="visible-block-phone"></div>
+<div id="mobile-query" class="visible-block-phone-portrait"></div>
 
 <script type="text/javascript">
 function isMobile() {

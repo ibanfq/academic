@@ -5,7 +5,7 @@
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('Programar curso', "/events/schedule/{$course['Course']['id']}"); ?>
 
-<div id="mobile-query" class="visible-block-phone"></div>
+<div id="mobile-query" class="visible-block-phone-portrait"></div>
 
 <script type="text/javascript">
 

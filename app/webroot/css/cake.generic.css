@@ -597,9 +597,28 @@ ul.groups li {
 }
 
 /* Phones, less than 768px */
-.visible-block-phone {
+.visible-block-phone,
+.visible-block-phone-portrait,
+.visible-block-phone-landscape {
     display: none !important;
 }
+@media screen and (orientation:portrait) {
+    .hidden-phone-portrait {
+        display: none !important;
+    }
+    .visible-block-phone-portrait {
+        display: block !important;
+    }
+}
+@media screen and (orientation:landscape) {
+    .hidden-phone-landscape {
+        display: none !important;
+    }
+    .visible-block-phone-landscape {
+        display: block !important;
+    }
+}
+
 .fc-header-left .fc-header-title {
     display: none !important;
 }
