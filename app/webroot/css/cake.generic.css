@@ -609,6 +609,29 @@ ul.groups li {
     .visible-block-phone-portrait {
         display: block !important;
     }
+    .fc-view-basicDay .fc-day-content {
+        padding-bottom: 40px !important;
+    }
+    .fc-event a {
+        padding: 1.5em 0;
+    }
+    .fc-event a span {
+        margin: 0 10px;
+    }
+    .fc-event a .fc-event-time {
+        float: left;
+    }
+    .fc-event a .fc-event-title {
+        margin-right: 10px;
+        display: block;
+        overflow: hidden;
+    }
+    .fc-header-left .fc-header-title {
+        display: block !important;
+    }
+    .fc-header-center, .fc-button-month, .fc-button-agendaWeek {
+        display: none !important;
+    }
 }
 @media screen and (orientation:landscape) {
     .hidden-phone-landscape {
@@ -705,29 +728,6 @@ ul.groups li {
     #legend #legend_left, #legend #legend_right {
         float: none;
         width: auto;
-    }
-    .fc-view-basicDay .fc-day-content {
-        padding-bottom: 40px !important;
-    }
-    .fc-event a {
-        padding: 1.5em 0;
-    }
-    .fc-event a span {
-        margin: 0 10px;
-    }
-    .fc-event a .fc-event-time {
-        float: left;
-    }
-    .fc-event a .fc-event-title {
-        margin-right: 10px;
-        display: block;
-        overflow: hidden;
-    }
-    .fc-header-left .fc-header-title {
-        display: block !important;
-    }
-    .fc-header-center, .fc-button-month, .fc-button-agendaWeek {
-        display: none !important;
     }
 }
 
