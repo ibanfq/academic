@@ -223,6 +223,7 @@
               }
           } else if (view.name === 'basicDay') {
               $('#calendar').fullCalendar('changeView', 'agendaWeek');
+              $('#calendar').fullCalendar('render'); // Fix problem with columns width
           }
       },
 			eventClick: function(event, jsEvent, view) {

@@ -43,6 +43,7 @@ $(document).ready(function() {
                         }
                     } else if (view.name === 'basicDay') {
                         $('#calendar').fullCalendar('changeView', 'agendaWeek');
+                        $('#calendar').fullCalendar('render'); // Fix problem with columns width
                     }
                 },
 		<?php if (isset($auth)) { ?>
