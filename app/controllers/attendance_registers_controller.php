@@ -320,7 +320,7 @@ class AttendanceRegistersController extends AppController {
               $attendance_register['AttendanceRegister']['group_id']
             );
             $this->AttendanceRegister->notifyAttendanceRegisterClosed($attendance_register, $this);
-            file_put_contents($log_file, "\nAttendance Register with id {$event['AttendanceRegister']['id']} closed", FILE_APPEND);
+            file_put_contents($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed", FILE_APPEND);
           }
         }
       } elseif ($event['AttendanceRegister']['secret_code']) {
@@ -329,7 +329,7 @@ class AttendanceRegistersController extends AppController {
           SET duration = 0, secret_code = NULL
           WHERE id = {$event['AttendanceRegister']['id']}
         ");
-        file_put_contents($log_file, "\nAttendance Register with id {$event['AttendanceRegister']['id']} closed with duration 0", FILE_APPEND);
+        file_put_contents($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed with duration 0", FILE_APPEND);
       } elseif (empty($event['AttendanceRegister']['id'])) {
         
         $this->Email->reset();
@@ -342,14 +342,14 @@ class AttendanceRegistersController extends AppController {
         $this->set('event', $event);
         if ($event['Teacher']['notify_all']) {
           $this->Email->send();
-          file_put_contents($log_file, "\nNotify id {$event['AttendanceRegister']['id']} not registed to {$event['Teacher']['username']}", FILE_APPEND);
+          file_put_contents($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher']['username']}", FILE_APPEND);
         }
         if (!empty($event['Teacher_2']['username'])) {
           $this->Email->to = $event['Teacher_2']['username'];
           $this->set('teacher', $event['Teacher_2']);
           if ($event['Teacher_2']['notify_all']) {
             $this->Email->send();
-            file_put_contents($log_file, "\nNotify id {$event['AttendanceRegister']['id']} not registed to {$event['Teacher_2']['username']}", FILE_APPEND);
+            file_put_contents($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher_2']['username']}", FILE_APPEND);
           }
         }
       }
