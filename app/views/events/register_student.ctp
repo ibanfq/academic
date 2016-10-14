@@ -56,7 +56,7 @@
 				$total_group_changes_requests = isset($changes_requests[$activity['id']][$group['id']])? count($changes_requests[$activity['id']][$group['id']]) : 0;
         echo "<span>";
 				echo $html->link('Ver alumnos apuntados', array('controller' => 'registrations', 'action' => 'view_students_registered', $activity['id'], $group['id'], 'class' => ''));
-				if (1 || $total_group_changes_requests == 1) {
+				if ($total_group_changes_requests == 1) {
 					echo ' <span>(Tienes 1 solicitud pendiente)</span>';
 				} else if ($total_group_changes_requests > 1) {
 					echo " <span>(Tienes $total_group_changes_requests solicitudes pendientes)</span>";
