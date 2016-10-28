@@ -215,29 +215,54 @@
 					$teacher_2_id = trim("{$teacher_2_id}");
 				}
 				
+        $error = false;
 				$events = $this->Event->query("SELECT id FROM events as Event where id = {$event_id} or parent_id = {$event_id}");
 				$events_ids = Set::extract('/Event/id', $events);
+        
+        foreach ($events_ids as $event_id) {
+          $this->Event->id = $event_id;
+          $event = $this->Event->read();
+          
+          $old_teacher_id = $event['Event']['teacher_id'];
+          $old_teacher_2_id = $event['Event']['teacher_2_id'];
+          
+          $event['Event']['teacher_id'] = $teacher_id;
+          $event['Event']['teacher_2_id'] = $teacher_2_id;
+          
+          if (!$this->Event->save($event)) {
+            $error = true;
+            
+            $this->Event->updateAll(
+              array(
+                'Event.teacher_id' => $old_teacher_id,
+                'Event.teacher_2_id' => $old_teacher_2_id
+              ),
+              array('Event.id' => $events_ids)
+            );
+            
+            if ($this->Event->id != -1) {
+              $event = $this->Event->read();
+              $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
+              $this->set('event', $event);
+              $this->set('activity', $activity);
+            }
+            
+            break;
+          }
+        }
 				
-				$this->Event->updateAll(
-					array(
-						'Event.teacher_id' => $teacher_id,
-						'Event.teacher_2_id' => $teacher_2_id
-					),
-					array('Event.id' => $events_ids)
-				);
-				
-				$this->loadModel('AttendanceRegister');
-				$this->AttendanceRegister->updateAll(
-					array(
-						'AttendanceRegister.teacher_id' => $teacher_id,
-						'AttendanceRegister.teacher_2_id' => $teacher_2_id
-					),
-					array('AttendanceRegister.event_id' => $events_ids)
-				);
-				
-				$this->Event->query("UPDATE events SET teacher_2_id = '{$teacher_2_id}' WHERE id = {$event_id} OR parent_id = {$event_id}");
+        if (!$error) {
+          $this->loadModel('AttendanceRegister');
+          $this->AttendanceRegister->updateAll(
+            array(
+              'AttendanceRegister.teacher_id' => $teacher_id,
+              'AttendanceRegister.teacher_2_id' => $teacher_2_id
+            ),
+            array('AttendanceRegister.event_id' => $events_ids)
+          );
 
-				$this->set('ok', true);
+          $this->set('ok', true);
+        }
 			}
 		}
 		

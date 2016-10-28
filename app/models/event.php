@@ -75,7 +75,16 @@ class Event extends AcademicModel {
 		$initial_hour = $this->data['Event']['initial_hour'];
 		$final_hour = $this->data['Event']['final_hour'];
 		$classroom_id = $this->data['Event']['classroom_id'];
-		$query = "SELECT Event.id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')) AND Event.classroom_id = {$classroom_id}";
+    $teacher_id = $this->data['Event']['teacher_id'];
+    $teacher_2_id = $this->data['Event']['teacher_2_id'];
+    $teacher_condition = '';
+    if ($teacher_id) {
+      $teacher_condition .= " OR Event.teacher_id = {$teacher_id} OR Event.teacher_2_id = {$teacher_id}";
+    }
+    if ($teacher_2_id) {
+      $teacher_condition .= " OR Event.teacher_id = {$teacher_2_id} OR Event.teacher_2_id = {$teacher_2_id}";
+    }
+		$query = "SELECT Event.id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')) AND (Event.classroom_id = {$classroom_id} {$teacher_condition})";
 
 		if ((isset($this->data['Event']['id'])) && ($this->data['Event']['id'] > 0))
 			$query .= " AND Event.id <> {$this->data['Event']['id']}";

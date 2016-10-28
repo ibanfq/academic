@@ -194,23 +194,20 @@
 					type: "GET", 
 					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
 					success: function(data){
-						if (data == "false"){
+            if (data == "notAllowed") {
+              revertFunc();
+              $('#notice').removeClass('success');
+              $('#notice').addClass('error');
+              $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+						} else if (data && data != "true") {
 							revertFunc();
-							$('#notice').removeClass('success');
-							$('#notice').addClass('error');
-							$('#notice').html("No ha sido posible actualizar el evento porque coincide con otra actividad o se ha superado el número máximo de horas para esta actividad y grupo.");
-						} else { 
-							if (data == "notAllowed") {
-								revertFunc();
-								$('#notice').removeClass('success');
-								$('#notice').addClass('error');
-								$('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
-							}
-							else {
-								$('#notice').removeClass('error');
-								$('#notice').addClass('success');
-								$('#notice').html("El evento se ha actualizado correctamente.");
-							}
+              $('#notice').removeClass('success');
+              $('#notice').addClass('error');
+              $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad o se ha superado el número máximo de horas para esta actividad y grupo.");
+						} else {
+              $('#notice').removeClass('error');
+              $('#notice').addClass('success');
+              $('#notice').html("El evento se ha actualizado correctamente.");
 						}
 					}
 				});
@@ -261,25 +258,21 @@
 					type: "GET", 
 					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta,
 					success: function(data){
-						if (data == "false"){
+						if (data == "notAllowed") {
+              revertFunc();
+              $('#notice').removeClass('success');
+              $('#notice').addClass('error');
+              $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+            } else if (data && data != "true") {
 							revertFunc();
-							$('#notice').removeClass('success');
-							$('#notice').addClass('error');
-							$('#notice').html("No ha sido posible actualizar el evento porque coincide con otra actividad.");
-						} else {
-							if (data == "notAllowed") {
-								revertFunc();
-								$('#notice').removeClass('success');
-								$('#notice').addClass('error');
-								$('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
-							}
-							else {
-								$('#notice').removeClass('error');
-								$('#notice').addClass('success');
-								$('#notice').html("El evento se ha actualizado correctamente.");
-							}
-						}
-						
+              $('#notice').removeClass('success');
+              $('#notice').addClass('error');
+              $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad.");
+            } else {
+              $('#notice').removeClass('error');
+              $('#notice').addClass('success');
+              $('#notice').html("El evento se ha actualizado correctamente.");
+            }
 					}
 				}); 
 			},
