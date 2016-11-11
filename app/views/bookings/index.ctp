@@ -41,7 +41,7 @@ function isMobile() {
 		$.ajax({
 			cache: false,
 			type: "POST",
-			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][classroom_id]': $('#classrooms').val()},
+			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()},
 			url: "<?php echo PATH ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script',
@@ -113,23 +113,20 @@ function isMobile() {
 						type: "GET",
 						url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
 						success: function(data){
-							if (data == "false"){
-								revertFunc();
-								$('#notice').removeClass('success');
-								$('#notice').addClass('error');
-								$('#notice').html("No ha sido posible actualizar la reserva porque coincide con una actividad académica u otra reserva.");
-							} else {
-								if (data == "notAllowed") {
-									revertFunc();
-									$('#notice').removeClass('success');
-									$('#notice').addClass('error');
-									$('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
-								}
-								else {
-									$('#notice').removeClass('error');
-									$('#notice').addClass('success');
-									$('#notice').html("La reserva se ha actualizado correctamente.");
-								}
+							if (data == "notAllowed") {
+                revertFunc();
+                $('#notice').removeClass('success');
+                $('#notice').addClass('error');
+                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
+              } else if (data && data != "true") {
+                revertFunc();
+                $('#notice').removeClass('success');
+                $('#notice').addClass('error');
+                $('#notice').html(data != "false"? data : "No ha sido posible actualizar la reserva porque coincide con una actividad académica u otra reserva.");
+              } else {
+                $('#notice').removeClass('error');
+                $('#notice').addClass('success');
+                $('#notice').html("La reserva se ha actualizado correctamente.");
 							}
 						}
 					});
@@ -190,25 +187,21 @@ function isMobile() {
 						type: "GET",
 						url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta,
 						success: function(data){
-							if (data == "false"){
-								revertFunc();
-								$('#notice').removeClass('success');
-								$('#notice').addClass('error');
-								$('#notice').html("No ha sido posible actualizar la reserva porque coincide con una actividad académica u otra reserva.");
-							} else {
-								if (data == "notAllowed") {
-									revertFunc();
-									$('#notice').removeClass('success');
-									$('#notice').addClass('error');
-									$('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
-								}
-								else {
-									$('#notice').removeClass('error');
-									$('#notice').addClass('success');
-									$('#notice').html("La reserva se ha actualizado correctamente.");
-								}
+              if (data == "notAllowed") {
+                revertFunc();
+                $('#notice').removeClass('success');
+                $('#notice').addClass('error');
+                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
+              } else if (data && data != "true") {
+                revertFunc();
+                $('#notice').removeClass('success');
+                $('#notice').addClass('error');
+                $('#notice').html(data != "false"? data : "No ha sido posible actualizar la reserva porque coincide con una actividad académica u otra reserva.");
+              } else {
+                $('#notice').removeClass('error');
+                $('#notice').addClass('success');
+                $('#notice').html("La reserva se ha actualizado correctamente.");
 							}
-
 						}
 					});
 				}
@@ -247,45 +240,55 @@ function isMobile() {
                     $('#calendar').fullCalendar('select', new Date(date.getTime()+9*60*60*1000), new Date(date.getTime()+10*60*60*1000), allDay);
                 }
 			},
-            select: function(date, endDate, allDay, jsEvent, view) {
+      select: function(date, endDate, allDay, jsEvent, view) {
 				if ($('#classrooms').val() == "") {
-					alert("Debe seleccionar un aula antes de comenzar a programar actividades");
-					$('#calendar').fullCalendar('unselect');
-				}else{
-					reset_form();
-					var initial_hour = ('0'+date.getHours()).slice(-2);
-                    var initial_minute = ('0'+date.getMinutes()).slice(-2);
-                    var final_hour = ('0'+endDate.getHours()).slice(-2);
-                    var final_minute = ('0'+endDate.getMinutes()).slice(-2);
+          <?php if ($auth->user('type') == "Administrador"): ?>
+            $('#AllClassrooms').attr('checked', 'checked').attr('disabled', 'disabled');
+            $('#AllClassroomsDefault').val('1');
+          <?php else: ?>
+            alert("Debe seleccionar un aula antes de comenzar a programar actividades");
+            $('#calendar').fullCalendar('unselect');
+            return;
+          <?php endif; ?>
+				} else {
+          <?php if ($auth->user('type') == "Administrador"): ?>
+            $('#AllClassrooms').removeAttr('disabled');
+            $('#AllClassroomsDefault').val('0');
+          <?php endif; ?>  
+        }
+        reset_form();
+        var initial_hour = ('0'+date.getHours()).slice(-2);
+                  var initial_minute = ('0'+date.getMinutes()).slice(-2);
+                  var final_hour = ('0'+endDate.getHours()).slice(-2);
+                  var final_minute = ('0'+endDate.getMinutes()).slice(-2);
 
-					if (currentEvent != null){
-						$('#calendar').fullCalendar('removeEventSource', currentEvent);
-						$('#calendar').fullCalendar('refetchEvents');
-					}
+        if (currentEvent != null){
+          $('#calendar').fullCalendar('removeEventSource', currentEvent);
+          $('#calendar').fullCalendar('refetchEvents');
+        }
 
 
-					var initial_date = toEventDateString(date);
-					var final_date = toEventDateString(endDate);
-					currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
-					$('#date').val(date.toString());
-					$('#BookingInitialHourHour').val(initial_hour);
-					$('#BookingInitialHourMin').val(initial_minute);
-					$('#BookingFinalHourHour').val(final_hour);
-					$('#BookingFinalHourMin').val(final_minute);
-					$('#form').dialog({
-						width:500,
-						position:'top',
-						close: function(event, ui) {
-							$('#calendar').fullCalendar('unselect');
-							if (currentEvent != null){
-								$('#calendar').fullCalendar('removeEventSource', currentEvent);
-								$('#calendar').fullCalendar('refetchEvents');
-							}
-						}
-					});
-					$('#calendar').fullCalendar('addEventSource', currentEvent);
-					$('#calendar').fullCalendar('refetchEvents');
-				}
+        var initial_date = toEventDateString(date);
+        var final_date = toEventDateString(endDate);
+        currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
+        $('#date').val(date.toString());
+        $('#BookingInitialHourHour').val(initial_hour);
+        $('#BookingInitialHourMin').val(initial_minute);
+        $('#BookingFinalHourHour').val(final_hour);
+        $('#BookingFinalHourMin').val(final_minute);
+        $('#form').dialog({
+          width:500,
+          position:'top',
+          close: function(event, ui) {
+            $('#calendar').fullCalendar('unselect');
+            if (currentEvent != null){
+              $('#calendar').fullCalendar('removeEventSource', currentEvent);
+              $('#calendar').fullCalendar('refetchEvents');
+            }
+          }
+        });
+        $('#calendar').fullCalendar('addEventSource', currentEvent);
+        $('#calendar').fullCalendar('refetchEvents');
 			}
 		});
 	});
@@ -377,7 +380,14 @@ function isMobile() {
 						</span>
 					</dl>
 				</div>
-				<input type="hidden" id="date" name="date" style="display:none">
+        <?php if ($auth->user('type') == "Administrador"): ?>
+          <div class="input checkbox">
+            <input type="checkbox" id="AllClassrooms" name="AllClassrooms" value="1">
+            <label for="AllClassrooms">Añadir para todas las aulas</label>
+            <input type="hidden" id="AllClassroomsDefault" name="AllClassrooms" value="0">
+          </div>
+        <?php endif; ?>
+        <input type="hidden" id="date" name="date" style="display:none">
 			</fieldset>
 			<?php echo $form->submit('Crear', array('onclick' => 'addBooking();'))?>
 		</div>

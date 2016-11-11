@@ -3,6 +3,8 @@ require_once('models/academic_model.php');
 
 class Booking extends AcademicModel {
 	var $name = "Booking";
+  var $booking_id_overlaped = null;
+  var $event_id_overlaped = null;
 
 	/**
 	 * belongsTo associations
@@ -38,22 +40,40 @@ class Booking extends AcademicModel {
 		);
 	
 	function bookingDontOverlap($initial_hour){
+    $this->booking_id_overlaped = null;
+    $this->event_id_overlaped = null;
+    
 		$initial_hour = $this->data['Booking']['initial_hour'];
 		$final_hour = $this->data['Booking']['final_hour'];
 		$classroom_id = $this->data['Booking']['classroom_id'];
-		$query = "SELECT Booking.id AS id FROM bookings Booking WHERE ((Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}') OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}') OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')) AND Booking.classroom_id = {$classroom_id}";
+            
+		$query = "SELECT Booking.id AS id FROM bookings Booking WHERE ((Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}') OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}') OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}'))";
 		
-		if ((isset($this->data['Booking']['id'])) && ($this->data['Booking']['id'] > 0))
+    if ($classroom_id != -1) {
+      $query .= " AND (Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1)";
+    }
+		if ((isset($this->data['Booking']['id'])) && ($this->data['Booking']['id'] > 0)) {
 			$query .= " AND Booking.id <> {$this->data['Booking']['id']}";
-
-		$query .= " UNION SELECT Event.id AS id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')) AND Event.classroom_id = {$classroom_id}";
-		
-		$events_count = $this->query($query);
-		
-		if (count($events_count) > 0)
+    }
+    
+    $bookings_count = $this->query($query);
+    if (count($bookings_count) > 0) {
+      $this->booking_id_overlaped = $bookings_count[0]['Booking']['id'];
 			return false;
-		else
+		}
+
+		$query = "SELECT Event.id AS id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}'))";
+		if ($classroom_id != -1) {
+      $query .= "  AND Event.classroom_id = {$classroom_id}";
+    }
+    
+		$events_count = $this->query($query);
+    if (count($events_count) > 0) {
+      $this->event_id_overlaped= $events_count[0]['Event']['id'];
+			return false;
+		} else {
 			return true;
+    }
 	} 
 	
 	function beforeValidate(){

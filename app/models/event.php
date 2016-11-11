@@ -93,9 +93,9 @@ class Event extends AcademicModel {
 		if (count($events_count) > 0) {
 			$this->id = $events_count[0]['Event']['id'];
 			return false;
-		}
-		else
-			return (count($events_count) == 0);
+		} else {
+			return true;
+    }
 	}
 
 	function eventDurationDontExceedActivityDuration($initial_hour){

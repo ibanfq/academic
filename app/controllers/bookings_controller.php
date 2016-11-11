@@ -15,13 +15,19 @@
 		}
 		
 		function add($finished_at = null, $frequency = null) {
+      $bookings = array();
+      
+      if ($this->Auth->user('type') != "Administrador" && $this->data['Booking']['classroom_id'] == -1) {
+        $this->set('notAllowed', true);
+        return;
+      }
+      
 			if (($finished_at != null) && ($frequency != null)) {
 				$initial_hour = new DateTime($this->data['Booking']['initial_hour']);
 				$final_hour = new DateTime($this->data['Booking']['final_hour']);
 				$finished_at = new DateTime($this->_parse_date($finished_at, "-"));
 				
 				$this->data['Booking']['user_id'] = $this->Auth->user('id');
-				$bookings = array();
 				
 				while ($finished_at->format('Ymd') >= $initial_hour->format('Ymd')) {
 					if ($this->Booking->save($this->data)){
@@ -48,24 +54,35 @@
 						break;
 					}
 				}
-				
-				if (isset($bookings)) {
-					$this->set('bookings', $bookings);
-				} 
 			}
 			else {
 				$this->data['Booking']['user_id'] = $this->Auth->user('id');
 				if ($this->Booking->save($this->data)){
-					$this->set('success', true);
-					$booking = $this->Booking->read();
-					
-					$this->set('bookings', array($booking));
+          array_push($bookings, $this->Booking->read());
 				}
 			}
+      
+      if (!empty($bookings)) {
+        $this->set('success', true);
+        $this->set('bookings', $bookings);
+      } else {
+        if ($this->Booking->booking_id_overlaped) {
+          $this->Booking->id = $this->Booking->booking_id_overlaped;
+          $booking_overlaped = $this->Booking->read();
+          $this->set('booking_overlaped', $booking_overlaped);
+        } elseif ($this->Booking->event_id_overlaped) {
+          $this->loadModel('Event');
+          $this->Event->id = $this->Booking->event_id_overlaped;
+          $event_overlaped = $this->Event->read();
+          $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+          $this->set('event_overlaped', $event_overlaped);
+          $this->set('activity_overlaped', $activity_overlaped);
+        }
+      }
 		}
 		
 		function get($classroom_id = null){
-			$bookings = $this->Booking->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking WHERE Booking.classroom_id = {$classroom_id}");
+			$bookings = $this->Booking->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking WHERE Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1");
 			
 			$this->set('bookings', $bookings);
 		}
@@ -87,6 +104,12 @@
 			$this->Booking->id = $id;
 			$booking = $this->Booking->read();
 			$uid = $this->Auth->user('id');
+      
+      if ($this->Auth->user('type') != "Administrador" && ($booking->classroom_id == -1 || $this->data['Booking']['classroom_id'] == -1)) {
+        $this->set('notAllowed', true);
+        return;
+      }
+      
 			if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador") || ($this->Auth->user('type') == "Administrativo") ) {
 				
 				if ($resize == null) {
@@ -100,8 +123,18 @@
 				$booking['Booking']['final_hour'] = $final_hour->format('Y-m-d H:i:s');
 
 				if (!($this->Booking->save($booking))){
-					$booking = $this->Booking->read();
-					$this->set('booking', $booking);
+          if ($this->Booking->booking_id_overlaped) {
+            $this->Booking->id = $this->Booking->booking_id_overlaped;
+            $booking_overlaped = $this->Booking->read();
+            $this->set('booking_overlaped', $booking_overlaped);
+          } elseif ($this->Booking->event_id_overlaped) {
+            $this->loadModel('Event');
+            $this->Event->id = $this->Booking->event_id_overlaped;
+            $event_overlaped = $this->Event->read();
+            $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+            $this->set('event_overlaped', $event_overlaped);
+            $this->set('activity_overlaped', $activity_overlaped);
+          }
 				}
 			} else
 				$this->set('notAllowed', true);
