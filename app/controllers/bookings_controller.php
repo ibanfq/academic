@@ -105,12 +105,12 @@
 			$booking = $this->Booking->read();
 			$uid = $this->Auth->user('id');
       
-      if ($this->Auth->user('type') != "Administrador" && ($booking->classroom_id == -1 || $this->data['Booking']['classroom_id'] == -1)) {
+      if ($this->Auth->user('type') != "Administrador" && $this->data['Booking']['classroom_id'] == -1 && $booking->classroom_id != -1) {
         $this->set('notAllowed', true);
         return;
       }
       
-			if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador") || ($this->Auth->user('type') == "Administrativo") ) {
+			if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador")) {
 				
 				if ($resize == null) {
 					$initial_hour = date_create($booking['Booking']['initial_hour']);
