@@ -26,6 +26,7 @@ class UsersController extends AppController {
 		$this->set('section', 'home');
 		$this->set('user', $this->User);
 		$this->set('events', $this->User->getEvents());
+    $this->set('bookings', $this->User->getBookings());
 	}
 	
 	function calendars($token) {
@@ -130,6 +131,34 @@ class UsersController extends AppController {
 		$this->redirect(array('contoller' => 'users', 'action' => 'index'));
 	}
 	
+  /**
+	 * Find by name
+	 */
+	function find_by_name() {
+		App::import('Sanitize');
+
+		$name_conditions = array();
+		foreach (explode(' ', $this->params['url']['q']) as $q) {
+			$q = '%'.Sanitize::escape($q).'%';
+			$name_conditions[] = array(
+				'OR' => array(
+					'User.first_name like' => $q,
+					'User.last_name like' => $q
+				)
+			);
+		}
+
+		$users = $this->User->find('all', array(
+			'fields' => array('User.id', 'User.first_name', 'User.last_name'),
+			'recursive' => 0,
+			'conditions' => array(
+				"AND" => $name_conditions
+			),
+			'order' => array('User.first_name', 'User.last_name')
+		));
+		$this->set('users', $users);
+	}
+  
 	function find_teachers_by_name(){
 		App::import('Sanitize');
 

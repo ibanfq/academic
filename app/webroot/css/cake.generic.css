@@ -330,7 +330,8 @@ div.actions ul li a:hover {
 
 input[type=submit],
 div.actions ul li a,
-td.actions a {
+td.actions a,
+a.button.button-action {
 	font-weight:normal;
 	padding: 4px 8px;
 	background:#8A0E24;
@@ -341,7 +342,9 @@ td.actions a {
 	-moz-border-radius:8px;
 	border-radius:8px;
 	text-decoration:none;
-	text-shadow: #fff 0px 1px 0px;
+        /*text-shadow: #8cee7c 0px 1px 0px;
+	text-shadow: #fff 0px 1px 0px;*/
+        text-shadow: #cb7282 0px 1px 0px;
 	min-width: 0;
         cursor:pointer;
 }
@@ -349,11 +352,16 @@ a.button {
     border-width: 2px;
     border-style: outset;
 }
+a.button.button-action {
+    display: inline-block;
+}
 input[type=submit]:hover,
 div.actions ul li a:hover,
-td.actions a:hover {
+td.actions a:hover,
+a.button.button-action:hover {
 	background: #BD4C60;
-	background: -webkit-gradient(linear, left top, left bottom, from(#f7f7e1), to(#eeeca9));
+	background: -webkit-gradient(linear, left top, left bottom, from(#8a0e24), to(#bd4c60));
+	background-image: -moz-linear-gradient(top, #8a0e24, #bd4c60);
 	text-decoration:underline;
 }
 

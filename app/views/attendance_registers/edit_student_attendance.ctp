@@ -132,7 +132,7 @@
 				<?php foreach ($students as $student): ?>
           <?php $checked = empty($ar['AttendanceRegister']['secret_code'])? 'checked' : ''; ?>
 					<tr id="row_<?php echo $i?>">
-						<td><?php echo "{$student['first_name']} {$student['last_name']}"?></td>
+						<td onclick="toogleCheckBox(<?php echo $student['Student']['id'] ?>)"><?php echo "{$student['first_name']} {$student['last_name']}"?></td>
 						<td><input type="checkbox" name="data[AttendanceRegister][students][<?php echo $student['id'] ?>]" value="1" id="students_<?php echo $student['id'] ?>" <?php echo $checked ?> /></td>
 					</tr>
 					<?php $i++; ?>
@@ -149,15 +149,6 @@
 		$('#AttendanceRegisterFinalHourHour').val('<?php echo $final_hour->format('H') ?>');
 		$('#AttendanceRegisterFinalHourMin').val('<?php echo $final_hour->format('i') ?>');
 	});
-
-	function getRegisterInfo(){
-		$.ajax({
-			type: "GET",
-			asynchronous: false,
-			url: "<?php echo PATH ?>/attendance_registers/get_register_info/" + $('#AttendanceRegisterId').val(),
-			dataType: 'script'
-		});
-	}
 
 	function toogleCheckBox(id){
 		$('#students_' + id).attr('checked', !($('#students_' + id).attr('checked')));

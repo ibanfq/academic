@@ -288,8 +288,8 @@
 					url: url + event.id.match(/\d+/),
 					asynchronous: false,
 					success: function(data) {
-						$('#tooltip').html(data).find('a').remove();
-						$('#EventDetails').html(data).find('a').remove();
+						$('#tooltip').html(data).find('a, .actions').remove();
+						$('#EventDetails').html(data).find('a, .actions').remove();
 					}
 				});
 				

@@ -102,6 +102,10 @@ class User extends AppModel {
 		}
 		return $events;
 	}
+  
+  function getBookings() {
+		return $this->query("SELECT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM users_booking UserBooking INNER JOIN bookings Booking ON Booking.id = UserBooking.booking_id WHERE UserBooking.user_id = {$this->id}");
+	}
 	
 	function can_send_alerts($user_id, $activity_id, $group_id) {
 		return $this->query("SELECT events.* FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND (teacher_id = {$user_id} OR teacher_2_id = {$user_id})") > 0;

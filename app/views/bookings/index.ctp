@@ -144,7 +144,7 @@ function isMobile() {
           }
       },
 			eventClick: function(event, jsEvent, view) {
-				id = event.id.match(/\d+/);
+				var id = event.id.match(/\d+/);
 				var url;
 				if (event.className == 'booking')
 					url = "<?php echo PATH ?>/bookings/view/";
@@ -207,24 +207,23 @@ function isMobile() {
 				}
 			},
 			eventMouseover: function(event, jsEvent, view) {
+				var id = event.id.match(/\d+/);
+        var url;
 				if (event.className == 'booking')
 					url = "<?php echo PATH ?>/bookings/view/";
 				else
 					url = "<?php echo PATH ?>/events/view/";
 
-				id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET",
 					url: url + id,
 					asynchronous: false,
 					success: function(data) {
-						$('#tooltip').html(data).find('a').remove();
-						$('#BookingDetails').html(data).find('a').remove();
+						$('#tooltip').html(data).find('a, .actions').remove();
+						$('#BookingDetails').html(data).find('a, .actions').remove();
 					}
 				});
-
-
 
 				$(this).tooltip({
 					delay: 500,

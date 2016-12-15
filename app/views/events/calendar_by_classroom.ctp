@@ -40,30 +40,33 @@ $(document).ready(function() {
                     }
                 },
 		eventMouseover: function(event, jsEvent, view) {
-			if (event.className == "booking")
-				url = "<?php echo PATH ?>/bookings/view/"; 
-			else
-				url = "<?php echo PATH ?>/events/view/";
-			
-			$.ajax({
-				type: "GET", 
-				url: url + event.id.match(/\d+/),
-				asynchronous: false,
-				success: function(data) {
-					$('#tooltip').html(data);
-					$('#EventDetails').html(data);
-				}
-			});
-			
-			$(this).tooltip({
-				delay: 500,
-				bodyHandler: function() {
-					return $('#EventDetails').html();
-				},
-				showURL: false
-			});
-			
-		},
+      var id = event.id.match(/\d+/);
+      var url;
+      if (event.className == 'booking')
+        url = "<?php echo PATH ?>/bookings/view/";
+      else
+        url = "<?php echo PATH ?>/events/view/";
+
+      $.ajax({
+        cache: false,
+        type: "GET",
+        url: url + id,
+        asynchronous: false,
+        success: function(data) {
+          $('#tooltip').html(data).find('a, .actions').remove();
+          $('#BookingDetails').html(data).find('a, .actions').remove();
+        }
+      });
+
+      $(this).tooltip({
+        delay: 500,
+        bodyHandler: function() {
+          return $('#EventDetails').html();
+        },
+        showURL: false
+      });
+
+    },
 		
 		})
 	});

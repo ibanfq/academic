@@ -113,15 +113,6 @@
 		<?php echo $dateHelper->datepicker("#date"); ?>
 	});
 
-	function getRegisterInfo(){
-		$.ajax({
-			type: "GET",
-			asynchronous: false,
-			url: "<?php echo PATH ?>/attendance_registers/get_register_info/" + $('#AttendanceRegisterId').val(),
-			dataType: 'script'
-		});
-	}
-
 	$(document).ready(function() {
 		function makeFormatItem(noItemString) {
 		    return function formatItem(row){

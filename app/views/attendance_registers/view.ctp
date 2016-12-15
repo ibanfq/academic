@@ -104,7 +104,7 @@
 
     <dl>
 			<dt>Asistentes</dt>
-			<dd id="students-count"><?php echo count(Set::extract('/UserAttendanceRegister[user_gone!=0]', $ar['Students'])) . ' / ' . count($ar['Students']) ?></dd>
+			<dd id="students-count"><?php echo count($students_with_user_gone) . ' / ' . count($ar['Students']) ?></dd>
 		</dl>
 	</fieldset>
 	

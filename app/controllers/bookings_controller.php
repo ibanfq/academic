@@ -5,6 +5,8 @@
 		var $helpers = array('Ajax', 'activityHelper');
 		
 		function index(){
+			$this->set('bookings_schedule', true);
+      
 			$this->set('section', 'bookings');
 			$classrooms = array();
 			foreach($this->Booking->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
@@ -89,15 +91,83 @@
 		
 		function view($id = null){
 			$this->set('booking', $this->Booking->findById($id));
+      $this->set('isAjax', $this->RequestHandler->isAjax());
 		}
+    
+    function edit($id = null){
+			$uid = $this->Auth->user('id');
+      
+      if (!empty($this->data)) {
+        $this->data = array('Booking' => $this->data['Booking']); # Sanatize the data
+        $this->data['Booking']['id'] = $id;
+        $internal_date_format = $this->Booking->dateFormatInternal($this->data['Booking']['date']);
+        $this->data['Booking']['initial_hour'] = "{$internal_date_format} {$this->data['Booking']['initial_hour']['hour']}:{$this->data['Booking']['initial_hour']['minute']}";
+        $this->data['Booking']['final_hour'] = "{$internal_date_format} {$this->data['Booking']['final_hour']['hour']}:{$this->data['Booking']['final_hour']['minute']}";
+
+        if (isset($this->data['Booking']['attendees'])){
+          $selected_attendees = array_unique(array_keys($this->data['Booking']['attendees']));
+          $this->data['Attendee'] = array();
+          foreach ($selected_attendees as $attendee_id) {
+            $this->data['Attendee'][] = array(
+                'UserBooking' => array(
+                  'user_id' => $attendee_id,
+                  'booking_id' => $id
+                )
+            );
+          }
+          unset($this->data['Booking']['attendees']);
+        } else {
+          $this->data['Attendee'][0] = array();  // Remove all attendees
+        }
+
+        if ($this->Booking->saveAll($this->data)){
+          $this->Session->setFlash('La reserva se ha guardado correctamente.');
+          $this->redirect(array('action' => 'view', $id));
+        }
+        else {
+          $this->Session->setFlash('No se ha podido guard la reserva. Por favor, revise que ha introducido todos los datos correctamente.');
+          $this->redirect(array('action' => 'view', $id));
+        }
+
+      } else {
+        $this->data = $this->Booking->read(null, $id);
+
+        if (!$this->data) {
+          $this->Session->setFlash('La reserva a la que intenta acceder ya no existe.');
+          $this->redirect(array('action' => 'index'));
+        }
+        
+        if (($this->data['Booking']['user_id'] != $uid) && ($this->Auth->user('type') != "Administrador"))
+        {
+          $this->redirect(array('action' => 'view', $id));
+        }
+
+        $attendees = $this->Booking->Attendee->query("SELECT Attendee.*
+          FROM users Attendee
+          INNER JOIN users_booking UB ON UB.user_id = Attendee.id
+          WHERE UB.booking_id = {$id}
+          ORDER BY Attendee.last_name, Attendee.first_name
+        ");
+
+        foreach($this->Booking->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
+          $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
+        }
+        $this->set('classrooms', $classrooms);
+        $this->set('booking', $this->data);
+        $this->set('attendees', $attendees);
+      }
+    }
 		
 		function delete($id=null) {
-			$this->Booking->id = $id;
-			$booking = $this->Booking->read();
-			
 			$ids = $this->Booking->query("SELECT Booking.id FROM bookings Booking where Booking.id = {$id} OR Booking.parent_id = {$id}");
 			$this->Booking->query("DELETE FROM bookings WHERE id = {$id} OR parent_id = {$id}");
-			$this->set('bookings', $ids);
+      
+      if ($this->RequestHandler->isAjax()) {
+  			$this->set('bookings', $ids);
+      } else {
+        $this->Session->setFlash('La reserva se eliminó correctamente.');
+        $this->redirect(array('action' => 'index'));
+      }
 		}
 		
 		function update($id, $deltaDays, $deltaMinutes, $resize = null) {
@@ -157,8 +227,6 @@
 		function _authorize() {
 			parent::_authorize();
 			
-			$this->set('bookings_schedule', true);
-		
 			if (($this->params['action'] == "get") || ($this->params['action'] == "view"))
 				return true;
 				

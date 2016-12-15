@@ -52,3 +52,7 @@ Inflector::rules('singular', array('irregular' => array('users_attendance_regist
 Inflector::rules('singular', array('irregular' => array('usersattendanceregister' => 'UserAttendanceRegister')));
 Inflector::rules('plural', array('irregular' => array('user_attendance_register' => 'users_attendance_register')));
 Inflector::rules('plural', array('irregular' => array('userattendanceregister' => 'users_attendance_register')));
+Inflector::rules('singular', array('irregular' => array('users_booking' => 'user_booking')));
+Inflector::rules('singular', array('irregular' => array('usersbooking' => 'UserBooking')));
+Inflector::rules('plural', array('irregular' => array('user_booking' => 'users_booking')));
+Inflector::rules('plural', array('irregular' => array('userbooking' => 'users_booking')));

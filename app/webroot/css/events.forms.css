@@ -129,18 +129,6 @@ input[type=submit] {
 	font-size: 80%;
 	width: auto;
 }
-form .submit input[type=submit] {
-	background:#8a0324;
-	background: -webkit-gradient(linear, left top, left bottom, from(#8a0e24), to(#bd4c60));
-	background-image: -moz-linear-gradient(top, #8a0e24, #bd4c60);
-	color: #fff;
-	text-shadow: #8cee7c 0px 1px 0px;
-}
-form .submit input[type=submit]:hover {
-	background:#bd4c60;
-	background: -webkit-gradient(linear, left top, left bottom, from(#8a0e24), to(#bd4c60));
-	background-image: -moz-linear-gradient(top, #8a0e24, #bd4c60);
-}
 
 a.dialog { font-size:80%; }
 

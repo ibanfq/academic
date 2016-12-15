@@ -10,6 +10,17 @@ class Booking extends AcademicModel {
 	 * belongsTo associations
 	 */
 	var $belongsTo = array('Classroom');
+  var $hasAndBelongsToMany = array(
+		'Attendee' =>
+			array(
+					'className'				=> 'User',
+					'joinTable'				=> 'users_booking',
+					'foreignKey'			=> 'booking_id',
+					'associationForeignKey'	=> 'user_id',
+          'order'         => array('Attendee.last_name' => 'ASC', 'Attendee.first_name' => 'ASC'),
+					'unique'				=> true
+				)
+		);
 	
 	var $validate = array(
 		'classroom_id' => array(
