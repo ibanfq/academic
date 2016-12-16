@@ -54,7 +54,6 @@
 			</dl>
 		</div>
   
-  <h1>¡¡¡Comprobar que es no editable el aula si no es un administrador y esta seleccionada el todas las aulas!!!</h1>
     <?php if ($auth->user('type') == "Administrador" || $booking['Booking']['classroom_id'] != -1): ?>
       <?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $booking['Booking']['classroom_id'], 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
     <?php else: ?>
