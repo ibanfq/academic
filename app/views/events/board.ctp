@@ -27,7 +27,7 @@
                 </td>
                 <td class="center"><small><?php echo ucfirst(preg_replace('/^grupo\s/i', '', $event['group_name'])); ?></small></td>
                 <td class="center"><small><?php echo $text->truncate("{$event['teacher_first_name']} {$event['teacher_last_name']}", 25); ?></small></td>
-                <td class="center"><?php echo ucfirst(preg_replace('/^aula\s/i', '', $event['classroom_name'])); ?></td>
+                <td class="center"><?php echo intval($event['classroom_id']) === -1? 'Todas' : ucfirst(preg_replace('/^aula\s/i', '', $event['classroom_name'])); ?></td>
             </tr>
         <?php endforeach;?>
     </tbody>

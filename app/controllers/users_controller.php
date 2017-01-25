@@ -36,7 +36,6 @@ class UsersController extends AppController {
 		}
 		$this->User->id = $user['User']['id'];
 		$this->User->data = $user;
-		$events = $this->User->getEvents();
 		
 		#header('Content-type: text/calendar; charset=utf-8');
 		#header('Content-Disposition: attachment; filename=calendar.ics');
@@ -54,7 +53,7 @@ class UsersController extends AppController {
 		echo "METHOD:PUBLISH\r\n";
 		
 		$utc = new DateTimeZone('UTC');
-		foreach ($events as $event) {
+		foreach ($this->User->getEvents() as $event) {
 			$initial_date = date_create($event['Event']['initial_hour']);
 			$final_date = date_create($event['Event']['final_hour']);
 			$initial_date->setTimezone($utc);
@@ -63,6 +62,19 @@ class UsersController extends AppController {
 			echo "BEGIN:VEVENT\r\n";
 			echo "UID:{$event['Event']['id']}\r\n";
 			echo "SUMMARY:{$event['Activity']['name']} ({$event['Subject']['acronym']})\r\n";
+			echo "DTSTART:{$initial_date->format('Ymd\THis\Z')}\r\n";
+			echo "DTEND:{$final_date->format('Ymd\THis\Z')}\r\n";
+			echo "END:VEVENT\r\n";
+		}
+    foreach ($this->User->getBookings() as $booking) {
+			$initial_date = date_create($booking['Booking']['initial_hour']);
+			$final_date = date_create($booking['Booking']['final_hour']);
+			$initial_date->setTimezone($utc);
+			$final_date->setTimezone($utc);
+			
+			echo "BEGIN:VEVENT\r\n";
+			echo "UID:booking_{$booking['Booking']['id']}\r\n";
+			echo "SUMMARY:{$booking['Booking']['reason']}\r\n";
 			echo "DTSTART:{$initial_date->format('Ymd\THis\Z')}\r\n";
 			echo "DTEND:{$final_date->format('Ymd\THis\Z')}\r\n";
 			echo "END:VEVENT\r\n";

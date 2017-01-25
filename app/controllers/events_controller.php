@@ -401,6 +401,7 @@
                                     'Group.name as group_name',
                                     'Teacher.first_name as teacher_first_name',
                                     'Teacher.last_name as teacher_last_name',
+                                    'Event.classroom_id',
                                     'Classroom.name as classroom_name'
                                 ),
 				'conditions' => 'Classroom.show_tv AND Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
@@ -459,9 +460,10 @@
                                     'null as group_name',
                                     'null as teacher_first_name',
                                     'null as teacher_last_name',
+                                    'Booking.classroom_id',
                                     'Classroom.name as classroom_name'
                                 ),
-				'conditions' => 'Classroom.show_tv AND Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+				'conditions' => '(Booking.classroom_id = -1 OR Classroom.show_tv) AND Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
 				'joins' => array(
                                     array(
                                         'table' => 'classrooms',
