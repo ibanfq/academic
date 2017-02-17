@@ -54,6 +54,8 @@
 			</dl>
 		</div>
   
+    <?php echo $form->input('user_type', array('label' => 'Tipo de asistentes', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'onchange' => 'userTypeChanged()', 'empty' => 'Ninguno', 'options' => array("Todos" => "Todos los usuarios", "No-estudiante" => "Todos menos estudiante", "Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario"))); ?>
+  
     <?php if ($auth->user('type') == "Administrador" || $booking['Booking']['classroom_id'] != -1): ?>
       <?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $booking['Booking']['classroom_id'], 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
     <?php else: ?>

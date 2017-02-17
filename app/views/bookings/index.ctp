@@ -41,7 +41,7 @@ function isMobile() {
 		$.ajax({
 			cache: false,
 			type: "POST",
-			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()},
+			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][user_type]': $('#BookingUserType').val(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()},
 			url: "<?php echo PATH ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script',
@@ -69,6 +69,7 @@ function isMobile() {
 	function reset_form(){
 		$('#BookingReason').val("")
 		$('#BookingRequiredEquipment').val("");
+    $('#BookingUserType').val("");
 		$('#finished_at').val("");
 		$('#finish_date').hide();
 	}
@@ -373,6 +374,21 @@ function isMobile() {
 							<option value="">No repetir</option>
 							<option value="1">Diariamente</option>
 							<option value="7">Semanalmente</option>
+						</select>
+						<span id="finish_date" style="display:none">
+							<label for="BookingFinishedAt" style="display:inline"> hasta el</label>&nbsp;&nbsp;<input type="text" name="finished_at" id="BookingFinishedAt" style="width:25%;"/>
+						</span>
+					</dl>
+				</div>
+        <div class="input">
+					<dl>
+						<select id="BookingUserType" name="data[Booking][user_type]">
+							<option value="">No asignar a nadie</option>
+							<option value="Todos">Todos los usuarios</option>
+							<option value="No-estudiante">Todos menos los estudiantes</option>
+              <?php foreach (array("Administrador", "Administrativo", "Conserje", "Profesor", "Estudiante", "Becario") as $userType): ?>
+                <option value="<?php echo $userType ?>"><?php echo $userType ?></option>
+              <?php endforeach; ?>
 						</select>
 						<span id="finish_date" style="display:none">
 							<label for="BookingFinishedAt" style="display:inline"> hasta el</label>&nbsp;&nbsp;<input type="text" name="finished_at" id="BookingFinishedAt" style="width:25%;"/>

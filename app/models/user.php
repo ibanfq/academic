@@ -104,7 +104,15 @@ class User extends AppModel {
 	}
   
   function getBookings() {
-		return $this->query("SELECT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM users_booking UserBooking INNER JOIN bookings Booking ON Booking.id = UserBooking.booking_id WHERE UserBooking.user_id = {$this->id}");
+    $userType = $this->data['User']['type'];
+    switch($userType) {
+      case "Estudiante":
+        $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = '$userType')";
+        break;
+      default:
+        $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'No-estudiante' OR Booking.user_type = '$userType')";
+    }
+		return $this->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id WHERE $whereUserType OR UserBooking.user_id = {$this->id}");
 	}
 	
 	function can_send_alerts($user_id, $activity_id, $group_id) {

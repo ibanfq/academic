@@ -1,5 +1,6 @@
 <?php
   $numAttendees = count($booking['Attendee']);
+  $userType = $booking['Booking']['user_type'];
 ?>
 <?php if ($isAjax): ?>
   <h3><?php echo "{$booking['Booking']['reason']}" ?></h3>
@@ -10,9 +11,18 @@
   ?>
   <p><strong>Hora de inicio:</strong> <?php echo $initial_date->format('H:i') ?></p>
   <p><strong>Hora de fin:</strong> <?php echo $final_date->format('H:i') ?></p>
-  <?php if ($numAttendees): ?>
+  <?php if ($userType === 'Todos'): ?>
+    <p><strong>Tipo de asistentes:</strong> Todos los usuarios</p>
+  <?php elseif ($userType === 'No-estudiante'): ?>
+    <p><strong>Tipo de asistentes:</strong> Todos menos estudiante</p>
+  <?php elseif ($userType): ?>
+    <p><strong>Tipo de asistentes:</strong> <?php echo $userType ?></p>
+  <?php elseif ($numAttendees): ?>
     <p><strong>Asistentes:</strong> <?php echo $numAttendees ?></p>
   <?php endif ?>
+  <?php if ($userType && $numAttendees && ($auth->user('type') == "Administrador" || $auth->user('type') == "Conserje")): ?>
+    <p><strong>Otros asistentes:</strong> <?php echo $numAttendees ?></p>
+  <?php endif; ?>
   <p><strong>Aula:</strong>
     <?php echo $booking['Booking']['classroom_id'] == -1? 'Todas las aulas' : $booking['Classroom']['name']; ?>
   </p>
@@ -86,7 +96,22 @@
       </dl>
 
       <dl>
-        <dt>Nº de asistentes</dt>
+        <dt>Tipo de asistentes</dt>
+        <dd>
+          <?php if ($userType === 'Todos'): ?>
+            Todos los usuarios
+          <?php elseif ($userType === 'No-estudiante'): ?>
+            Todos menos estudiante
+          <?php elseif ($userType): ?>
+            <?php echo $userType ?>
+          <?php else: ?>
+            Ninguno
+          <?php endif; ?>
+        </dd>
+      </dl>
+    
+      <dl>
+        <dt>Nº de otros asistentes añadidos</dt>
         <dd><?php echo $numAttendees ?></dd>
       </dl>
     </fieldset>
