@@ -1,5 +1,6 @@
 <?php
-require_once('models/academic_model.php');
+
+App::import('model', 'academicModel');
 
 class Activity extends AcademicModel {
     const DAYS_TO_BLOCK_CHANGING_GROUP = 7;

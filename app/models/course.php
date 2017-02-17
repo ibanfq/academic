@@ -1,5 +1,6 @@
 <?php
-require_once('models/academic_model.php');
+
+App::import('model', 'academicModel');
 
 class Course extends AcademicModel {
 	var $name = 'Course';
