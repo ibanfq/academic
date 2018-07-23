@@ -38,10 +38,13 @@ function isMobile() {
 		final_hour.setHours($('#BookingFinalHourHour').val());
 		final_hour.setMinutes($('#BookingFinalHourMin').val());
 
+    var initial_date = toEventDateString(initial_hour);
+    var final_date = toEventDateString(final_hour);
+
 		$.ajax({
 			cache: false,
 			type: "POST",
-			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_hour.toString(), 'data[Booking][final_hour]': final_hour.toString(), 'data[Booking][user_type]': $('#BookingUserType').val(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()},
+			data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_date, 'data[Booking][final_hour]': final_date, 'data[Booking][user_type]': $('#BookingUserType').val(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()},
 			url: "<?php echo PATH ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script',
@@ -271,7 +274,7 @@ function isMobile() {
         var initial_date = toEventDateString(date);
         var final_date = toEventDateString(endDate);
         currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
-        $('#date').val(date.toString());
+        $('#date').val(initial_date);
         $('#BookingInitialHourHour').val(initial_hour);
         $('#BookingInitialHourMin').val(initial_minute);
         $('#BookingFinalHourHour').val(final_hour);

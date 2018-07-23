@@ -88,7 +88,7 @@
 		$.ajax({
 			cache: false,
 			type: "POST", 
-			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': $('#EventTeacher2Id').val(), 'data[Event][initial_hour]': initial_hour.toString(), 'data[Event][final_hour]': final_hour.toString(), 'data[Event][classroom_id]': $('#classrooms').val()},
+			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': $('#EventTeacher2Id').val(), 'data[Event][initial_hour]': toEventDateString(initial_hour), 'data[Event][final_hour]': toEventDateString(final_hour), 'data[Event][classroom_id]': $('#classrooms').val()},
 			url: "<?php echo PATH ?>/events/add/" + $('#EventFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script', 
@@ -328,7 +328,7 @@
 	 				var initial_date = toEventDateString(date);
 					var final_date = toEventDateString(endDate);
 					currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
-					$('#date').val(date.toString());
+					$('#date').val(toEventDateString(date));
 					$('#EventInitialHourHour').val(initial_hour);
 					$('#EventInitialHourMin').val(initial_minute);
 					$('#EventFinalHourHour').val(final_hour);

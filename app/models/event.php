@@ -101,7 +101,11 @@ class Event extends AcademicModel {
 
 	function eventDurationDontExceedActivityDuration($initial_hour){
 		$activity = $this->Activity->find('first', array('conditions' => array('Activity.id' => $this->data['Event']['activity_id'])));
-		$query = "SELECT activity_id, group_id, sum(duration) as scheduled from events Event WHERE activity_id = {$activity['Activity']['id']} AND group_id = {$this->data['Event']['group_id']}";
+		$query = "SELECT activity_id, group_id, sum(duration) as scheduled from events Event WHERE activity_id = {$activity['Activity']['id']}";
+    
+    if (!empty($this->data['Event']['group_id'])) {
+      $query .= " AND group_id = {$this->data['Event']['group_id']}";
+    }
 
 		if (isset($this->data['Event']['id']))
 			$query .= " AND Event.id <> {$this->data['Event']['id']}";
