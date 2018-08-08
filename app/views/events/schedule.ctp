@@ -79,16 +79,22 @@
 		var initial_hour = new Date($("#date").val());
 		var final_hour = new Date($("#date").val());
 		var new_event;
+    var isEvaluation = $('option:selected', $('#EventActivityId')).attr('data-type') == 'Evaluación';
+    var eventTeacher2Id = isEvaluation ? $('#EventTeacher2Id').val() : "";
 		
 		initial_hour.setHours($('#EventInitialHourHour').val());
 		initial_hour.setMinutes($('#EventInitialHourMin').val());
 		final_hour.setHours($('#EventFinalHourHour').val());
 		final_hour.setMinutes($('#EventFinalHourMin').val());
+    
+    if ($("#teacher_2_name").val() == "") {
+      eventTeacher2Id = "";
+    }
 		
 		$.ajax({
 			cache: false,
 			type: "POST", 
-			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': $('#EventTeacher2Id').val(), 'data[Event][initial_hour]': toEventDateString(initial_hour), 'data[Event][final_hour]': toEventDateString(final_hour), 'data[Event][classroom_id]': $('#classrooms').val()},
+			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': eventTeacher2Id, 'data[Event][initial_hour]': toEventDateString(initial_hour), 'data[Event][final_hour]': toEventDateString(final_hour), 'data[Event][classroom_id]': $('#classrooms').val()},
 			url: "<?php echo PATH ?>/events/add/" + $('#EventFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script', 
@@ -434,14 +440,14 @@
 	
 	<div id="form_container" style="display:none;float:right;padding-top:6em">
 		<div id="form">
-			<?php echo $form->create('Event', array('onsubmit' => 'return false;')); ?>
+			<?php echo $form->create('Event', array('onsubmit' => 'addEvent();return false;')); ?>
 			<fieldset>
 				<div class="input">
 					<dl><dt><label for="subject_name">Asignatura</label></dt><dd><input type="text" name="subject_name" id="subject_name" /></dd></dl>
 				</div>
 				<?php 
-					echo $form->input('activity_id', array('label' => 'Actividad', 'options' => array("Seleccione una actividad"), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
-					echo $form->input('group_id', array('label' => 'Grupo', 'options' => array("Seleccione una actividad"), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+					echo $form->input('activity_id', array('label' => 'Actividad', 'required' => 'required', 'options' => array("Seleccione una actividad"), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
+					echo $form->input('group_id', array('label' => 'Grupo', 'required' => 'required', 'options' => array("Seleccione una actividad"), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 				?>
 				<div class="input">
 					<dl>
@@ -450,7 +456,7 @@
 					</dl> 
 				</div>
 				
-				<div class="input">
+				<div class="input" style="display:none;">
 					<dl>
 						<dt><label for="teacher_2_name">2º Profesor</label></dt>
 						<dd><input type="text" name="teacher_2_name" id="teacher_2_name" /></dd>
@@ -494,7 +500,7 @@
 				<input type="hidden" id="date" name="date" style="display:none">
 				<?php echo $form->input('owner_id', array('type' => 'hidden', 'value' => $user_id)) ?>
 			</fieldset>
-			<?php echo $form->submit('Crear', array('onclick' => 'addEvent();'))?>
+			<?php echo $form->submit('Crear')?>
 		</div>
 	</div>
 </div>
@@ -525,6 +531,8 @@
 	});
 	
 	$('#EventActivityId').change(function() {
+    var isEvaluation = $('option:selected', this).attr('data-type') == 'Evaluación';
+    $('#teacher_2_name').closest('.input').toggle(isEvaluation);
 		$.ajax({
 			cache: false,
 			type: "GET",

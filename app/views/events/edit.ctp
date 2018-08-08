@@ -32,7 +32,7 @@
 					</dl> 
 				</div>
 				
-				<div>
+				<div style="<?php if ($event['Activity']['type'] != 'Evaluación' && empty($event['Teacher_2']['id'])): ?>display:none;<?php endif; ?>">
 					<dl>
 						<dt><label for="teacher_name_2">2º Profesor</label></dt>
 						<dd>
