@@ -121,7 +121,7 @@ function isMobile() {
                 revertFunc();
                 $('#notice').removeClass('success');
                 $('#notice').addClass('error');
-                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
+                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje, un administrativo o un administrador pueden hacerlo.");
               } else if (data && data != "true") {
                 revertFunc();
                 $('#notice').removeClass('success');
@@ -195,7 +195,7 @@ function isMobile() {
                 revertFunc();
                 $('#notice').removeClass('success');
                 $('#notice').addClass('error');
-                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje o un administrador pueden hacerlo.");
+                $('#notice').html("Usted no tiene permisos para modificar esta reserva. Solo su dueño, un conserje, un administrativo o un administrador pueden hacerlo.");
               } else if (data && data != "true") {
                 revertFunc();
                 $('#notice').removeClass('success');

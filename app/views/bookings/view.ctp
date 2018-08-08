@@ -20,7 +20,7 @@
   <?php elseif ($numAttendees): ?>
     <p><strong>Asistentes:</strong> <?php echo $numAttendees ?></p>
   <?php endif ?>
-  <?php if ($userType && $numAttendees && ($auth->user('type') == "Administrador" || $auth->user('type') == "Conserje")): ?>
+  <?php if ($userType && $numAttendees && ($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje")): ?>
     <p><strong>Otros asistentes:</strong> <?php echo $numAttendees ?></p>
   <?php endif; ?>
   <p><strong>Aula:</strong>
@@ -28,7 +28,7 @@
   </p>
   <p><strong>Más información:</strong> <?php echo $booking['Booking']['required_equipment'] ?></p>
   <br />
-  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Conserje"))): ?>
+  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje"))): ?>
   <p class="actions">
     <?php if ($numAttendees): ?>
       <a class="button button-action" href="<?php echo PATH ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
@@ -49,7 +49,7 @@
   <h1>Reserva</h1>
 
   <div class="actions">
-  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Conserje"))): ?>
+  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje"))): ?>
     <ul>
       <?php if ($auth->user('type') == "Administrador" || $auth->user('id') == $booking['Booking']['user_id']): ?>
         <li><?php echo $html->link('Modificar reserva', array('action' => 'edit', $booking['Booking']['id'])) ?></li>

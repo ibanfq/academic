@@ -194,12 +194,14 @@
 			$booking = $this->Booking->read();
 			$uid = $this->Auth->user('id');
       
-      if ($this->Auth->user('type') != "Administrador" && $this->data['Booking']['classroom_id'] == -1 && $booking->classroom_id != -1) {
-        $this->set('notAllowed', true);
-        return;
+      if ($this->Auth->user('type') != "Administrador" && isset($this->data['Booking']['classroom_id'])) {
+        if ($this->data['Booking']['classroom_id'] == -1 && $booking->classroom_id != -1) {
+          $this->set('notAllowed', true);
+          return;
+        }
       }
       
-			if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador")) {
+			if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador") || ($this->Auth->user('type') == "Administrativo")) {
 				
 				if ($resize == null) {
 					$initial_hour = date_create($booking['Booking']['initial_hour']);
@@ -249,7 +251,7 @@
 			if (($this->params['action'] == "get") || ($this->params['action'] == "view"))
 				return true;
 				
-			if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Conserje")) 
+			if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Conserje")) 
 				return false;
 			
 			return true;
