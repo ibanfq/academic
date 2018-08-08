@@ -133,11 +133,17 @@ class ClassroomsController extends AppController {
 		parent::_authorize();
 		
 		$administrator_actions = array('add', 'edit', 'delete');
+    $student_actions = array('index', 'view');
 		
 		$this->set('section', 'classrooms');
 		
-		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador"))
+		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
 			return false;
+    }
+    
+    if ((array_search($this->params['action'], $student_actions) === false) && ($this->Auth->user('type') == "Estudiante")) {
+      return false;
+    }
 	
 		return true;
 	}

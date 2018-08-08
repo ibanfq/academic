@@ -6,22 +6,24 @@
 <h1><?php echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['level']} - {$subject['Subject']['semester']})" ?></h1>
 <div class="actions">
 	<ul>
-	  <?php if ($auth->user('type') != "Administrativo") { ?>
-  		<li><?php echo $html->link('Crear grupo', array('controller' => 'groups', 'action' => 'add', $subject['Subject']['id'])) ?></li>
-  		<li><?php echo $html->link('Crear actividad', array('controller' => 'activities', 'action' => 'add', $subject['Subject']['id'])) ?></li>
-  		<li><?php echo $html->link('Ver programación', array('action' => 'getScheduledInfo', $subject['Subject']['id'])) ?></li>
+	  <?php if ($auth->user('type') != "Administrativo"): ?>
+      <?php if ($auth->user('type') != "Estudiante"): ?>
+        <li><?php echo $html->link('Crear grupo', array('controller' => 'groups', 'action' => 'add', $subject['Subject']['id'])) ?></li>
+        <li><?php echo $html->link('Crear actividad', array('controller' => 'activities', 'action' => 'add', $subject['Subject']['id'])) ?></li>
+        <li><?php echo $html->link('Ver programación', array('action' => 'getScheduledInfo', $subject['Subject']['id'])) ?></li>
+      <?php endif; ?>
   		<li><?php echo $html->link('Estadísticas estudiante', array('action' => 'students_stats', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Estadísticas asignatura', array('action' => 'statistics', $subject['Subject']['id'])) ?></li>
-  		<?php if ($auth->user('type') == "Administrador") {?>
+  		<?php if ($auth->user('type') == "Administrador"): ?>
   			<li><?php echo $html->link('Editar asignatura', array('action' => 'edit', $subject['Subject']['id'])) ?></li>
   			<li><?php echo $html->link('Eliminar asignatura', array('action' => 'delete', $subject['Subject']['id']), null, 'Cuando elimina una asignatura, elimina también los grupos, las actividades y toda la programación. ¿Está seguro que desea borrarla?') ?></li>
-			<?php } ?>
-		<?php } ?>
-		<?php if (($auth->user('type') == "Administrador") || ($auth->user('id') == $subject['Subject']['coordinator_id']) || ($auth->user('id') == $subject['Subject']['practice_responsible_id'])) {?>
+			<?php endif; ?>
+		<?php endif; ?>
+		<?php if (($auth->user('type') == "Administrador") || ($auth->user('id') == $subject['Subject']['coordinator_id']) || ($auth->user('id') == $subject['Subject']['practice_responsible_id'])): ?>
 			<li><?php echo $html->link('Programar curso', array('controller' => 'events', 'action' => 'schedule', $subject['Course']['id'])) ?></li>
 			<li><?php echo $html->link('Editar estudiantes', array('action' => 'students_edit', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Alertar estudiantes', array('action' => 'send_alert_students_without_group', $subject['Subject']['id']), null, 'Esta acción enviará un correo electrónico a todos los estudiantes que no hayan elegido grupo para alguna de las actividades de la asignatura. Debido a que es un cálculo complejo, puede tardar algún tiempo. ¿Está seguro de que desea continuar? Una vez decida continuar, no podrá parar la acción.') ?></li>
-		<?php } ?>
+		<?php endif; ?>
 	</ul>
 </div>
 

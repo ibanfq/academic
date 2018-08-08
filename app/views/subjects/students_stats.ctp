@@ -22,7 +22,11 @@
 			<tbody>
 				<?php foreach ($students as $student): ?>
 					<tr>
-					  <td><?php echo $html->link("{$student['Student']['first_name']} {$student['Student']['last_name']}", array('controller' => 'users', 'action' => 'student_stats_details', $student['Student']['id'], '?' => array('course_id' => $subject['Course']['id'], 'subject_id' => $subject['Subject']['id']))) ?></td>
+            <?php if ($auth->user('type') == "Estudiante"): ?>
+              <td><?php echo "{$student['Student']['first_name']} {$student['Student']['last_name']}" ?></td>
+            <?php else: ?>
+              <td><?php echo $html->link("{$student['Student']['first_name']} {$student['Student']['last_name']}", array('controller' => 'users', 'action' => 'student_stats_details', $student['Student']['id'], '?' => array('course_id' => $subject['Course']['id'], 'subject_id' => $subject['Subject']['id']))) ?></td>
+            <?php endif; ?>
 					  <td><?php echo $student[0]['teorical']?></td>
 					  <td><?php echo $student[0]['practice']?></td>
 					  <td><?php echo $student[0]['others']?></td>

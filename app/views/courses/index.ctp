@@ -1,14 +1,16 @@
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 
 <h1>Cursos</h1>
-<div class="actions">
-	<ul>
-		<?php if ($auth->user('type') == "Administrador") { ?>
-			<li><?php echo $html->link('Crear curso', array('action' => 'add')) ?></li>
-		<?php }?>
-	</ul>
-</div>
-<div class="view">
+<?php if ($auth->user('type') != "Estudiante") : ?>
+  <div class="actions">
+    <ul>
+      <?php if ($auth->user('type') == "Administrador"): ?>
+        <li><?php echo $html->link('Crear curso', array('action' => 'add')) ?></li>
+      <?php endif; ?>
+    </ul>
+  </div>
+<?php endif; ?>
+<div class="<?php if ($auth->user('type') != "Estudiante"): ?>view<?php endif; ?>">
 	<table>
 		<thead>
 			<tr>

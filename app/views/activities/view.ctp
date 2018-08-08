@@ -7,14 +7,16 @@
 
 <h1><?php echo $activity['Activity']['name'] ?></h1>
 
-<div class="actions">
-	<ul>
-		<li><?php echo $html->link('Modificar actividad', array('action' => 'edit', $activity['Activity']['id'])) ?></li>
-		<li><?php echo $html->link('Eliminar actividad', array('action' => 'delete', $activity['Activity']['id']), null, 'Cuando elimina una actividad toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
-	</ul>
-</div>
+<?php if ($auth->user('type') != "Estudiante") : ?>
+  <div class="actions">
+    <ul>
+      <li><?php echo $html->link('Modificar actividad', array('action' => 'edit', $activity['Activity']['id'])) ?></li>
+      <li><?php echo $html->link('Eliminar actividad', array('action' => 'delete', $activity['Activity']['id']), null, 'Cuando elimina una actividad toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
+    </ul>
+  </div>
+<?php endif; ?>
 
-<div class="view">
+<div class="<?php if ($auth->user('type') != "Estudiante"): ?>view<?php endif; ?>">
 	<fieldset>
 	<legend>Datos generales</legend>
 		<dl>
@@ -39,7 +41,7 @@
 		</dl>
 	</fieldset>
 	
-	<?php if (count($groups) > 0) { ?>
+	<?php if (count($groups) > 0): ?>
 		<fieldset>
 		<legend>Grupos con estudiantes</legend>
 			<table>
@@ -55,9 +57,9 @@
 				<?php endforeach;?>
 			</table>
 		</fieldset>
-	<?php }?>
+	<?php endif; ?>
 	
-	<?php if (count($registrations) > 0) { ?>
+	<?php if (count($registrations) > 0): ?>
 		<fieldset>
 		<legend>Estudiantes</legend>
 			<table>
@@ -79,5 +81,5 @@
 				<?php endforeach; ?>
 			</table>
 		</fieldset>
-	<?php }?>
+	<?php endif; ?>
 </div>

@@ -296,15 +296,35 @@ class SubjectsController extends AppController {
 		$this->Session->setFlash('La asignatura ha sido eliminada correctamente');
 		$this->redirect(array('controller' => 'courses', 'action' => 'index', $course_id));
 	}
+  
+  function _get_subject(){
+      if (!empty($this->data) && isset($this->data['Subject']['id'])) {
+        return $this->Subject->find('first', array('conditions' => array("Subject.id" => $this->data['Subject']['id'])));
+      } else {
+        return $this->Subject->find('first', array('conditions' => array("Subject.id" => $this->params['pass']['0'])));
+      }
+			return null;
+		}
 
 	function _authorize() {
 		parent::_authorize();
-		$administrator_actions = array('add', 'edit', 'delete');
+		$administrator_actions = array('add', 'edit', 'delete', 'send_alert_students_without_group', 'students_edit');
+    $owner_actions = array('send_alert_students_without_group', 'students_edit');
 
 		$this->set('section', 'courses');
 
-		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador"))
-			return false;
+		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
+      if ((array_search($this->params['action'], $owner_actions) === false)) {
+        return false;
+      } else {
+        $user_id = $this->Auth->user('id');
+				$subject = $this->_get_subject();
+				
+				if (($subject['Subject']['coordinator_id'] != $user_id) && ($subject['Subject']['practice_responsible_id'] != $user_id)) {
+ 					return false;
+        }
+      }
+    }
 
 		return true;
 	}

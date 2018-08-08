@@ -4,7 +4,7 @@ class CoursesController extends AppController {
 	var $paginate = array('limit' => 10, 'order' => array('Course.initial_date' => 'asc'));
 
 	function index() {
-		$this->set('courses', $this->Course->find('all', array('order' => array('Course.initial_date'))));
+		$this->set('courses', $this->Course->find('all', array('order' => array('Course.initial_date desc'))));
 	}
 
 	function add(){
@@ -290,11 +290,17 @@ class CoursesController extends AppController {
 		parent::_authorize();
 
 		$administrator_actions = array('add', 'edit', 'delete');
+    $student_actions = array('index', 'view');
 
 		$this->set('section', 'courses');
 
-		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($auth->user('type') != "Administrativo"))
+		if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo")) {
 			return false;
+    }
+    
+    if ((array_search($this->params['action'], $student_actions) === false) && ($this->Auth->user('type') == "Estudiante")) {
+      return false;
+    }
 
 		return true;
 	}

@@ -160,7 +160,10 @@
 					$this->Email->subject = "Alta en Academic";
 					$this->set('success', $this->Email->send($message));
 				}
-			}
+			} else {
+        $this->Session->setFlash('No tiene permisos para realizar esta acción.');
+        $this->redirect(array('controller' => 'courses'));
+      }
 		}
 		
 		function _get_subject(){
@@ -203,8 +206,9 @@
 				$user_id = $this->Auth->user('id');
 				$subject = $this->_get_subject();
 				
-				if (($subject['Subject']['coordinator_id'] != $user_id) && ($subject['Subject']['practice_responsible_id'] != $user_id))
+				if (($subject['Subject']['coordinator_id'] != $user_id) && ($subject['Subject']['practice_responsible_id'] != $user_id)) {
  					return false;
+        }
 			}
 				
 			return true;

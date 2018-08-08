@@ -116,7 +116,8 @@ class User extends AppModel {
 	}
 	
 	function can_send_alerts($user_id, $activity_id, $group_id) {
-		return $this->query("SELECT events.* FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND (teacher_id = {$user_id} OR teacher_2_id = {$user_id})") > 0;
+    $result = $this->query("SELECT count('') as events_count FROM events WHERE activity_id = {$activity_id} AND group_id = {$group_id} AND (teacher_id = {$user_id} OR teacher_2_id = {$user_id})");
+    return $result[0][0]['events_count'] > 0;
 	}
 
 	/**

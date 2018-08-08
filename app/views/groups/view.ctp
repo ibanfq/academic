@@ -6,14 +6,16 @@
 
 <h1><?php echo $group['Group']['name'] ?></h1>
 
-<div class="actions">
-	<ul>
-		<li><?php echo $html->link('Modificar grupo', array('action' => 'edit', $group['Group']['id'])) ?></li>
-		<li><?php echo $html->link('Eliminar grupo', array('action' => 'delete', $group['Group']['id']), null, 'Cuando elimina un grupo toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
-	</ul>
-</div>
+<?php if ($auth->user('type') != "Estudiante") : ?>
+  <div class="actions">
+    <ul>
+      <li><?php echo $html->link('Modificar grupo', array('action' => 'edit', $group['Group']['id'])) ?></li>
+      <li><?php echo $html->link('Eliminar grupo', array('action' => 'delete', $group['Group']['id']), null, 'Cuando elimina un grupo toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
+    </ul>
+  </div>
+<?php endif; ?>
 
-<div class="view">
+<div class="<?php if ($auth->user('type') != "Estudiante"): ?>view<?php endif; ?>">
 	<fieldset>
 	<legend>Datos generales</legend>
 		<dl>
