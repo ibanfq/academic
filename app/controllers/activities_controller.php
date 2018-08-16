@@ -121,9 +121,32 @@
 		function find_activities_by_name(){
 			App::import('Sanitize');
 			$q = '%'.Sanitize::escape($this->params['url']['q']).'%';
-			$activities = $this->Activity->find('all', array('fields' => array('Activity.id', 'Activity.name'), 'recursive' => 0, 'conditions' => array( 'Activity.name LIKE' => $q)));
+			$activities = $this->Activity->find('all', array('fields' => array('Activity.id', 'Activity.name'), 'recursive' => 0, 'conditions' => array('Activity.name LIKE' => $q)));
 			$this->set('activities', $activities);
 		}
+    
+    function students_stats($activity_id = null) {
+      $activity = $this->Activity->find('first', array(
+          'conditions' => array('Activity.id' => $activity_id),
+          'recursive' => -1
+      ));
+      
+      if (!$activity) {
+        $this->Session->setFlash('La actividad no existe.');
+        $this->redirect($this->referer());
+      }
+
+      $subject = $this->Activity->Subject->find('first', array(
+          'conditions' => array('Subject.id' => $activity['Activity']['subject_id']),
+          'recursive' => 0
+      ));
+      
+      $registers = $this->Activity->query("SELECT Student.id, Student.first_name, Student.last_name, RegistrationGroup.name, UserAttendanceRegister.user_gone, Event.initial_hour, `Group`.name, Teacher.first_name, Teacher.last_name, Teacher2.first_name, Teacher2.last_name FROM activities Activity INNER JOIN subjects_users SubjectUser ON SubjectUser.subject_id = Activity.subject_id INNER JOIN users Student ON Student.id = SubjectUser.user_id LEFT JOIN registrations Registration on Registration.activity_id = Activity.id AND Registration.student_id = Student.id LEFT JOIN groups RegistrationGroup ON RegistrationGroup.id = Registration.group_id LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.activity_id = Activity.id LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.attendance_register_id = AttendanceRegister.id AND UserAttendanceRegister.user_id = Student.id AND UserAttendanceRegister.user_gone LEFT JOIN users Teacher ON Teacher.id = AttendanceRegister.teacher_id LEFT JOIN users Teacher2 ON Teacher2.id = AttendanceRegister.teacher_2_id LEFT JOIN groups `Group` ON `Group`.id = AttendanceRegister.group_id LEFT JOIN events Event ON Event.id = AttendanceRegister.event_id WHERE Activity.id = {$activity['Activity']['id']} GROUP BY Student.id, UserAttendanceRegister.attendance_register_id ORDER BY Student.first_name ASC, Student.last_name ASC, UserAttendanceRegister.user_gone is null, Event.initial_hour DESC");
+
+      $this->set('activity', $activity);
+      $this->set('subject', $subject);
+      $this->set('registers', $registers);
+    }
 		
 		function delete_student($activity_id = null, $group_id = null, $student_id = null){
 			if (($activity_id != null) && ($group_id != null) && ($student_id != null)){

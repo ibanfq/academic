@@ -43,7 +43,7 @@ class UsersAttendanceRegisterController extends AppController {
           $data
         );
         if ($response['status'] === 'success') {
-          $this->Session->setFlash('El usuario se ha registrado correctamente.');
+          $this->Session->setFlash("Te has registrado correctamente en el grupo \"{$response['data']['Group']['name']}\" de la actividad \"{$response['data']['Activity']['name']}\".");
           $this->redirect(array('action' => 'add_by_secret_code'));
         } else if ($response['status'] === 'error') {
           $this->Session->setFlash($response['message']);
