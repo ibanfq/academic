@@ -1,0 +1,3 @@
+<?php
+
+$config['email']['audit_address'] = 'audit@correo.es';

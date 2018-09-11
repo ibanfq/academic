@@ -315,3 +315,8 @@ Cache::config('default', array('engine' => 'File'));
  * @since 2012-05-17
  */
 define('PATH', "/academic");
+
+/**
+ * Load app config
+ */
+Configure::load('app');
