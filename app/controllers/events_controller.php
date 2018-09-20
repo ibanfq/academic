@@ -23,26 +23,37 @@
 		}
 		
 		function get($classroom_id = null){
-			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE events.classroom_id = {$classroom_id}");
+			$db = $this->Event->getDataSource();
+			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE events.classroom_id = {$db->value($classroom_id)}");
 			
 			$this->set('events', $events);
 		}
 		
 		function get_by_subject($subject_id = null){
-			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE activities.subject_id = {$subject_id}");
+			$db = $this->Event->getDataSource();
+			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE activities.subject_id = {$db->value($subject_id)}");
 			
 			$this->set('events', $events);
 		}
 		
 		function get_by_level($level = null){
-			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE subjects.level = '{$level}'");
+			$db = $this->Event->getDataSource();
+			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE subjects.level = {$db->value($level)}");
 			
 			$this->set('events', $events);
 			
 		}
+
+		function get_by_degree_and_level($degree = null, $level = null){
+			$db = $this->Event->getDataSource();
+			$events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE subjects.degree = {$db->value($degree)} AND subjects.level = {$db->value($level)}");
+			
+			$this->set('events', $events);
+		}
 		
 		function _getScheduled($activity_id, $group_id) {
-			$query = "SELECT sum(duration) as scheduled from events Event WHERE activity_id = {$activity_id} AND group_id = {$group_id}";
+			$db = $this->Event->getDataSource();
+			$query = "SELECT sum(duration) as scheduled from events Event WHERE activity_id = {$db->value(activity_id)} AND group_id = {$db->value(group_id)}";
 			
 			$event = $this->Event->query($query);
 			
@@ -280,11 +291,12 @@
 			
 			$auth_user_id = $this->Auth->user('id');
 			
-			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
+			$db = $this->Event->getDataSource();
+			$events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$db->value($subject_id)} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
 			
 			$activities_groups = array();
 			foreach ($events as $event):
-				$busy_capacity = $this->Event->query("SELECT count(*) as busy_capacity FROM registrations WHERE group_id = {$event['Group']['id']} AND activity_id = {$event['Activity']['id']}");
+				$busy_capacity = $this->Event->query("SELECT count(*) as busy_capacity FROM registrations WHERE group_id = {$db->value($event['Group']['id'])} AND activity_id = {$db->value($event['Activity']['id'])}");
 				$ended = $event[0]['time_to_end'] < 0;
 				$closed = $ended || ($event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP);
 				
@@ -349,13 +361,15 @@
 		
 		
 		function view_info($activity_id = null, $group_id = null) {
+			$db = $this->Event->getDataSource();
+
 			$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $activity_id)));
 			
-			$events = $this->Event->query("SELECT DISTINCT DATE_FORMAT(Event.initial_hour, '%w') AS day, DATE_FORMAT(Event.initial_hour,'%H:%i') AS initial_hour, DATE_FORMAT(Event.final_hour,'%H:%i') AS final_hour FROM events Event WHERE activity_id = {$activity_id} AND group_id = {$group_id} ORDER BY day, initial_hour");
+			$events = $this->Event->query("SELECT DISTINCT DATE_FORMAT(Event.initial_hour, '%w') AS day, DATE_FORMAT(Event.initial_hour,'%H:%i') AS initial_hour, DATE_FORMAT(Event.final_hour,'%H:%i') AS final_hour FROM events Event WHERE activity_id = {$activity_id} AND group_id = {$db->value($group_id)} ORDER BY day, initial_hour");
 			
-			$event_min_date = $this->Event->Activity->query("SELECT MIN(Event.initial_hour) as initial_date FROM events Event WHERE activity_id = {$activity_id} AND group_id = {$group_id}");
+			$event_min_date = $this->Event->Activity->query("SELECT MIN(Event.initial_hour) as initial_date FROM events Event WHERE activity_id = {$db->value($activity_id)} AND group_id = {$db->value($group_id)}");
 			
-			$event_max_date = $this->Event->query("SELECT MAX(Event.initial_hour) as final_date FROM events Event WHERE activity_id = {$activity_id} AND group_id = {$group_id}");
+			$event_max_date = $this->Event->query("SELECT MAX(Event.initial_hour) as final_date FROM events Event WHERE activity_id = {$db->value($activity_id)} AND group_id = {$db->value($group_id)}");
 			
 			$this->set('events', $events);
 			$this->set('activity', $activity);
@@ -397,6 +411,7 @@
                                     'Activity.name',
                                     'Activity.type',
                                     'Subject.acronym as subject_acronym',
+                                    'Subject.degree as subject_degree',
                                     'Subject.level as subject_level',
                                     'Group.name as group_name',
                                     'Teacher.first_name as teacher_first_name',
@@ -456,6 +471,7 @@
                                     'Booking.reason as name',
                                     '"booking" as type',
                                     'null as subject_acronym',
+                                    'null as subject_degree',
                                     'null as subject_level',
                                     'null as group_name',
                                     'null as teacher_first_name',
@@ -506,7 +522,7 @@
 		function _authorize() {
 			parent::_authorize();
 
-			$private_actions = array('schedule', 'add', 'edit', 'update', 'delete', 'update_teacher');
+			$private_actions = array('schedule', 'add', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
 			$student_actions = array('register_student');
 
 			if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
@@ -522,6 +538,13 @@
                 
                 function _sortBoardEvents($a, $b) {
                     if ($a['initial_hour'] === $b['initial_hour']) {
+                		if ($a['subject_degree'] !== null && $b['subject_degree'] !== null) {
+                			$a_degree = $this->Event->Activity->Subject->degreeToInt($a['subject_degree']);
+                			$b_degree = $this->Event->Activity->Subject->degreeToInt($b['subject_degree']);
+	                    	if ($a_degree !== $b_degree) {
+	                    		return $a_degree - $b_degree;
+	                    	}
+                		}
                         if ($a['subject_level'] === null || $b['subject_level'] === null) {
                             if ($a['subject_level'] === $b['subject_level']) {
                                 return strcasecmp($a['name'], $b['name']);

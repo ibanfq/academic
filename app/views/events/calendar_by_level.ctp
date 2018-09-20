@@ -69,12 +69,25 @@ $(document).ready(function() {
 <p>Seleccione un curso para ver su calendario.</p>
 <br/>
 
+<?php if (!empty(Configure::read('app.degrees'))): ?>
+	<dl>
+		<dt>Titulación</dt>
+		<dd>
+			<select id="degree" name="degree">
+				<option value="" selected>Seleccione una titulación</option>
+				<?php foreach (Configure::read('app.degrees') as $degree => $degreeName) : ?>
+					<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
+				<?php endforeach; ?>
+			</select>
+		</dd>
+	</dl>
+<?php endif; ?>
 <dl>
 	<dt>Curso</dt>
 	<dd>
 		<select id="level" name="level">
 			<option value="" selected>Seleccione un curso</option>
-			<?php foreach (Configure::read('app.levels') as $level => $levelName) : ?>
+			<?php foreach (Configure::read('app.subject.levels') as $level => $levelName) : ?>
 				<option value="<?php echo h($level) ?>"><?php echo h($levelName) ?></option>
 			<?php endforeach; ?>
 		</select>
@@ -113,18 +126,40 @@ $(document).ready(function() {
 </div>
 
 <script type="text/javascript">
+	var degreeLevels = <?php echo json_encode(Configure::read('app.subject.degree_levels')) ?>;
+	$('#degree').change(function() {
+		$('#calendar').fullCalendar('removeEvents');
+		var degree = $(this).val();
+		var level = $('#level').val('').attr('disabled', 'disabled');
+		var options = level.find('option').attr('disabled', 'disabled');
+		if (degree in degreeLevels) {
+			for (var i in degreeLevels[degree]) {
+				options.filter(function () {
+					return this.value === degreeLevels[degree][i];
+				}).removeAttr('disabled');
+			}
+			level.removeAttr('disabled');
+		}
+	}).change();
 	$('#level').change(function() {
 		$('#calendar').fullCalendar('removeEvents');
+		var degree = $('#degree');
+		var level = $('#level');
+		var url = degree.length
+			? "<?php echo PATH ?>/events/get_by_degree_and_level/" + encodeURIComponent(degree.val()) + "/" + encodeURIComponent(level.val())
+			: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val())
+		;
 		$.ajax({
 			cache: false,
 			type: "GET",
-			url: "<?php echo PATH ?>/events/get_by_level/" + $('#level').val(),
+			url: url,
 			dataType: "script"
 		});
 	});
 	
 	$(document).ready(function() {
 
+		$('#degree').val("");
 		$('#level').val("");
 
 	});
