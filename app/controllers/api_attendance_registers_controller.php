@@ -74,7 +74,7 @@ class ApiAttendanceRegistersController extends AppController {
           case 'closed':
             if (empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
               $this->_view($id);
-            } else if (Configure::read('testing.secret_code') && Configure::read('testing.secret_code') === $attendanceRegister['AttendanceRegister']['secret_code']) {
+            } else if (Configure::read('api.test.secret_code') && Configure::read('testing.secret_code') === $attendanceRegister['AttendanceRegister']['secret_code']) {
               $this->_view($id);
             } else {
               $students = $this->AttendanceRegister->getStudentsWithUserGone($id);

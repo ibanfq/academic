@@ -317,6 +317,13 @@ Cache::config('default', array('engine' => 'File'));
 define('PATH', "/academic");
 
 /**
+ * Define the api testing secret code
+ *
+ * (Only for bypass the apple store verification in test endpoint)
+ */
+Configure::write('api.test.secret_code', false);
+
+/**
  * Load app config
  */
 Configure::load('app');

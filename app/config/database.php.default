@@ -74,7 +74,7 @@
 class DATABASE_CONFIG {
 
 	var $default = array(
-		'driver' => 'mysql',
+		'driver' => 'mysql_academic',
 		'persistent' => false,
 		'host' => 'localhost',
 		'login' => 'user',
@@ -85,7 +85,7 @@ class DATABASE_CONFIG {
 	);
 
 	var $test = array(
-		'driver' => 'mysql',
+		'driver' => 'mysql_academic',
 		'persistent' => false,
 		'host' => 'localhost',
 		'login' => 'user',
