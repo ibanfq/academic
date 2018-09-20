@@ -3,7 +3,8 @@
 $config['app']['logo'] = '/img/logo.jpg';
 $config['app']['audit_email'] = 'audit@correo.es';
 $config['app']['degrees'] = false;
-$config['app']['levels'] = array(
+$config['app']['subject']['degree_levels'] = array();
+$config['app']['subject']['levels'] = array(
 	"Primero"   => "Primero",
 	"Segundo"   => "Segundo" ,
 	"Tercero"   => "Tercero",
@@ -11,8 +12,22 @@ $config['app']['levels'] = array(
 	"Quinto"    => "Quinto",
 	"Postgrado" => "Postgrado"
 );
-$config['app']['semesters'] = array(
+$config['app']['subject']['semesters'] = array(
 	"Primero" => "Primero",
 	"Segundo" => "Segundo",
 	"Anual"   => "Anual"
 );
+$config['app']['subject']['types'] = array(
+    'Grado' => array(
+        'Básica de Rama' => 'Básica de Rama',
+        'Básica'         => 'Básica',
+        'Obligatoria'    => 'Obligatoria',
+        'Optativa'       => 'Optativa'
+    ),
+    'Licencitura' => array(
+        'Troncal'     => 'Troncal',
+        'Obligatoria' => 'Obligatoria',
+        'Optativa'    => 'Optativa'
+    )
+);
+$config['app']['subject']['default_type'] = 'Troncal';

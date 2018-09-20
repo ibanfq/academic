@@ -13,6 +13,26 @@ class SubjectsController extends AppController {
 				$this->Session->setFlash('La asignatura se ha guardado correctamente');
 				$this->redirect(array('controller' => 'courses', 'action' => 'view', $this->data['Subject']['course_id']));
 			} else {
+				if (!empty($this->data['Subject']['coordinator_id'])) {
+					$alias = $this->Subject->Coordinator->alias;
+					$primaryKey = $this->Subject->Coordinator->primaryKey;
+					$coordinator = $this->Subject->Coordinator->find('first', array(
+						'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['coordinator_id'])
+					));
+					if ($coordinator) {
+						$this->data['Coordinator'] = $coordinator['Coordinator'];
+					}
+				}
+				if (!empty($this->data['Subject']['practice_responsible_id'])) {
+					$alias = $this->Subject->Responsible->alias;
+					$primaryKey = $this->Subject->Responsible->primaryKey;
+					$responsible = $this->Subject->Responsible->find('first', array(
+						'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['practice_responsible_id'])
+					));
+					if ($responsible) {
+						$this->data['Responsible'] = $responsible['Responsible'];
+					}
+				}
 				$this->set('course_id', $this->data['Subject']['course_id']);
 				$this->set('course', $this->Subject->Course->find('first', array('conditions' => array('Course.id' => $this->data['Subject']['course_id']))));
 			}
@@ -55,12 +75,38 @@ class SubjectsController extends AppController {
 		if (empty($this->data)) {
 			$this->data = $this->Subject->read();
 			$this->set('subject', $this->data);
+			$this->set('course', array('Course' =>$this->data['Course']));
 		} else {
 			if ($this->Subject->save($this->data)) {
 				$this->Session->setFlash('La asignatura se ha modificado correctamente.');
 				$this->redirect(array('action' => 'view', $id));
 			}	else {
+				if (!empty($this->data['Subject']['coordinator_id'])) {
+					$alias = $this->Subject->Coordinator->alias;
+					$primaryKey = $this->Subject->Coordinator->primaryKey;
+					$coordinator = $this->Subject->Coordinator->find('first', array(
+						'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['coordinator_id'])
+					));
+					if ($coordinator) {
+						$this->data['Coordinator'] = $coordinator['Coordinator'];
+					}
+				}
+				if (!empty($this->data['Subject']['practice_responsible_id'])) {
+					$alias = $this->Subject->Responsible->alias;
+					$primaryKey = $this->Subject->Responsible->primaryKey;
+					$responsible = $this->Subject->Responsible->find('first', array(
+						'recursive' => -1,
+						'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['practice_responsible_id'])
+					));
+					if ($responsible) {
+						$this->data['Responsible'] = $responsible['Responsible'];
+					}
+				}
 				$this->set('subject', $this->data);
+				$this->set('course', $this->Subject->Course->find('first', array(
+					'recursive' => -1,
+					'conditions' => array('Course.id' => $this->data['Subject']['course_id'])
+				)));
 			}
 		}
 	}
