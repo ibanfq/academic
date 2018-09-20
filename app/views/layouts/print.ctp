@@ -41,7 +41,7 @@
 			<table width="95%" border="0" align="center">
 				<tr>
 					<td>
-						<img src="<?php echo PATH."/" ?>img/logoulpgc.gif" />
+						<img src="<?php echo PATH."/" ?>img/logo_ulpgc_white.gif" />
 					</td>
 					<td style="text-align:right;">
 						<?php echo $html->image('barcode/code_'.$random.'.png') ?>

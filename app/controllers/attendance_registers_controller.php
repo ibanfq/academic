@@ -335,8 +335,8 @@ class AttendanceRegistersController extends AppController {
         $this->Email->reset();
         $this->Email->from = 'Academic <noreply@ulpgc.es>';
         $this->Email->to = $event['Teacher']['username'];
-        if (Configure::read('email.audit_address')) {
-          $this->Email->bcc = array(Configure::read('email.audit_address'));
+        if (Configure::read('app.audit_email')) {
+          $this->Email->bcc = array(Configure::read('app.audit_email'));
         }
         $this->Email->subject = "Evento no registrado";
         $this->Email->sendAs = 'both';

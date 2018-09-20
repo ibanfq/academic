@@ -23,7 +23,7 @@ $max_per_page = 16;
 
 	<table width="95%" border="0" align="center">
 		<tr>
-			<td><img src="<?php echo PATH."/" ?>img/logoulpgc.gif" /></td>
+			<td><img src="<?php echo PATH."/" ?>img/logo_ulpgc_white.gif" /></td>
 		</tr>
 
 		<?php if ($first_page): ?>

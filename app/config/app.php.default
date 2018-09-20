@@ -1,3 +1,18 @@
 <?php
 
-$config['email']['audit_address'] = 'audit@correo.es';
+$config['app']['logo'] = '/img/logo.jpg';
+$config['app']['audit_email'] = 'audit@correo.es';
+$config['app']['degrees'] = false;
+$config['app']['levels'] = array(
+	"Primero"   => "Primero",
+	"Segundo"   => "Segundo" ,
+	"Tercero"   => "Tercero",
+	"Cuarto"    => "Cuarto",
+	"Quinto"    => "Quinto",
+	"Postgrado" => "Postgrado"
+);
+$config['app']['semesters'] = array(
+	"Primero" => "Primero",
+	"Segundo" => "Segundo",
+	"Anual"   => "Anual"
+);

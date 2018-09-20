@@ -21,7 +21,7 @@
             <div class="left">
                 <ul class="logo">
                     <li>
-                        <img src="<?php echo PATH?>/img/logo.jpg">
+                        <img src="<?php echo PATH . Configure::read('app.logo') ?>">
                     </li>
                     <li>
                         <img src="<?php echo PATH?>/img/divider.jpg">

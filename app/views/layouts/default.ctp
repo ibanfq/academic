@@ -19,7 +19,7 @@
 				<ul class="logo">
 					<li class="hidden-phone">
 						<a href="<?php echo PATH?>/courses">
-							<img src="<?php echo PATH?>/img/logo.jpg">
+							<img src="<?php echo PATH . Configure::read('app.logo') ?>">
 						</a>
 					</li>
 					<li class="hidden-phone">
@@ -91,7 +91,7 @@
 	<div id="footer">
     <p class="logo visible-block-phone">
       <a href="<?php echo PATH?>/courses">
-        <img src="<?php echo PATH?>/img/logo.jpg">
+        <img src="<?php echo PATH . Configure::read('app.logo') ?>">
       </a>
     </p>
 		<?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>

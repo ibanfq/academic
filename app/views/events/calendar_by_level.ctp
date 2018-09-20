@@ -74,12 +74,9 @@ $(document).ready(function() {
 	<dd>
 		<select id="level" name="level">
 			<option value="" selected>Seleccione un curso</option>
-			<option value="Primero">Primero</option>
-			<option value="Segundo">Segundo</option>
-			<option value="Tercero">Tercero</option>
-			<option value="Cuarto">Cuarto</option>
-			<option value="Quinto">Quinto</option>
-			<option value="Postgrado">Postgrado</option>
+			<?php foreach (Configure::read('app.levels') as $level => $levelName) : ?>
+				<option value="<?php echo h($level) ?>"><?php echo h($levelName) ?></option>
+			<?php endforeach; ?>
 		</select>
 	</dd>
 </dl>
