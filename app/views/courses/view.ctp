@@ -1,5 +1,7 @@
 <!-- File: /app/views/courses/view.ctp -->
 
+<?php $degreeEnabled = !empty(Configure::read('app.degrees')); ?>
+
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb("{$course['Course']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
 
@@ -41,6 +43,9 @@
 					<th>Código</th>
 					<th>Nombre</th>
 					<th>Acrónimo</th>
+					<?php if ($degreeEnabled): ?>
+						<th>Titulación</th>
+					<?php endif; ?>
 					<th>Curso</th>
 				</tr>
 			</thead>
@@ -50,6 +55,9 @@
 						<td><?php echo $html->link($subject['code'], array('controller' => 'subjects', 'action' => 'view', $subject['id'])) ?></td>
 						<td><?php echo $subject['name'] ?></td>
 						<td><?php echo $subject['acronym'] ?></td>
+						<?php if ($degreeEnabled): ?>
+							<td><?php echo $subject['degree'] ?></td>
+						<?php endif; ?>
 						<td><?php echo $subject['level'] ?></td>
 					</tr>
 				<?php endforeach; ?>

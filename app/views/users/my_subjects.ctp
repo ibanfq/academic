@@ -1,4 +1,7 @@
 <!-- File: /app/views/users/view.ctp -->
+
+<?php $degreeEnabled = !empty(Configure::read('app.degrees')); ?>
+
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
 
 <h1>Mis asignaturas</h1>
@@ -8,6 +11,9 @@
 		<thead>
 			<tr>
 				<th>Asignatura</th>
+				<?php if (degreeEnabled): ?>
+					<th>Titulación</th>
+				<?phh endif; ?>
 				<th>Curso</th>
 			</tr>
 		</thead>
@@ -15,6 +21,9 @@
 			<?php foreach ($subjects as $subject): ?>
 				<tr>
 					<td><?php echo $html->link($subject['Subject']['name'], array('controller' => 'events', 'action' => 'register_student', $subject['Subject']['id'])) ?></td>
+					<?php if (degreeEnabled): ?>
+						<td><?php echo $subject['Subject']['degree'] ?></td>
+					<?php endif ?>
 					<td><?php echo $subject['Subject']['level'] ?></td>
 				</tr>
 			<?php endforeach; ?>

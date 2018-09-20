@@ -1,9 +1,18 @@
 <!-- File: /app/views/subjects/view.ctp -->
+
+<?php $degreeEnabled = !empty(Configure::read('app.degrees')); ?>
+
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); ?>
 <?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
 
-<h1><?php echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['level']} - {$subject['Subject']['semester']})" ?></h1>
+<h1><?php
+	if ($degreeEnabled) {
+		echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['degree']} - {$subject['Subject']['level']} - {$subject['Subject']['semester']})";
+	} else {
+		echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['level']} - {$subject['Subject']['semester']})";
+	}
+?></h1>
 <div class="actions">
 	<ul>
 	  <?php if ($auth->user('type') != "Administrativo"): ?>
