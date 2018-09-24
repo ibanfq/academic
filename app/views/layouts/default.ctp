@@ -66,7 +66,7 @@
 						    <li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
 						<?php } ?>
 						
-						<?php if (($auth->user('type') == 'Conserje') || ($auth->user('type') == 'Administrativo') || ($auth->user('type') == 'Administrador')) { ?>
+						<?php if (($auth->user('type') == 'Conserje') || ($auth->user('type') == 'Administrativo') || ($auth->user('type') == 'Administrador') || (Configure::read('app.classroom.teachers_can_booking') && $auth->user('type') == 'Profesor')) { ?>
 							<li class="<?php echo ($section == 'bookings' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/bookings">Gestión de aulas</a></li>
 						<?php }?>
           <?php } else { ?>

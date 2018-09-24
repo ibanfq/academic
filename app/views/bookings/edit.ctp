@@ -1,14 +1,13 @@
 <?php 
 	$html->addCrumb('Reservas', '/bookings'); 
-  $html->addCrumb('Ver reserva', "/bookings/view/{$booking['Booking']['id']}"); 
+    $html->addCrumb('Ver reserva', "/bookings/view/{$booking['Booking']['id']}"); 
 	$html->addCrumb('Editar reserva', "/bookings/edit/{$booking['Booking']['id']}");
+
+    $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking');
+    $isTeacher = $auth->user('type') == 'Profesor';
 	
 	$initial_hour = date_create($booking['Booking']['initial_hour']);
-  $final_hour = date_create($booking['Booking']['final_hour']);
-  
-  if ($auth->user('type') == "Administrador" || $booking['Booking']['classroom_id'] == -1) {
-    $classrooms = array(-1 => 'Todas las aulas') + $classrooms;
-  }
+    $final_hour = date_create($booking['Booking']['final_hour']);
 ?>
 <h1>Editar reserva</h1>
 
@@ -57,7 +56,21 @@
     <?php echo $form->input('user_type', array('label' => 'Tipo de asistentes', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'onchange' => 'userTypeChanged()', 'empty' => 'Ninguno', 'options' => array("Todos" => "Todos los usuarios", "No-estudiante" => "Todos menos estudiante", "Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario"))); ?>
   
     <?php if ($auth->user('type') == "Administrador" || $booking['Booking']['classroom_id'] != -1): ?>
-      <?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $booking['Booking']['classroom_id'], 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+    	<div class="input select required">
+    		<dl>
+    			<dt><label for="BookingClassroomId">Aula</label></dt>
+    			<dd>
+			    	<select name="data[Booking][classroom_id]" id="BookingClassroomId">
+					    <?php if ($auth->user('type') == "Administrador"): ?>
+					    	<option value="-1" <?php if ($booking['Booking']['classroom_id'] == -1): ?>selected="selected"<?php endif; ?>>Todas las aulas</option>
+						<?php endif; ?>
+						<?php foreach ($classrooms as $classroom): ?>
+							<option <?php if ($teachers_can_booking && $isTeacher && !$classroom['Classroom']['teachers_can_booking']): ?>disabled="disabled"<?php elseif($classroom['Classroom']['id'] == $booking['Booking']['classroom_id']): ?>selected="selected"<?php endif; ?> value="<?php echo h($classroom['Classroom']['id']) ?>"><?php echo h($classroom['Classroom']['name']) ?></option>
+						<?php endforeach; ?>
+					</select>
+				</dd>
+			</dl>
+		</div>
     <?php else: ?>
       <div><dl>
           <dt><label>Aula</label></dt>

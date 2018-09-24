@@ -35,6 +35,12 @@
 				<th>Nombre</th>
 				<th>Tipo</th>
 				<th>Capacidad</th>
+				<?php if (Configure::read('app.classroom.show_tv')): ?>
+					<th>Mostrar en TV</th>
+				<?php endif ?>
+				<?php if (Configure::read('app.classroom.teachers_can_booking')): ?>
+					<th>Profesores reservan</th>
+				<?php endif; ?>
 			</tr>
 		</thead>
 		<tfoot>
@@ -56,6 +62,12 @@
 				<td><?php echo $html->link($classroom['Classroom']['name'], array('controller' => 'classrooms', 'action' => 'view', $classroom['Classroom']['id'])) ?></td>
 				<td><?php echo $classroom['Classroom']['type'] ?></td>
 				<td><?php echo $classroom['Classroom']['capacity'] ?></td>
+				<?php if (Configure::read('app.classroom.show_tv')): ?>
+					<td><?php echo $classroom['Classroom']['show_tv'] ? '&#10004;' : '' ?></td>
+				<?php endif; ?>
+				<?php if (Configure::read('app.classroom.teachers_can_booking')): ?>
+					<td><?php echo $classroom['Classroom']['teachers_can_booking'] ? '&#10004;' : '' ?></td>
+				<?php endif; ?>
 			</tr>
 			<?php endforeach; ?>
 			

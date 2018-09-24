@@ -1,4 +1,5 @@
 <?php
+  $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking');
   $numAttendees = count($booking['Attendee']);
   $userType = $booking['Booking']['user_type'];
 ?>
@@ -28,7 +29,7 @@
   </p>
   <p><strong>Más información:</strong> <?php echo $booking['Booking']['required_equipment'] ?></p>
   <br />
-  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje"))): ?>
+  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje")) || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking'])): ?>
   <p class="actions">
     <?php if ($numAttendees): ?>
       <a class="button button-action" href="<?php echo PATH ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
@@ -37,7 +38,9 @@
       <a class="button button-action" href="<?php echo PATH ?>/bookings/edit/<?php echo $booking['Booking']['id'] ?>">Editar</a>
       o
     <?php endif ?>
-    <a href="javascript:;" onclick="deleteBooking(<?php echo $booking['Booking']['id'] ?>, '<?php echo $booking['Booking']['parent_id']?>')">Eliminar reserva</a>
+    <?php if ($auth->user('type') != "Profesor" || $auth->user('id') == $booking['Booking']['user_id']): ?>
+      <a href="javascript:;" onclick="deleteBooking(<?php echo $booking['Booking']['id'] ?>, '<?php echo $booking['Booking']['parent_id']?>')">Eliminar reserva</a>
+    <?php endif; ?>
   </p>
   <?php endif; ?>
 <?php else: //No ajax ?>
@@ -49,7 +52,7 @@
   <h1>Reserva</h1>
 
   <div class="actions">
-  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje"))): ?>
+  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje") || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking']))): ?>
     <ul>
       <?php if ($auth->user('type') == "Administrador" || $auth->user('id') == $booking['Booking']['user_id']): ?>
         <li><?php echo $html->link('Modificar reserva', array('action' => 'edit', $booking['Booking']['id'])) ?></li>

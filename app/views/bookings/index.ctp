@@ -1,4 +1,6 @@
 <?php $html->addCrumb('Reservas', '/bookings'); ?>
+<?php $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking'); ?>
+<?php $isTeacher = $auth->user('type') == 'Profesor'; ?>
 
 <div id="mobile-query" class="visible-block-phone-portrait"></div>
 
@@ -303,7 +305,14 @@ function isMobile() {
 
 <dl>
 	<dt>Aulas</dt>
-	<dd><?php echo $form->select('classrooms', $classrooms); ?></dd>
+	<dd>
+		<select id="classrooms">
+			<option value=""></option>
+			<?php foreach ($classrooms as $classroom): ?>
+				<option <?php if ($teachers_can_booking && $isTeacher && !$classroom['Classroom']['teachers_can_booking']): ?>disabled="disabled"<?php endif; ?> value="<?php echo h($classroom['Classroom']['id']) ?>"><?php echo h($classroom['Classroom']['name']) ?></option>
+			<?php endforeach; ?>
+		</select>
+	</dd>
 </dl>
 
 <div>

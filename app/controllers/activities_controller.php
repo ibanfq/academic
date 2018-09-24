@@ -73,9 +73,11 @@
 					}
 					unset($this->data['Students'][$student_id]);
 				}
-				foreach ($this->data['Students'] as $student_id => $student) {
-					if ($student['group_id'] && ($administrator || $student['group_id'] == -1)) {
-						array_push($registrations, array('group_id' => $student['group_id'], 'activity_id' => $id, 'student_id' => $student_id));
+				if (isset($this->data['Students'])) {
+					foreach ($this->data['Students'] as $student_id => $student) {
+						if ($student['group_id'] && ($administrator || $student['group_id'] == -1)) {
+							array_push($registrations, array('group_id' => $student['group_id'], 'activity_id' => $id, 'student_id' => $student_id));
+						}
 					}
 				}
 				unset($this->data['Students']);

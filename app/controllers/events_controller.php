@@ -53,7 +53,7 @@
 		
 		function _getScheduled($activity_id, $group_id) {
 			$db = $this->Event->getDataSource();
-			$query = "SELECT sum(duration) as scheduled from events Event WHERE activity_id = {$db->value(activity_id)} AND group_id = {$db->value(group_id)}";
+			$query = "SELECT sum(duration) as scheduled from events Event WHERE activity_id = {$db->value($activity_id)} AND group_id = {$db->value($group_id)}";
 			
 			$event = $this->Event->query($query);
 			
@@ -108,13 +108,19 @@
 							$this->set('eventExceedDuration', true);
 						} 
 						else {
-							$event = $this->Event->read();
-							$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Event']['activity_id'])));
-							$this->set('event', $event);
-							$this->set('activity', $activity);
+							$invalidFields = $this->Event->invalidFields();
+							if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
+								$event = $this->Event->read();
+								$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Event']['activity_id'])));
+								$this->set('event', $event);
+								$this->set('activity', $activity);
+							}
+							$this->set('invalidFields', $invalidFields);
 						}
 						
-						$this->Event->query("DELETE FROM events WHERE id = {$this->data['Event']['parent_id']} OR parent_id = {$this->data['Event']['parent_id']}");
+						if (!empty($events)) {
+							$this->Event->query("DELETE FROM events WHERE id = {$this->data['Event']['parent_id']} OR parent_id = {$this->data['Event']['parent_id']}");
+						}
 						unset($events);
 						
 						break;
@@ -140,12 +146,15 @@
 				else {
 					if ($this->Event->id == -1){
 						$this->set('eventExceedDuration', true);
-					}
-					else {
-						$event = $this->Event->read();
-						$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
-						$this->set('event', $event);
-						$this->set('activity', $activity);
+					} else {
+						$invalidFields = $this->Event->invalidFields();
+						if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
+							$event = $this->Event->read();
+							$activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
+							$this->set('event', $event);
+							$this->set('activity', $activity);
+						}
+						$this->set('invalidFields', $invalidFields);
 					}
 				}
 			}
