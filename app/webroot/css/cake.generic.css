@@ -756,3 +756,233 @@ ul.groups li {
         display: block !important;
     }
 }
+
+
+/* Full calendar */
+table.fc-agenda-slots tr td {
+	/* ignore striped row style */
+	background: transparent;
+}
+.fc-header table {width: 75%;}		
+.fc-header table tr td {border-bottom:none;}		
+.fc-header-center table tr td {text-align:center;}
+.clase_magistral, .clase_magistral .fc-event-skin{
+	color:#fff;
+	background:#FF9900;
+}
+.clase_magistral a {
+	color:#fff;
+	background:#FF9900;
+}
+
+.clase_magistral .fc-event-time{
+	background:#FF9900;
+}
+
+.seminario, .seminario .fc-event-skin{
+	color:#fff;
+	background:#CC3300;
+}
+
+.seminario a {
+	color:#fff;
+	background:#CC3300;
+}
+
+.seminario .fc-event-time{
+	background:#CC3300;
+}
+
+.taller_trabajo, .taller_trabajo .fc-event-skin{
+	color:#fff;
+	background:#660000;
+}
+
+.taller_trabajo a {
+	color:#fff;
+	background:#660000;
+}
+
+.taller_trabajo .fc-event-time{
+	background:#660000;
+}
+
+.practica_aula, .practica_aula .fc-event-skin{
+	color:#fff;
+	background:#003300;
+}
+
+.practica_aula a {
+	color:#fff;
+	background:#003300;
+}
+
+.practica_aula .fc-event-time{
+	background:#003300;
+}
+
+.practica_problemas, .practica_problemas .fc-event-skin{
+	color:#fff;
+	background:#009900;
+}
+
+.practica_problemas a {
+	color:#fff;
+	background:#009900;
+}
+
+.practica_problemas .fc-event-time{
+	background:#009900;
+}
+
+.practica_informatica, .practica_informatica .fc-event-skin{
+	color:#fff;
+	background:#00CC66;
+}
+
+.practica_informatica a {
+	color:#fff;
+	background:#00CC66;
+}
+
+.practica_informatica .fc-event-time{
+	background:#00CC66;
+}
+
+.practica_microscopia, .practica_microscopia .fc-event-skin{
+	color:#fff;
+	background:#00CCCC;
+}
+
+.practica_microscopia a {
+	color:#fff;
+	background:#00CCCC;
+}
+
+.practica_microscopia .fc-event-time{
+	background:#00CCCC;
+}
+
+.practica_laboratorio, .practica_laboratorio .fc-event-skin{
+	color:#fff;
+	background:#0099CC;
+}
+
+.practica_laboratorio a {
+	color:#fff;
+	background:#0099CC;
+}
+
+.practica_laboratorio .fc-event-time{
+	background:#0099CC;
+}
+
+.practica_clinica, .practica_clinica .fc-event-skin{
+	color:#fff;
+	background:#0000CC;
+}
+
+.practica_clinica a {
+	color:#fff;
+	background:#0000CC;
+}
+
+.practica_clinica .fc-event-time{
+	background:#0000CC;
+}
+
+.practica_externa, .practica_externa .fc-event-skin{
+	color:#fff;
+	background:#000066;
+}
+
+.practica_externa a {
+	color:#fff;
+	background:#000066;
+}
+
+.practica_externa .fc-event-time{
+	background:#000066;
+}
+
+.tutoria, .tutoria .fc-event-skin{
+	color:#fff;
+	background:#990099;
+}
+
+.tutoria a {
+	color:#fff;
+	background:#990099;
+}
+
+.tutoria .fc-event-time{
+	background:#990099;
+}
+
+.evaluacion, .evaluacion .fc-event-skin{
+	color:#fff;
+	background:#660066;
+}
+
+.evaluacion a {
+	color:#fff;
+	background:#660066;
+}
+
+.evaluacion .fc-event-time{
+	background:#660066;
+}
+
+.otra_presencial, .otra_presencial .fc-event-skin{
+	color:#fff;
+	background:#999999;
+}
+
+.otra_presencial a {
+	color:#fff;
+	background:#999999;
+}
+
+.otra_presencial .fc-event-time{
+	background:#999999;
+}
+
+.booking, .booking .fc-event-skin{
+	color:#fff;
+	background:#999999;
+}
+
+.booking a {
+	color:#fff;
+	background:#999999;
+}
+
+.booking .fc-event-time{
+	background:#999999;
+}
+
+/* leyend */
+#legend {overflow: hidden;}
+#legend_left {float:left; width:25%;}
+#legend_right {float:right; width:75%; }
+
+#legend ul {list-style:none;}
+#legend ul li {padding-left: 1.8em; margin-bottom:0.1em;}
+#prac_aula {background:url(../img/fullcalendar/003300.png) no-repeat left 1px;}
+#prac_problemas {background:url(../img/fullcalendar/009900.png) no-repeat left 1px;}
+#prac_informatica {background:url(../img/fullcalendar/00CC66.png) no-repeat left 1px;}
+#prac_micros {background:url(../img/fullcalendar/00CCCC.png) no-repeat left 1px;}
+#prac_lab {background:url(../img/fullcalendar/0099CC.png) no-repeat left 1px;}
+#prac_clin {background:url(../img/fullcalendar/0000CC.png) no-repeat left 1px;}
+#prac_ext {background:url(../img/fullcalendar/000066.png) no-repeat left 1px;}
+
+#clase_magistral {background:url(../img/fullcalendar/FF9900.png) no-repeat left 1px;}
+#seminario {background:url(../img/fullcalendar/CC3300.png) no-repeat left 1px;}
+#taller_trabajo {background:url(../img/fullcalendar/660000.png) no-repeat left 1px;}
+#tutoria {background:url(../img/fullcalendar/990099.png) no-repeat left 1px;}
+#evaluacion {background:url(../img/fullcalendar/660066.png) no-repeat left 1px;}
+#otra_presencial {background:url(../img/fullcalendar/999999.png) no-repeat left 1px;}
+
+/* calendar ics */
+#calendar_ics {margin-top: 2em;}
+#calendar_ics input {margin-top: 0.5em;}

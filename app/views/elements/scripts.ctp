@@ -15,7 +15,7 @@
 ?>
 
 <script type="text/javascript">
-  $(document).delegate("*", "dialogopen", function () {
+  $(document).delegate(".ui-dialog-content", "dialogopen", function () {
     var overlay = $('#ui-widget-overlay');
     if (overlay.length) {
       var prev = $('.ui-dialog-last').removeClass('ui-dialog-last');
@@ -26,7 +26,7 @@
     }
     $(this).addClass('ui-dialog-last'); 
   });
-  $(document).delegate("*", "dialogclose", function () {
+  $(document).delegate(".ui-dialog-content", "dialogclose", function () {
     var overlay = $('#ui-widget-overlay');
     var counter = overlay.data('counter');
     if (counter) {
