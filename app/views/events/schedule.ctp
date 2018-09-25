@@ -79,22 +79,22 @@
 		var initial_hour = new Date($("#date").val());
 		var final_hour = new Date($("#date").val());
 		var new_event;
-    var isEvaluation = $('option:selected', $('#EventActivityId')).attr('data-type') == 'Evaluación';
-    var eventTeacher2Id = isEvaluation ? $('#EventTeacher2Id').val() : "";
+        var isEvaluation = $('option:selected', $('#EventActivityId')).attr('data-type') == 'Evaluación';
+        var eventTeacher2Id = isEvaluation ? $('#EventTeacher2Id').val() : "";
 		
 		initial_hour.setHours($('#EventInitialHourHour').val());
 		initial_hour.setMinutes($('#EventInitialHourMin').val());
 		final_hour.setHours($('#EventFinalHourHour').val());
 		final_hour.setMinutes($('#EventFinalHourMin').val());
     
-    if ($("#teacher_2_name").val() == "") {
-      eventTeacher2Id = "";
-    }
+        if ($("#teacher_2_name").val() == "") {
+            eventTeacher2Id = "";
+        }
 		
 		$.ajax({
 			cache: false,
 			type: "POST", 
-			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': eventTeacher2Id, 'data[Event][initial_hour]': toEventDateString(initial_hour), 'data[Event][final_hour]': toEventDateString(final_hour), 'data[Event][classroom_id]': $('#classrooms').val()},
+			data: {'data[Event][activity_id]': $('#EventActivityId').val(), 'data[Event][group_id]': $('#EventGroupId').val(), 'data[Event][teacher_id]': $('#EventTeacherId').val(), 'data[Event][teacher_2_id]': eventTeacher2Id, 'data[Event][initial_hour]': toEventDateString(initial_hour), 'data[Event][final_hour]': toEventDateString(final_hour), 'data[Event][classroom_id]': $('#classrooms').val()<?php if (Configure::read('app.event.show_tv')): ?>, 'data[Event][show_tv]': $('#ShowTV').attr('checked') ? '1' : '0'<?php endif; ?>},
 			url: "<?php echo PATH ?>/events/add/" + $('#EventFinishedAt').val() + "/" + $('#Frequency').val(),
 			asynchronous: false,
 			dataType: 'script', 
@@ -114,11 +114,11 @@
 			if ($("#edit_teacher_2_name").val() == "") {
 	  		    $('#teacher_2_id').val("");
   		    }
-			  
+
 			$.ajax({
 				cache: false,
 				type: "GET", 
-				url: "<?php echo PATH ?>/events/update_classroom/" + event_id + "/" + classroom_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val(),
+				url: "<?php echo PATH ?>/events/update_classroom/" + event_id + "/" + classroom_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val()<?php if (Configure::read('app.event.show_tv')): ?> + "/show_tv:" + ($('#EventShowTv').attr('checked') ? '1' : '0')<?php endif; ?>,
 				asynchronous: false,
 				dataType: 'script', 
 				success: function(data){
@@ -137,11 +137,11 @@
 			if ($("#edit_teacher_2_name").val() == "") {
 				$('#teacher_2_id').val("");
 			}
-		  
+
 			$.ajax({
 				cache: false,
 				type: "GET", 
-				url: "<?php echo PATH ?>/events/update_teacher/" + event_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val(),
+				url: "<?php echo PATH ?>/events/update_teacher/" + event_id + "/" + $('#teacher_id').val() + "/" + $('#teacher_2_id').val()<?php if (Configure::read('app.event.show_tv')): ?> + "/show_tv:" + ($('#EventShowTv').attr('checked') ? '1' : '0')<?php endif; ?>,
 				asynchronous: false,
 				dataType: 'script', 
 				success: function(data){
@@ -497,6 +497,13 @@
 						</span>
 					</dl>
 				</div>
+				<?php if (Configure::read('app.event.show_tv')): ?>
+                    <div class="input checkbox">
+                        <input type="checkbox" id="ShowTV" name="ShowTV" value="1">
+                        <label for="ShowTV">Mostrar en TV</label>
+                        <input type="hidden" id="ShowTVDefault" name="ShowTV" value="0">
+                    </div>
+                <?php endif; ?>
 				<input type="hidden" id="date" name="date" style="display:none">
 				<?php echo $form->input('owner_id', array('type' => 'hidden', 'value' => $user_id)) ?>
 			</fieldset>

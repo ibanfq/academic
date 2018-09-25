@@ -63,10 +63,10 @@
 				<td><?php echo $classroom['Classroom']['type'] ?></td>
 				<td><?php echo $classroom['Classroom']['capacity'] ?></td>
 				<?php if (Configure::read('app.classroom.show_tv')): ?>
-					<td><?php echo $classroom['Classroom']['show_tv'] ? '&#10004;' : '' ?></td>
+					<td><?php echo $classroom['Classroom']['show_tv'] ? 'Si' : 'No' ?></td>
 				<?php endif; ?>
 				<?php if (Configure::read('app.classroom.teachers_can_booking')): ?>
-					<td><?php echo $classroom['Classroom']['teachers_can_booking'] ? '&#10004;' : '' ?></td>
+					<td><?php echo $classroom['Classroom']['teachers_can_booking'] ? 'Si' : 'No' ?></td>
 				<?php endif; ?>
 			</tr>
 			<?php endforeach; ?>

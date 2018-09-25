@@ -77,6 +77,10 @@
           <dd><?php echo $classrooms[$booking['Booking']['classroom_id']] ?></dd>
       </dl></div>
     <?php endif; ?>
+
+    <?php if (Configure::read('app.booking.show_tv')): ?>
+    	<?php echo $form->input('show_tv', array('label' => 'Mostrar esta reserva en TV')); ?>
+	<?php endif; ?>
 		
 		<?php echo $form->input('id', array('type' => 'hidden')); ?>
 	</fieldset>

@@ -20,10 +20,10 @@
 					<dd style="margin-left: 8em"><?php echo date_create($event['Event']['final_hour'])->format('H:i')?> </dd>
 				</dl>
 				<div>
-				<?php if ($auth->user('type') == "Administrador") { ?>
-	            	<?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $event['Event']['classroom_id'], 'div' => false, 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-				<?php } ?>
-        </div>
+    				<?php if ($auth->user('type') == "Administrador") { ?>
+    	            	<?php echo $form->input('classroom_id', array('label' => 'Aula', 'options' => $classrooms, 'selected' => $event['Event']['classroom_id'], 'div' => false, 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+    				<?php } ?>
+                </div>
 				<div>
 					<dl>
 						<dt><label for="teacher_name">Profesor</label></dt>
@@ -44,13 +44,21 @@
 						<input type="hidden" id="teacher_2_id" name="Teacher_2Id" value="<?php echo $event['Teacher_2']['id'] ?>" />
 					</dl> 
 				</div>
+
+				<?php if (Configure::read('app.event.show_tv')): ?>
+	    	        <?php echo $form->input('show_tv', array('label' => 'Mostrar en TV', 'checked' => $event['Event']['show_tv']? 'checked' : '')); ?>
+                <?php endif; ?>
 			</div>
 		</fieldset>
 		<div class="submit">
 			<input type="submit" value="Actualizar" onclick="
-			<?php if ($event['Event']['parent_id'] == null) {?>
-				if (confirm('Este evento es el primero de la serie. Si modifica el profesor se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
-			<?php } ?>
+			<?php if ($event['Event']['parent_id'] == null) :?>
+                <?php if (Configure::read('app.event.show_tv')): ?>
+                    if (confirm('Este evento es el primero de la serie. Si modifica el profesor o la visibilidad en TV se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
+                <?php else: ?>
+				    if (confirm('Este evento es el primero de la serie. Si modifica el profesor se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
+                <?php endif; ?>
+			<?php endif; ?>
 				{
 					<?php if ($auth->user('type') == "Administrador") { ?>
 						update_classroom(<?php echo $event['Event']['id'] ?>);

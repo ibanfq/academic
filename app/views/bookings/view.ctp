@@ -27,6 +27,11 @@
   <p><strong>Aula:</strong>
     <?php echo $booking['Booking']['classroom_id'] == -1? 'Todas las aulas' : $booking['Classroom']['name']; ?>
   </p>
+  <?php if (Configure::read('app.booking.show_tv')): ?>
+    <p><strong>Mostrar en TV:</strong>
+      <?php echo $booking['Booking']['show_tv']? 'Si' : 'No'; ?>
+    </p>
+  <?php endif; ?>
   <p><strong>Más información:</strong> <?php echo $booking['Booking']['required_equipment'] ?></p>
   <br />
   <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje")) || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking'])): ?>
@@ -92,6 +97,13 @@
         <dt>Aula</dt>
         <dd><?php echo $booking['Booking']['classroom_id'] == -1? 'Todas las aulas' : $booking['Classroom']['name']; ?></dd>
       </dl>
+
+      <?php if (Configure::read('app.booking.show_tv')): ?>
+        <dl>
+          <dt>Mostrar en TV</dt>
+          <dd><?php echo $booking['Booking']['show_tv']? 'Si' : 'No'; ?></dd>
+        </dl>
+      <?php endif; ?>
 
       <dl>
         <dt>Más información</dt>
