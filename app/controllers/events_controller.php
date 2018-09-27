@@ -76,8 +76,9 @@
         }
 
         function _addDuration($initial_hour, $hours) {
+            $minutes = round($hours * 60);
             $new_initial_hour = clone $initial_hour;
-            $new_initial_hour->add(new DateInterval("PT{$hours}H"));
+            $new_initial_hour->add(new DateInterval("PT{$minutes}M"));
             return $new_initial_hour;
         }
         
@@ -165,6 +166,7 @@
         }
         
         function copy($id) {
+            $events = array();
             $event = $this->Event->find('first', array('conditions' => array('Event.id' => $id), 'recursive' => -1));
             if (!$event) {
                 $this->set('notAllowed', true);

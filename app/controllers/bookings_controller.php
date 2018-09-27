@@ -90,6 +90,56 @@
             }
             $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
         }
+
+        function copy($id) {
+            $bookings = array();
+            $booking = $this->Booking->find('first', array('conditions' => array('Booking.id' => $id), 'recursive' => -1));
+            if (!$booking) {
+                $this->set('notAllowed', true);
+            } else {
+                $booking_initial_hour = new DateTime($booking['Booking']['initial_hour']);
+                if (!empty($this->params['named']['initial_hour'])) {
+                    $initial_hour = new DateTime($this->params['named']['initial_hour']);
+                } else {
+                    $initial_hour = $booking_initial_hour;
+                }
+                if (!empty($this->params['named']['classroom'])) {
+                    $classroom_id = $this->params['named']['classroom'];
+                } else {
+                    $classroom_id = $booking['Booking']['classroom_id'];
+                }
+                $duration = $this->_getDuration($booking_initial_hour, new DateTime($booking['Booking']['final_hour']));
+                $final_hour = $this->_addDuration($initial_hour, $duration);
+                $this->data = [
+                    'id'           => null,
+                    'user_id'      => $this->Auth->user('id'),
+                    'user_type'    => $booking['Booking']['user_type'],
+                    'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
+                    'classroom_id' => $classroom_id,
+                    'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
+                    'reason'    => $booking['Booking']['reason'],
+                    'required_equipment'    => $booking['Booking']['required_equipment'],
+                    'show_tv'      => $booking['Booking']['show_tv']
+                ];
+                if ($this->Booking->save($this->data)){
+                    array_push($bookings, $this->Booking->read());
+                    $this->set('success', true);
+                    $this->set('bookings', $bookings);
+                } elseif ($this->Booking->booking_id_overlaped) {
+                    $this->Booking->id = $this->Booking->booking_id_overlaped;
+                    $booking_overlaped = $this->Booking->read();
+                    $this->set('booking_overlaped', $booking_overlaped);
+                } elseif ($this->Booking->event_id_overlaped) {
+                    $this->loadModel('Event');
+                    $this->Event->id = $this->Booking->event_id_overlaped;
+                    $event_overlaped = $this->Event->read();
+                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                    $this->set('event_overlaped', $event_overlaped);
+                    $this->set('activity_overlaped', $activity_overlaped);
+                }
+            }
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        }
         
         function get($classroom_id = null) {
             $db = $this->Booking->getDataSource();
@@ -276,6 +326,23 @@
             } else {
                 $this->set('notAllowed', true);
             }
+        }
+
+        function _getDuration($initial_hour, $final_hour) {
+            $date_components = split("-", $initial_hour->format('Y-m-d-H-i-s'));
+            $initial_timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
+            
+            $date_components = split("-", $final_hour->format('Y-m-d-H-i-s'));
+            $final_timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
+            
+            return ($final_timestamp - $initial_timestamp) / 3600.0;
+        }
+
+        function _addDuration($initial_hour, $hours) {
+            $minutes = round($hours * 60);
+            $new_initial_hour = clone $initial_hour;
+            $new_initial_hour->add(new DateInterval("PT{$minutes}M"));
+            return $new_initial_hour;
         }
         
         function _add_days(&$date, $ndays, $nminutes = 0){

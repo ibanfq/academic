@@ -139,7 +139,7 @@
 		});
 	}
 
-    function editEvent(event) {
+    function openEvent(event) {
         var model = event.className.indexOf('booking') !== -1? 'bookings' : 'events';
         var action = event.className.indexOf('booking') !== -1? 'view' : 'edit';
         var id = event.id.match(/\d+/);
@@ -245,7 +245,7 @@
 			                $('#calendar').fullCalendar('select', start, end, allDay);
 			                break;
 		                case 'edit':
-		                	editEvent(menu.data('fc-event'));
+		                	openEvent(menu.data('fc-event'));
 		                	break;
 		                case 'copy':
 		                	$('.menu [data-action="paste"]')
@@ -455,11 +455,11 @@
                             .closest('li')[event.className.indexOf('booking') === -1 ? 'removeClass' : 'addClass']('ui-state-disabled');
 					});
 					element.bind('dblclick', function (jsEvent) {
-						editEvent(event);
+						openEvent(event);
 					});
 				} else {
 					element.bind('click', function (jsEvent) {
-	                    editEvent(event);
+	                    openEvent(event);
 					});
 				}
             },
@@ -496,6 +496,8 @@
 				if (!event.className || !event.className.length) {
 					return;
 				}
+				var id = event.id.match(/\d+/);
+                var url;
 				if (event.className.indexOf('booking') !== -1) {
 					url = "<?php echo PATH ?>/bookings/view/";
                 } else {
@@ -505,7 +507,7 @@
 				$.ajax({
 					cache: false,
 					type: "GET", 
-					url: url + event.id.match(/\d+/),
+					url: url + id,
 					asynchronous: false,
 					success: function(data) {
 						$('#tooltip').html(data).find('a, .actions').remove();
