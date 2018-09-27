@@ -21,31 +21,57 @@
 	
 	var currentEvent = null;
 	
-  function isMobile() {
-      return $('#mobile-query').css('display') !== 'none';
-  }
-  
-	function delete_event(event_id, parent_id) {
-		if (parent_id == '')
-			confirmated = confirm("¿Está seguro de que desea eliminar este evento? Al eliminarlo se eliminarán también todos los eventos de la misma serie.");
-		else 
-			confirmated = confirm("¿Está seguro de que desea eliminar este evento?");
-		
-		if (confirmated){
-			$.ajax({
-				cache: false,
-				type: "GET", 
-				url: "<?php echo PATH ?>/events/delete/" + event_id, 
-				dataType: 'script'
-			});
-		}
+    function isMobile() {
+        return $('#mobile-query').css('display') !== 'none';
+    }
+
+    function isMenusEnabled() {
+        return <?php echo Configure::read('app.fullcalendar.menus') ? 'true' : 'false' ?>;
+    }
+
+    function copyEvent(event_id, start) {
+		$.ajax({
+			cache: false,
+			type: "GET",
+			url: "<?php echo PATH ?>/events/copy/" + event_id + "/initial_hour:" + toEventDateString(start) + "/classroom:" + $('#classrooms').val(),
+			dataType: 'script'
+		});
 	}
 	
-	function deleteBooking(id, parent_id){
-		if (parent_id == '')
+	function copyBooking(id, start) {
+		$.ajax({
+			cache: false,
+			type: "POST",
+			url: "<?php echo PATH ?>/bookings/copy/" + id + "/initial_hour:" + toEventDateString(start) + "/classroom:" + $('#classrooms').val(),
+			dataType: 'script'
+		});
+	}
+  
+	function delete_event(event_id, parent_id) {
+		if (parent_id === null || parent_id == '') {
+			confirmated = confirm("¿Está seguro de que desea eliminar este evento? Al eliminarlo se eliminarán también todos los eventos de la misma serie.");
+        } else {
+			confirmated = confirm("¿Está seguro de que desea eliminar este evento?");
+        }
+		
+		if (confirmated) {
+			$.ajax({
+				cache: false,
+				type: "GET",
+				url: "<?php echo PATH ?>/events/delete/" + event_id,
+				dataType: 'script'
+			});
+			return true;
+		}
+		return false;
+	}
+	
+	function deleteBooking(id, parent_id) {
+		if (parent_id === null || parent_id == '') {
 			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva? Al eliminarla se eliminarán también todos las reservas de la misma serie.");
-		else
+        } else {
 			confirmated = confirm("¿Está seguro de que desea eliminar esta reserva?");
+        }
 		if (confirmated){
 			$.ajax({
 				cache: false,
@@ -53,7 +79,9 @@
 				url: "<?php echo PATH?>/bookings/delete/" + id,
 				dataType: 'script'
 			});
+			return true;
 		}
+		return false;
 	}
 	
 	function toEventDateString(date){
@@ -63,14 +91,18 @@
 		var hour = date.getHours();
 		var minute = date.getMinutes();
 		
-		if (day < 10)
+		if (day < 10) {
 			day = "0" + day;
-		if (month < 10)
+        }
+		if (month < 10) {
 			month = "0" + month;
-		if (hour < 10)
+        }
+		if (hour < 10) {
 			hour = "0" + hour;
-		if (minute < 10)
+        }
+		if (minute < 10) {
 			minute = "0" + minute;
+        }
 		
 		return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":00";
 	}
@@ -106,6 +138,34 @@
 			}
 		});
 	}
+
+    function editEvent(event) {
+        var model = event.className.indexOf('booking') !== -1? 'bookings' : 'events';
+        var action = event.className.indexOf('booking') !== -1? 'view' : 'edit';
+        var id = event.id.match(/\d+/);
+        $.ajax({
+            cache: false,
+            type: "GET",
+            url: "<?php echo PATH ?>/" + model + "/" + action + "/" + id, 
+            success: function(data) {
+                if (data == "false")
+                    alert("Usted no tiene permisos para editar este evento");
+                else{
+                    $('#edit_form').html(data);
+                    $('#edit_form').dialog({
+                        width:500, 
+                        position:'top', 
+                        close: function(event, ui) {
+                            if (currentEvent != null){
+                                $('#calendar').fullCalendar('removeEventSource', currentEvent);
+                                $('#calendar').fullCalendar('refetchEvents');
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
 	
 	<?php if ($auth->user('type') == "Administrador") { ?>
 		function update_classroom(event_id) {
@@ -167,6 +227,139 @@
 	}
 	
 	$(document).ready(function() {
+        if (isMenusEnabled()) {
+        	$('.menu').menu({
+        		select: function (e, ui) {
+        			var menu = $(this).blur();
+        			e.preventDefault();
+        			switch (ui.item.attr('data-action')) {
+    					case 'select':
+    						var start = menu.data('fc-start');
+			                var allDay = menu.data('fc-allDay');
+			                if (allDay) {
+			                	var end = menu.data('fc-end');
+			                } else {
+		    					var duration = parseInt(ui.item.attr('data-duration')) * 60 * 1000;
+				                var end = new Date(start.getTime() + duration);
+				            }
+			                $('#calendar').fullCalendar('select', start, end, allDay);
+			                break;
+		                case 'edit':
+		                	editEvent(menu.data('fc-event'));
+		                	break;
+		                case 'copy':
+		                	$('.menu [data-action="paste"]')
+			                    .data('fc-clipboard', {
+			                        event: menu.data('fc-event'),
+			                    })
+			                    .removeClass('ui-state-disabled');
+		                    break;
+	                    case 'paste':
+	                    	var start = menu.data('fc-start');
+	                    	var allDay = menu.data('fc-allDay')
+		                	var clipbard = ui.item.data('fc-clipboard');
+		                    if (clipbard.event) {
+		                    	var event = clipbard.event;
+		                    	if (allDay) {
+		                    		var date = new Date(start.getTime());
+		                    		var eventDate = new Date(event.start.getTime());
+		                    		date.setHours(0,0,0,0);
+		                    		eventDate.setHours(0,0,0,0);
+		                    		start = new Date(date.getTime() + event.start.getTime() - eventDate.getTime());
+		                    	}
+		                    	if (event.className.indexOf('booking') !== -1) {
+		                    		copyBooking(event.id.match(/\d+/), start);
+		                    	} else {
+		                    		copyEvent(event.id.match(/\d+/), start);
+		                    	}
+		                    }
+		                    break;
+	                	case 'delete':
+	                		var event = menu.data('fc-event');
+			                var eventSource = event.source.events.find(function(source) {
+			                    return source.id+'' === event.id;
+			                });
+			                if (eventSource) {
+			                	var success = false;
+			                    if (event.className.indexOf('booking') !== -1) {
+			                        success = deleteBooking(
+			                            event.id.match(/\d+/),
+			                            eventSource.parent_id ? eventSource.parent_id.match(/\d+/) : null
+			                        );
+			                    } else {
+			                        success = delete_event(
+			                            event.id.match(/\d+/),
+			                            eventSource.parent_id ? eventSource.parent_id.match(/\d+/) : null
+			                        );
+			                    }
+			                    var clipboard = $('.menu [data-action="paste"]').data('fc-clipboard');
+			                    if (success && clipboard) {
+			                    	var clipboardEventSource = clipboard.event.source.events.find(function(source) {
+					                    return source.id+'' === clipboard.event.id;
+					                });
+					                if (clipboardEventSource.id === event.id || clipboardEventSource.parent_id === event.id) {
+					                	$('.menu [data-action="paste"]')
+					                    	.data('fc-clipboard', false)
+					                    	.addClass('ui-state-disabled');	
+					                }
+			                    }
+			                }
+	                		break;
+        				case 'cancel':
+        					$('.menu [data-action="paste"]')
+		                    	.data('fc-clipboard', false)
+		                    	.addClass('ui-state-disabled');
+        					break;
+        			}
+        		},
+        		focus: function (e, ui) {
+        			var menu = $(this).data('ui-focused', ui);
+        			switch (ui.item.attr('data-action')) {
+        				case 'select':
+        					if (!menu.data('fc-allDay')) {
+	        					var view = $('#calendar').fullCalendar('getView');
+	        					var start = menu.data('fc-start');
+	        					var duration = parseInt(ui.item.attr('data-duration')) * 60 * 1000;
+	        					view.clearOverlays();
+	        					view.renderSelection(start, new Date(start.getTime() + duration), false);
+	        				}
+        					break;
+    					case 'paste':
+    						if (!menu.data('fc-allDay')) {
+	    						var view = $('#calendar').fullCalendar('getView');
+	        					var start = menu.data('fc-start');
+	        					var clipbard = ui.item.data('fc-clipboard');
+	        					var duration = clipbard.event.end.getTime() - clipbard.event.start.getTime();
+	        					view.clearOverlays();
+	        					view.renderSelection(start, new Date(start.getTime() + duration), false);
+	        				}
+        					break;
+        			}
+        		},
+        		blur: function (e) {
+        			var menu = $(this);
+        			if (!menu.is(':visible')) {
+        				return;
+        			}
+        			var ui = menu.data('ui-focused');
+        			menu.data('ui-focused', null);
+        			switch (ui.item.attr('data-action')) {
+        				case 'select':
+        				case 'paste':
+        					if (!menu.data('fc-allDay')) {
+	        					var view = $('#calendar').fullCalendar('getView');
+	        					var start = menu.data('fc-start');
+	        					view.clearOverlays();
+	        					view.renderSelection(start, new Date(start.getTime() + 30 * 60 * 1000), false);
+	        				}
+        					break;
+        			}
+        		}
+        	}).blur(function (e) {
+        		$(e.target).hide();
+    		});
+        }
+        
 		$('#calendar').fullCalendar({
 			header: {
 				right: 'prev,next today',
@@ -174,7 +367,7 @@
 				left: 'title,month,agendaWeek'
 			},
 			defaultView: isMobile()? 'basicDay' : 'agendaWeek',
-			defaultEventMinutes: 60,
+			defaultEventMinutes: isMenusEnabled() ? 30 : 60,
 			editable: true,
             selectable: {
                 agenda: true
@@ -193,100 +386,121 @@
 			dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
 			dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
 			eventResize: function(event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
-				var model = event.className == 'booking'? 'bookings' : 'events';
+				if (!event.className || !event.className.length) {
+					return;
+				}
+				var model = event.className.indexOf('booking') !== -1? 'bookings' : 'events';
 				var id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET", 
 					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
-					success: function(data){
-            if (data == "notAllowed") {
-              revertFunc();
-              $('#notice').removeClass('success');
-              $('#notice').addClass('error');
-              $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
-						} else if (data && data != "true") {
-							revertFunc();
-              $('#notice').removeClass('success');
-              $('#notice').addClass('error');
-              $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad o se ha superado el número máximo de horas para esta actividad y grupo.");
-						} else {
-              $('#notice').removeClass('error');
-              $('#notice').addClass('success');
-              $('#notice').html("El evento se ha actualizado correctamente.");
-						}
-					}
+					success: function(data) {
+                        if (data == "notAllowed") {
+                            revertFunc();
+                            $('#notice').removeClass('success');
+                            $('#notice').addClass('error');
+                            $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+                		} else if (data && data != "true") {
+                			revertFunc();
+                            $('#notice').removeClass('success');
+                            $('#notice').addClass('error');
+                            $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad o se ha superado el número máximo de horas para esta actividad y grupo.");
+                		} else {
+                            $('#notice').removeClass('error');
+                            $('#notice').addClass('success');
+                            $('#notice').html("El evento se ha actualizado correctamente.");
+            			}
+            		}
 				});
 			},
 			buttonText: {today: 'hoy', month: 'mes', week: 'semana', day: 'día'},
-      windowResize: function(view) {
-          if (isMobile()) {
-              if (view.name !== 'basicDay') {
-                  $('#calendar').fullCalendar('changeView', 'basicDay');
-              }
-          } else if (view.name === 'basicDay') {
-              $('#calendar').fullCalendar('changeView', 'agendaWeek');
-              $('#calendar').fullCalendar('render'); // Fix problem with columns width
-          }
-      },
-			eventClick: function(event, jsEvent, view) {
-				var model = event.className == 'booking'? 'bookings' : 'events';
-				var action = event.className == 'booking'? 'view' : 'edit';
-				var id = event.id.match(/\d+/);
-				$.ajax({
-					cache: false,
-					type: "GET",
-					url: "<?php echo PATH ?>/" + model + "/" + action + "/" + id, 
-					success: function(data) {
-						if (data == "false")
-							alert("Usted no tiene permisos para editar este evento");
-						else{
-							$('#edit_form').html(data);
-							$('#edit_form').dialog({
-								width:500, 
-								position:'top', 
-								close: function(event, ui) {
-									if (currentEvent != null){
-										$('#calendar').fullCalendar('removeEventSource', currentEvent);
-										$('#calendar').fullCalendar('refetchEvents');
-									}
-								}
-							});
-						}
-					}
-				});
-			},
+            windowResize: function(view) {
+                if (isMobile()) {
+                    if (view.name !== 'basicDay') {
+                        $('#calendar').fullCalendar('changeView', 'basicDay');
+                    }
+                } else if (view.name === 'basicDay') {
+                    $('#calendar').fullCalendar('changeView', 'agendaWeek');
+                    $('#calendar').fullCalendar('render'); // Fix problem with columns width
+                }
+            },
+            //viewRender: function (view, element) {
+            viewDisplay: function (view, element) {
+            	$('[data-fc-view]').each(function () {
+            		var item = $(this);
+            		var visible = item.attr('data-fc-view').split(',').map(function(name) {
+  						return name.trim();
+					}).indexOf(view.name) !== -1;
+					item.toggle(visible);
+            	})
+            },
+            eventRender: function (event, element, view) {
+            	if (!event.className || !event.className.length) {
+            		element.bind('click', function (jsEvent) {
+            			$('.menu:visible').blur();	
+            		});            		
+					return;
+				}
+				if (isMenusEnabled()) {
+					element.bind('click', function (jsEvent) {
+	    				var menu = $('#menu-event')
+	    					.data('fc-event', event)
+	                        .show()
+	                        .position({my: "left top", of: jsEvent})
+	                        .focus();
+                        menu.find('[data-action="delete"]')
+                            .closest('li')[event.deletable ? 'removeClass' : 'addClass']('ui-state-disabled');
+                        menu.find('[data-action="copy"]')
+                            .closest('li')[event.className.indexOf('booking') === -1 ? 'removeClass' : 'addClass']('ui-state-disabled');
+					});
+					element.bind('dblclick', function (jsEvent) {
+						editEvent(event);
+					});
+				} else {
+					element.bind('click', function (jsEvent) {
+	                    editEvent(event);
+					});
+				}
+            },
 			eventDrop: function( event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view ) {
-				var model = event.className == 'booking'? 'bookings' : 'events';
+				if (!event.className || !event.className.length) {
+					return;
+				}
+				var model = event.className.indexOf('booking') !== -1? 'bookings' : 'events';
 				var id = event.id.match(/\d+/);
 				$.ajax({
 					cache: false,
 					type: "GET", 
 					url: "<?php echo PATH ?>/" + model + "/update/" + id + "/" + dayDelta + "/" + minuteDelta,
-					success: function(data){
+					success: function(data) {
 						if (data == "notAllowed") {
-              revertFunc();
-              $('#notice').removeClass('success');
-              $('#notice').addClass('error');
-              $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
-            } else if (data && data != "true") {
+                            revertFunc();
+                            $('#notice').removeClass('success');
+                            $('#notice').addClass('error');
+                            $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+                        } else if (data && data != "true") {
 							revertFunc();
-              $('#notice').removeClass('success');
-              $('#notice').addClass('error');
-              $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad.");
-            } else {
-              $('#notice').removeClass('error');
-              $('#notice').addClass('success');
-              $('#notice').html("El evento se ha actualizado correctamente.");
-            }
+                            $('#notice').removeClass('success');
+                            $('#notice').addClass('error');
+                            $('#notice').html(data != "false"? data : "No ha sido posible actualizar el evento porque coincide con otra actividad.");
+                        } else {
+                            $('#notice').removeClass('error');
+                            $('#notice').addClass('success');
+                            $('#notice').html("El evento se ha actualizado correctamente.");
+                        }
 					}
 				}); 
 			},
 			eventMouseover: function(event, jsEvent, view) {
-				if (event.className == 'booking')
+				if (!event.className || !event.className.length) {
+					return;
+				}
+				if (event.className.indexOf('booking') !== -1) {
 					url = "<?php echo PATH ?>/bookings/view/";
-				else
+                } else {
 					url = "<?php echo PATH ?>/events/view/";
+                }
 				
 				$.ajax({
 					cache: false,
@@ -299,8 +513,6 @@
 					}
 				});
 				
-				
-				
 				$(this).tooltip({
 					delay: 500,
 					bodyHandler: function() {
@@ -311,26 +523,49 @@
 				
 			},
 			dayClick: function(date, allDay, jsEvent, view){
-                if (allDay) {
-                    $('#calendar').fullCalendar('select', new Date(date.getTime()+9*60*60*1000), new Date(date.getTime()+10*60*60*1000), allDay);
+                if ($('#classrooms').val() == "") {
+                    if (allDay) {
+                        alert("Debe seleccionar un aula antes de comenzar a programar actividades");
+                    }
+                } else {
+                	if (allDay) {
+                		var start = new Date(date.getTime() + 9 * 3600 * 1000);
+                        var end = new Date(date.getTime() + 10 * 3600 * 1000);
+                	} else {
+                		var start = date;
+                        var end = new Date(date.getTime() + 3600 * 1000);
+                	}
+                    if (isMenusEnabled()) {
+                        $('#menu-slot')
+                            .data('fc-start', start)
+                            .data('fc-end', end)
+                            .data('fc-allDay', allDay)
+                            .show()
+                            .position({my: "left top", of: jsEvent})
+                            .focus();
+                    } else if (allDay) {
+                        $('#calendar').fullCalendar('select', start, end, allDay);
+                    }
                 }
 			},
             select: function(date, endDate, allDay, jsEvent, view) {
+                if ($('#menu-slot').is(':visible')) {
+                    return;
+                }
 				if ($('#classrooms').val() == "") {
 					alert("Debe seleccionar un aula antes de comenzar a programar actividades");
                     $('#calendar').fullCalendar('unselect');
-                }else{
+                } else {
 					var initial_hour = ('0'+date.getHours()).slice(-2);
                     var initial_minute = ('0'+date.getMinutes()).slice(-2);
                     var final_hour = ('0'+endDate.getHours()).slice(-2);
                     var final_minute = ('0'+endDate.getMinutes()).slice(-2);
                     
-					if (currentEvent != null){
+					if (currentEvent != null) {
 						$('#calendar').fullCalendar('removeEventSource', currentEvent);
 						$('#calendar').fullCalendar('refetchEvents');
 					}
 					
-				
 	 				var initial_date = toEventDateString(date);
 					var final_date = toEventDateString(endDate);
 					currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
@@ -362,7 +597,7 @@
 							type: "GET", 
 							url: "<?php echo PATH ?>/groups/get/" + $('#EventActivityId').val(),
 							asynchronous: false,
-							success: function(data){
+							success: function(data) {
 								if (data.match(/\s*<option/)) {
 									var options = $(data);
 									if (options.length > 1) {
@@ -388,7 +623,6 @@
             }
 		});
 	});
-
 </script>
 <h1>Programar curso</h1>
 
@@ -428,7 +662,29 @@
 			</ul>			
 		</div>
 	</div>
-	
+
+	<ul id="menu-event" class="menu" style="display:none;">
+	  <li data-action="edit"><a href="#">Mostrar</a></li>
+	  <li data-action="copy"><a href="#">Copiar</a></li>
+	  <li data-action="delete" class="ui-state-disabled"><a href="#">Borrar</a></li>
+      <li data-action="cancel"><a href="#">Cancelar</a></li>
+	</ul>
+	<ul id="menu-slot" class="menu" style="display:none;">
+      <li data-fc-view="month,basicDay" data-action="select"><a href="#">Crear evento</a></li>
+	  <li data-fc-view="agendaWeek"><a href="#">Crear evento</a>
+	  	<ul>
+	  		<li data-action="select" data-duration="60"><a href="#">1 hora</a></li>
+	  		<li data-action="select" data-duration="90"><a href="#">1 hora y 30 minutos</a></li>
+	  		<li data-action="select" data-duration="120"><a href="#">2 horas</a></li>
+	  		<li data-action="select" data-duration="150"><a href="#">2 horas y 30 minutos</a></li>
+	  		<li data-action="select" data-duration="180"><a href="#">3 horas</a></li>
+	  		<li data-action="select" data-duration="210"><a href="#">3 horas y 30 minutos</a></li>
+	  		<li data-action="select" data-duration="240"><a href="#">4 horas</a></li>
+        </ul>
+  	  </li>
+	  <li data-action="paste" class="ui-state-disabled"><a href="#">Pegar</a></li>
+	  <li data-action="cancel"><a href="#">Cancelar</a></li>
+	</ul>
 
 	<div id="edit_form">
 		
@@ -472,14 +728,14 @@
 						<label for="EventInitialHour" style="display:inline">Desde</label>
 						<?php echo $form->hour('initial_hour', true, "07", array('timeFormat' => '24')); ?>
 						:
-            <select id="EventInitialHourMin" name="data[Event][initial_hour][minute]">
+                        <select id="EventInitialHourMin" name="data[Event][initial_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>
 						<label for="EventFinalHour" style="display:inline">Hasta</label>
 						<?php echo $form->hour('final_hour', true, "07", array('timeFormat' => '24')); ?>
 						:
-            <select id="EventFinalHourMin" name="data[Event][final_hour][minute]">
+                        <select id="EventFinalHourMin" name="data[Event][final_hour][minute]">
 							<option value="00">00</option>
 							<option value="30">30</option>
 						</select>
@@ -531,10 +787,11 @@
 	});
 	
 	$('#Frequency').change(function() {
-		if ($('#Frequency').val() != "")
+		if ($('#Frequency').val() != "") {
 			$('#finish_date').show();
-		else
+        } else {
 			$('#finish_date').hide();
+        }
 	});
 	
 	$('#EventActivityId').change(function() {
@@ -552,11 +809,12 @@
 	
 
 	$(document).ready(function() {
-		function formatItem(row){
-			if (row[1] != null)
+		function formatItem(row) {
+			if (row[1] != null) {
 				return row[0];
-			else
+            } else {
 				return 'No existe ningún profesor con este nombre.';
+            }
 		}
 		
 		$("#teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#EventTeacherId").val(item[1]); });
@@ -572,7 +830,7 @@
 			formatMatch: function(row, i, max){
 				return row.name;
 			}
-		}).result(function(event,item) {
+		}).result(function(event, item) {
 			$.ajax({
 				cache: false,
 				type: "GET", 
@@ -585,8 +843,5 @@
 		});
 		
 		$('#classrooms').val("");
-		
-		
-	});
-			
+	});			
 </script>

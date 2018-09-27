@@ -1,11 +1,7 @@
 <?php if (isset($eventExceedDuration)): ?>
 	$('#notice').removeClass('success');
 	$('#notice').addClass('error');
-	$('#notice').html("El evento no ha podido programarse porque exceden la duración de la actividad");
-<?php elseif (isset($notAllowed)): ?>
-	$('#notice').removeClass('success');
-	$('#notice').addClass('error');
-	$('#notice').html("No tienes permisos para realizar esta acción");
+	$('#notice').html("Los eventos no han podido programarse porque exceden la duración de la actividad");
 <?php elseif (isset($events)): ?>
 	if (currentEvent != null) {
 		$('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -27,7 +23,7 @@
 	?>];
 	$('#form_container').hide();
 	$('#notice').removeClass('error');
-	$('#notice').html('El evento se ha añadido correctamente');
+	$('#notice').html('Los eventos se han añadido correctamente');
 	$('#notice').addClass('success');
 	$('#calendar').fullCalendar('addEventSource', events);
 	$('#calendar').fullCalendar('refetchEvents');

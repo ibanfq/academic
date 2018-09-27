@@ -23,30 +23,33 @@
         
         function get($classroom_id = null) {
             $db = $this->Event->getDataSource();
-            $events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE events.classroom_id = {$db->value($classroom_id)}");
+            $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.classroom_id = {$db->value($classroom_id)}");
             
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
             $this->set('events', $events);
         }
         
         function get_by_subject($subject_id = null) {
             $db = $this->Event->getDataSource();
-            $events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE activities.subject_id = {$db->value($subject_id)}");
+            $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Activity.subject_id = {$db->value($subject_id)}");
             
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
             $this->set('events', $events);
         }
         
         function get_by_level($level = null) {
             $db = $this->Event->getDataSource();
-            $events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE subjects.level = {$db->value($level)}");
+            $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Subject.level = {$db->value($level)}");
             
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
             $this->set('events', $events);
-            
         }
 
         function get_by_degree_and_level($degree = null, $level = null) {
             $db = $this->Event->getDataSource();
-            $events = $this->Event->query("SELECT DISTINCT events.id, events.initial_hour, events.final_hour, events.activity_id, activities.name AS `activity`, activities.type AS 'type', events.group_id, groups.name AS `group`, subjects.acronym AS `acronym` FROM events INNER JOIN activities ON activities.id = events.activity_id INNER JOIN groups ON groups.id = events.group_id INNER JOIN subjects ON subjects.id = activities.subject_id WHERE subjects.degree = {$db->value($degree)} AND subjects.level = {$db->value($level)}");
+            $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Subject.degree = {$db->value($degree)} AND Subject.level = {$db->value($level)}");
             
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
             $this->set('events', $events);
         }
         
@@ -70,6 +73,12 @@
             $final_timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
             
             return ($final_timestamp - $initial_timestamp) / 3600.0;
+        }
+
+        function _addDuration($initial_hour, $hours) {
+            $new_initial_hour = clone $initial_hour;
+            $new_initial_hour->add(new DateInterval("PT{$hours}H"));
+            return $new_initial_hour;
         }
         
         function add($finished_at = null, $frequency = null) {
@@ -152,8 +161,65 @@
                     }
                 }
             }
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
         }
         
+        function copy($id) {
+            $event = $this->Event->find('first', array('conditions' => array('Event.id' => $id), 'recursive' => -1));
+            if (!$event) {
+                $this->set('notAllowed', true);
+            } else {
+                $event_initial_hour = new DateTime($event['Event']['initial_hour']);
+                if (!empty($this->params['named']['initial_hour'])) {
+                    $initial_hour = new DateTime($this->params['named']['initial_hour']);
+                } else {
+                    $initial_hour = $event_initial_hour;
+                }
+                if (!empty($this->params['named']['classroom'])) {
+                    $classroom_id = $this->params['named']['classroom'];
+                } else {
+                    $classroom_id = $event['Event']['classroom_id'];
+                }
+                $duration = $this->_getDuration($event_initial_hour, new DateTime($event['Event']['final_hour']));
+                $final_hour = $this->_addDuration($initial_hour, $duration);
+                $this->data = [
+                    'id'           => null,
+                    'group_id'     => $event['Event']['group_id'],
+                    'activity_id'  => $event['Event']['activity_id'],
+                    'teacher_id'   => $event['Event']['teacher_id'],
+                    'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
+                    'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
+                    'classroom_id' => $classroom_id,
+                    'duration'     => $event['Event']['duration'],
+                    'owner_id'     => $this->Auth->user('id'),
+                    'teacher_2_id' => $event['Event']['teacher_2_id'],
+                    'show_tv'      => $event['Event']['show_tv']
+                ];
+                if ($this->Event->save($this->data)) {
+                    $this->set('success', true);
+                    $event = $this->Event->read();
+                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
+                    
+                    $this->set('events', array($event));
+                    $this->set('subject', $subject);
+                } else {
+                    if ($this->Event->id == -1) {
+                        $this->set('eventExceedDuration', true);
+                    } else {
+                        $invalidFields = $this->Event->invalidFields();
+                        if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
+                            $event = $this->Event->read();
+                            $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
+                            $this->set('event', $event);
+                            $this->set('activity', $activity);
+                        }
+                        $this->set('invalidFields', $invalidFields);
+                    }
+                }
+            }
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        }        
+
         function edit($id = null) {
             $this->Event->id = $id;
             $event = $this->Event->read();
@@ -196,13 +262,14 @@
                 $this->set('notAllowed', true);
         }
         
-        
         function delete($id=null) {
             $this->Event->id = $id;
             $event = $this->Event->read();
-            
-            $ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
-            $this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");
+            $ids = [];
+            if ($this->_authorizeDelete($event)) {
+                $ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
+                $this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");
+            }
             $this->set('events', $ids);
         }
         
@@ -531,11 +598,23 @@
             
             return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
         }
+
+        function _authorizeDelete($event) {
+            $uid = $this->Auth->user('id');
+
+            return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Profesor");
+        }
+
+        function _getAuthorizeDeleteClosure() {
+            return function ($event) {
+                return $this->_authorizeDelete($event);
+            };
+        }
         
         function _authorize() {
             parent::_authorize();
 
-            $private_actions = array('schedule', 'add', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
+            $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
             $student_actions = array('register_student');
 
             if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {

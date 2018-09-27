@@ -88,11 +88,14 @@
                     $this->set('activity_overlaped', $activity_overlaped);
                 }
             }
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
         }
         
         function get($classroom_id = null) {
-            $bookings = $this->Booking->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking WHERE Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1");
-            
+            $db = $this->Booking->getDataSource();
+            $bookings = $this->Booking->query("SELECT DISTINCT Booking.id, Booking.parent_id, Booking.initial_hour, Booking.final_hour, Booking.reason, Booking.user_id, Booking.classroom_id, Classroom.id, Classroom.teachers_can_booking FROM bookings Booking LEFT JOIN classrooms Classroom ON Booking.classroom_id = Classroom.id WHERE Booking.classroom_id = {$db->value($classroom_id)} OR Booking.classroom_id = -1");
+
+            $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
             $this->set('bookings', $bookings);
         }
         
@@ -202,27 +205,28 @@
         }
         
         function delete($id=null) {
-            $uid = $this->Auth->user('id');
+            $booking = $this->Booking->find('first', array(
+                'conditions' => array('Booking.id' => $id),
+                'recursive' => 0
+            ));
 
-            if (Configure::read('app.classroom.teachers_can_booking') && $this->Auth->user('type') === 'Profesor') {
-                $booking = $this->Booking->find('first', array(
-                    'conditions' => array('Booking.id' => $id),
-                    'recursive' => 0
-                ));
-                if ($booking['Booking']['user_id'] != $uid || !$booking['Classroom']['teachers_can_booking']) {
+            $ids = [];
+
+            if (!empty($booking['Booking']['id'])) {
+                if (!$this->_authorizeDelete($booking)) {
                     $this->set('notAllowed', true);
                     return;
                 }
+                $ids = $this->Booking->query("SELECT Booking.id FROM bookings Booking where Booking.id = {$id} OR Booking.parent_id = {$id}");
+                $this->Booking->query("DELETE FROM bookings WHERE id = {$id} OR parent_id = {$id}");
             }
-            $ids = $this->Booking->query("SELECT Booking.id FROM bookings Booking where Booking.id = {$id} OR Booking.parent_id = {$id}");
-            $this->Booking->query("DELETE FROM bookings WHERE id = {$id} OR parent_id = {$id}");
-      
+
             if ($this->RequestHandler->isAjax()) {
                 $this->set('bookings', $ids);
             } else {
                 $this->Session->setFlash('La reserva se eliminó correctamente.');
                 $this->redirect(array('action' => 'index'));
-            }
+            }            
         }
         
         function update($id, $deltaDays, $deltaMinutes, $resize = null) {
@@ -288,6 +292,30 @@
             return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
         }
         
+        function _authorizeDelete($booking) {
+            $uid = $this->Auth->user('id');
+
+            if (Configure::read('app.classroom.teachers_can_booking') && $this->Auth->user('type') === 'Profesor') {
+                if ($booking['Booking']['classroom_id'] != -1 && empty($booking['Classroom']['id'])) {
+                    $classroom = $this->Booking->Classroom->find('first', array(
+                        'fields' => array('Classroom.id', 'Classroom.teachers_can_booking'), 'conditions' => array('Classroom.id' => $booking['Booking']['classroom_id']),
+                        'recursive' => -1
+                    ));
+                    $booking['Classroom'] = $classroom['Classroom'];
+                }
+
+                return $booking['Booking']['user_id'] == $uid && $booking['Classroom']['teachers_can_booking'];
+            }
+
+            return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Administrativo") || ($this->Auth->user('type') === "Conserje");
+        }
+
+        function _getAuthorizeDeleteClosure() {
+            return function ($booking) {
+                return $this->_authorizeDelete($booking);
+            };
+        }
+
         function _authorize() {
             parent::_authorize();
             
