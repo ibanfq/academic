@@ -5,6 +5,8 @@
 	$html->addCrumb($activity['Activity']['name'], "/activities/view/{$activity['Activity']['id']}");
 ?>
 
+<?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>
+
 <h1><?php echo $activity['Activity']['name'] ?></h1>
 
 <?php if ($auth->user('type') != "Estudiante") : ?>
@@ -36,10 +38,12 @@
 			<dt>Observaciones</dt>
 			<dd><?php echo $activity['Activity']['notes'] ?></dd>
 		</dl>
-		<dl>
-			<dt>Bloquear grupos 7 días antes</dt>
-			<dd><?php echo $activity['Activity']['inflexible_groups']? 'Sí' : 'No' ?></dd>
-		</dl>
+		<?php if ($flexible_until_days_to_start): ?>
+			<dl>
+				<dt>Bloquear grupos <?php echo $flexible_until_days_to_start === 1 ? "$flexible_until_days_to_start día" : "$flexible_until_days_to_start días" ?> antes</dt>
+				<dd><?php echo $activity['Activity']['inflexible_groups']? 'Sí' : 'No' ?></dd>
+			</dl>
+		<?php endif; ?>
 	</fieldset>
 	
 	<?php if (count($groups) > 0): ?>

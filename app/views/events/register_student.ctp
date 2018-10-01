@@ -2,14 +2,25 @@
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
 <?php $html->addCrumb($subject['Subject']['name'], '/users/my_subjects'); ?>
 
+<?php $flexible_groups = !empty(Configure::read('app.registration.flexible_groups')); ?>
+<?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>
+
 <h1>Grupos de la asignatura <?php echo $subject['Subject']['name'] ?></h1>
 
 <p id="notice"></p>
 
 <div class="intro">
 	<p>Para consultar la información sobre un grupo, pase el ratón por encima del nombre y espere a que aparezca el cuadro con la información disponible.</p>
-	<p>Cuando el fondo está AMARILLO es que tiene cambios solicitados, no se puede cambiar de grupo hasta que no aparezca en VERDE.</p>
-	<p>En el caso de que el fondo esté en ROJO, ya no te puedes cambiar de grupo. Esto puede ser porque la práctica ya se impartió o porque el profesor tiene bloqueado el cambio de grupo 7 días antes de su impartición. En este caso tienes que hablar con el profesor para poder acudir a otro grupo de prácticas.</p>
+	<?php if ($flexible_groups): ?>
+		<p>Cuando el fondo está AMARILLO es que tiene cambios solicitados, no se puede cambiar de grupo hasta que no aparezca en VERDE.</p>
+		<?php if (is_int($flexible_until_days_to_start)): ?>
+			<p>En el caso de que el fondo esté en ROJO, ya no te puedes cambiar de grupo. Esto puede ser porque la práctica ya se impartió o porque el profesor tiene bloqueado el cambio de grupo <?php echo $flexible_until_days_to_start === 1 ? "$flexible_until_days_to_start día" : "$flexible_until_days_to_start días" ?> antes de su impartición. En este caso tienes que hablar con el profesor para poder acudir a otro grupo de prácticas.</p>
+		<?php else: ?>
+			<p>En el caso de que el fondo esté en ROJO, ya no te puedes cambiar de grupo. Esto puede ser porque la práctica ya se impartió. En este caso tienes que hablar con el profesor para poder acudir a otro grupo de prácticas.</p>
+		<?php endif; ?>
+	<?php else: ?>
+		<p>Una vez elegido un grupo ya no podrás cambiarte. En este caso tienes que hablar con el profesor para poder acudir a otro grupo de prácticas.</p>
+	<?php endif; ?>
 	<p>
             <strong>IMPORTANTE:</strong> Tenga en cuenta que el número de plazas libres puede ir cambiando debido a que los otros estudiantes van seleccionando sus grupos. Siempre puede <a href="javascript:;" onclick="update_subject_free_seats()">actualizar</a> las plazas disponibles.
             No escojas grupo de prácticas si tienes esa actividad aprobada. En caso de escoger erróneamente grupo ponte en contacto con tu profesor para que te borre de esa actividad.
@@ -33,11 +44,13 @@
 
 					echo "<span id='free_seats_{$activity['id']}_{$group['id']}'>Quedan {$free_seats} plazas libres</span>";
           
+          			echo "<span>";
 					if (!$activity_has_changes_requests) {
 						if (!$group['closed']) {
-							echo "<span><a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
+							echo "<a href='javascript:;' onclick='registerMe({$activity['id']}, {$group['id']})' class='register_me_link_activity_{$activity['id']}' id='register_me_link_activity_{$activity['id']}_{$group['id']}' style='display:none'>¡Me apunto!</a></span>";
 						}
 					}
+					echo "</span>";
 
 				} else {
 

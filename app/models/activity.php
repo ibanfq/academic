@@ -3,8 +3,6 @@
 App::import('model', 'academicModel');
 
 class Activity extends AcademicModel {
-    const DAYS_TO_BLOCK_CHANGING_GROUP = 7;
-    
 	var $name = "Activity";
 
 	var $belongsTo = array('Subject');
@@ -49,7 +47,13 @@ class Activity extends AcademicModel {
 		$group_id = intval($group_id);
 		$activity = $this->query("SELECT Activity.id, Activity.inflexible_groups, DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id WHERE Event.activity_id = $activity_id AND Event.group_id = $group_id");
 		if ($activity && $activity[0]['Activity']['id']) {
-			return $activity[0][0]['time_to_end'] >= 0 && (!$activity[0]['Activity']['inflexible_groups'] || $activity[0][0]['days_to_start'] > self::DAYS_TO_BLOCK_CHANGING_GROUP);
+			if (Configure::read('app.registration.flexible_groups')) {
+				$ended = $activity[0][0]['time_to_end'] < 0;
+				$until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start');
+				return !$ended && (!is_int($until_days_to_start) || !$activity[0]['Activity']['inflexible_groups'] || $until_days_to_start < $activity[0][0]['days_to_start']);
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}

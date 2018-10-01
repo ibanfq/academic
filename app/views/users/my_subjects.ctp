@@ -11,9 +11,9 @@
 		<thead>
 			<tr>
 				<th>Asignatura</th>
-				<?php if (degreeEnabled): ?>
+				<?php if ($degreeEnabled): ?>
 					<th>Titulación</th>
-				<?phh endif; ?>
+				<?php endif; ?>
 				<th>Curso</th>
 			</tr>
 		</thead>
@@ -21,7 +21,7 @@
 			<?php foreach ($subjects as $subject): ?>
 				<tr>
 					<td><?php echo $html->link($subject['Subject']['name'], array('controller' => 'events', 'action' => 'register_student', $subject['Subject']['id'])) ?></td>
-					<?php if (degreeEnabled): ?>
+					<?php if ($degreeEnabled): ?>
 						<td><?php echo $subject['Subject']['degree'] ?></td>
 					<?php endif ?>
 					<td><?php echo $subject['Subject']['level'] ?></td>

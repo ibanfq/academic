@@ -377,7 +377,12 @@
             foreach ($events as $event):
                 $busy_capacity = $this->Event->query("SELECT count(*) as busy_capacity FROM registrations WHERE group_id = {$db->value($event['Group']['id'])} AND activity_id = {$db->value($event['Activity']['id'])}");
                 $ended = $event[0]['time_to_end'] < 0;
-                $closed = $ended || ($event['Activity']['inflexible_groups'] && $event[0]['days_to_start'] <= Activity::DAYS_TO_BLOCK_CHANGING_GROUP);
+                if (Configure::read('app.registration.flexible_groups')) {
+                    $until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start');
+                    $closed = $ended || (is_int($until_days_to_start) && $event['Activity']['inflexible_groups'] && $until_days_to_start >= $event[0]['days_to_start']);
+                } else {
+                    $closed = true;
+                }
                 
                 if (!isset($activities_groups[$event['Activity']['id']])) {
                     $activities_groups[$event['Activity']['id']] = array('id' => $event['Activity']['id'],'name' => $event['Activity']['name'], 'duration' => $event['Activity']['duration'], 'groups_closed' => false, 'Groups' => array());
