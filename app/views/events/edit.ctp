@@ -54,9 +54,9 @@
 			<input type="submit" value="Actualizar" onclick="
 			<?php if ($event['Event']['parent_id'] == null) :?>
                 <?php if (Configure::read('app.event.show_tv')): ?>
-                    if (confirm('Este evento es el primero de la serie. Si modifica el profesor o la visibilidad en TV se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
+                    if (confirm('Este evento es el primero de la serie. El profesor y la visibilidad en TV se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
                 <?php else: ?>
-				    if (confirm('Este evento es el primero de la serie. Si modifica el profesor se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
+				    if (confirm('Este evento es el primero de la serie. El profesor se modificará en todos los eventos de la serie. ¿Seguro que desea continuar?'))
                 <?php endif; ?>
 			<?php endif; ?>
 				{
