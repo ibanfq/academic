@@ -1,0 +1,49 @@
+<?php
+
+$config['app']['logo'] = '/img/logo.jpg';
+$config['app']['audit_email'] = 'audit@correo.es';
+$config['app']['fullcalendar']['menus'] = true;
+$config['app']['registration']['flexible_groups'] = false;
+$config['app']['activity']['teacher_can_block_groups_if_days_to_start'] = false;
+$config['app']['event']['show_tv'] = true;
+$config['app']['booking']['show_tv'] = true;
+$config['app']['classroom']['show_tv'] = false;
+$config['app']['classroom']['teachers_can_booking'] = true;
+$config['app']['degrees'] = array(
+    'GITT'        => 'GIIT (Grado en Ingeniería en Tecnologías de la Telecomunicación)',
+    'DG-GITT-ADE' => 'DG-GITT+ADE (Doble Grado en GITT y ADE)',
+    'MUIT'        => 'MUIT (Máster en Ingeriería de Telecomunicación)'
+);
+$config['app']['subject']['degree_levels'] = array(
+    'GITT'        => array('Primero', 'Segundo', 'Tercero', 'Cuarto'),
+    'DG-GITT-ADE' => array('Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto', 'Sexto'),
+    'MUIT'        => array('Formacion', 'Primero', 'Segundo')
+);
+$config['app']['subject']['levels'] = array(
+    'Curso de Formación' => 'Curso de Formación',
+    'Primero'   => 'Primero',
+    'Segundo'   => 'Segundo' ,
+    'Tercero'   => 'Tercero',
+    'Cuarto'    => 'Cuarto',
+    'Quinto'    => 'Quinto',
+    'Sexto'     => 'Sexto',
+);
+$config['app']['subject']['semesters'] = array(
+    'Primero' => 'Primero',
+    'Segundo' => 'Segundo',
+    'Anual'   => 'Anual'
+);
+$config['app']['subject']['types'] = array(
+    'Grado' => array(
+        'Básica de Rama' => 'Básica de Rama',
+        'Básica'         => 'Básica',
+        'Obligatoria'    => 'Obligatoria',
+        'Optativa'       => 'Optativa'
+    ),
+    'Licencitura' => array(
+        'Troncal'     => 'Troncal',
+        'Obligatoria' => 'Obligatoria',
+        'Optativa'    => 'Optativa'
+    )
+);
+$config['app']['subject']['default_type'] = 'Troncal';
