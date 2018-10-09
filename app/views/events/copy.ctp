@@ -1,7 +1,7 @@
-<?php if (isset($eventExceedDuration)): ?>
+<?php if (isset($notAllowed)): ?>
 	$('#notice').removeClass('success');
 	$('#notice').addClass('error');
-	$('#notice').html("Los eventos no han podido programarse porque exceden la duración de la actividad");
+	$('#notice').html("No tienes permisos para realizar esta acción");
 <?php elseif (isset($events)): ?>
 	if (currentEvent != null) {
 		$('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -23,18 +23,36 @@
 	?>];
 	$('#form_container').hide();
 	$('#notice').removeClass('error');
-	$('#notice').html('Los eventos se han añadido correctamente');
+	$('#notice').html('El evento se han añadido correctamente');
 	$('#notice').addClass('success');
 	$('#calendar').fullCalendar('addEventSource', events);
 	$('#calendar').fullCalendar('refetchEvents');
 	$('#calendar').fullCalendar('render');
+<?php elseif (isset($booking_overlaped)): ?>
+	<?php 
+    	$initial_date = date_create($booking_overlaped['Booking']['initial_hour']);
+		$message = "No ha sido posible crear la/s reserva/s en la fecha señalada porque coincide el día <strong>{$initial_date->format('d-m-Y')}</strong> con la reserva <strong>{$booking_overlaped['Booking']['reason']}</strong>";
+	    if ($booking_overlaped['Classroom']['name']) {
+	      $message .= " del aula <strong>{$booking_overlaped['Classroom']['name']}</strong>";
+	    }
+    ?>
+	$('#notice').removeClass('success');
+	$('#notice').addClass('error');
+	$('#notice').html("<?php echo addslashes($message) ?>");
+<?php elseif (isset($event_overlaped)): ?>
+    <?php 
+    	$initial_date = date_create($event_overlaped['Event']['initial_hour']);
+		$message = "No ha sido posible crear la/s reserva/s en la fecha señalada porque coincide el día <strong>{$initial_date->format('d-m-Y')}</strong> con la actividad <strong>{$activity_overlaped['Activity']['name']}</strong> de la asignatura <strong>{$activity_overlaped['Subject']['name']}</strong> del aula <strong>{$event_overlaped['Classroom']['name']}</strong>";
+    ?>
+	$('#notice').removeClass('success');
+	$('#notice').addClass('error');
+	$('#notice').html("<?php echo addslashes($message) ?>");
+<?php elseif (empty($invalidFields) || isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDurationDontExceedActivityDuration'): ?>
+	$('#notice').removeClass('success');
+	$('#notice').addClass('error');
+	$('#notice').html("El evento no ha podido programarse porque exceden la duración de la actividad");
 <?php else: ?>
 	$('#notice').removeClass('success');
 	$('#notice').addClass('error');
-	<?php if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap'): ?>
-		<?php $initial_date = date_create($event['Event']['initial_hour']); ?>
-		$('#notice').html("<?php echo "No ha sido posible crear el evento en la fecha señalada porque coincide el día <strong>{$initial_date->format('d-m-Y')}</strong> con la actividad <strong>{$activity['Activity']['name']}</strong> de la asignatura <strong>{$activity['Subject']['name']}</strong> del aula <strong>{$event['Classroom']['name']}</strong>" ?>");
-	<?php else: ?>
-		$('#notice').html("<?php echo h(current(array_values($invalidFields))) ?>");
-	<?php endif; ?>
+	$('#notice').html("<?php echo h(current(array_values($invalidFields))) ?>");
 <?php endif; ?>

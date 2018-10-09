@@ -83,6 +83,9 @@
         }
         
         function add($finished_at = null, $frequency = null) {
+            $events = array();
+            $invalidFields = array();
+
             if (($finished_at != null) && ($frequency != null)) {
                 $initial_hour = new DateTime($this->data['Event']['initial_hour']);
                 $final_hour = new DateTime($this->data['Event']['final_hour']);
@@ -91,7 +94,6 @@
                 $scheduled = $this->_getScheduled($this->data['Event']['activity_id'], $this->data['Event']['group_id']);
                 
                 $this->data['Event']['owner_id'] = $this->Auth->user('id');
-                $events = array();
                 $activity = $this->Event->Activity->find('first', array('conditions' => array( 'Activity.id' => $this->data['Event']['activity_id'])));
                 
                 $duration = $activity['Activity']['duration'];
@@ -111,56 +113,41 @@
                         $this->Event->id = null;
                         $this->data['Event']['id'] = null;
                     } else {
-                        if (($scheduled + ($this->_getDuration($initial_hour, $final_hour))) > $duration) {
-                            $this->set('eventExceedDuration', true);
-                        }  else {
-                            $invalidFields = $this->Event->invalidFields();
-                            if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
-                                $event = $this->Event->read();
-                                $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Event']['activity_id'])));
-                                $this->set('event', $event);
-                                $this->set('activity', $activity);
-                            }
-                            $this->set('invalidFields', $invalidFields);
-                        }
-                        
-                        if (!empty($events)) {
+                        if (!empty($events) && $this->data['Event']['parent_id'] != null) {
                             $this->Event->query("DELETE FROM events WHERE id = {$this->data['Event']['parent_id']} OR parent_id = {$this->data['Event']['parent_id']}");
                         }
-                        unset($events);
-                        
+
+                        unset($events);                        
                         break;
                     }
                 }
-                
-                if (isset($events)) {
-                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
-                    $this->set('events', $events);
-                    $this->set('subject', $subject);
-                } 
             } else {
                 $this->data['Event']['owner_id'] = $this->Auth->user('id');
                 if ($this->Event->save($this->data)) {
-                    $this->set('success', true);
-                    $event = $this->Event->read();
-                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
-                    
-                    $this->set('events', array($event));
-                    $this->set('subject', $subject);
-                } else {
-                    if ($this->Event->id == -1) {
-                        $this->set('eventExceedDuration', true);
-                    } else {
-                        $invalidFields = $this->Event->invalidFields();
-                        if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
-                            $event = $this->Event->read();
-                            $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
-                            $this->set('event', $event);
-                            $this->set('activity', $activity);
-                        }
-                        $this->set('invalidFields', $invalidFields);
-                    }
+                    array_push($events, $this->Event->read());
                 }
+            }
+
+            if (!empty($events)) {
+                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
+                    $this->set('success', true);
+                    $this->set('events', $events);
+                    $this->set('subject', $subject);
+            } else {
+                $invalidFields = $this->Event->invalidFields();
+                if ($this->Event->booking_id_overlaped) {
+                    $this->loadModel('Booking');
+                    $this->Booking->id = $this->Event->booking_id_overlaped;
+                    $booking_overlaped = $this->Booking->read();
+                    $this->set('booking_overlaped', $booking_overlaped);
+                } elseif ($this->Event->event_id_overlaped) {
+                    $this->Event->id = $this->Event->event_id_overlaped;
+                    $event_overlaped = $this->Event->read();
+                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                    $this->set('event_overlaped', $event_overlaped);
+                    $this->set('activity_overlaped', $activity_overlaped);
+                }
+                $this->set('invalidFields', $invalidFields);
             }
             $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
         }
@@ -198,25 +185,26 @@
                     'show_tv'      => $event['Event']['show_tv']
                 ];
                 if ($this->Event->save($this->data)) {
+                    array_push($events, $this->Event->read());
+                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
                     $this->set('success', true);
-                    $event = $this->Event->read();
-                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
-                    
-                    $this->set('events', array($event));
+                    $this->set('events', $events);
                     $this->set('subject', $subject);
                 } else {
-                    if ($this->Event->id == -1) {
-                        $this->set('eventExceedDuration', true);
-                    } else {
-                        $invalidFields = $this->Event->invalidFields();
-                        if (isset($invalidFields['initial_hour']) && $invalidFields['initial_hour'] === 'eventDontOverlap') {
-                            $event = $this->Event->read();
-                            $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
-                            $this->set('event', $event);
-                            $this->set('activity', $activity);
-                        }
-                        $this->set('invalidFields', $invalidFields);
+                    $invalidFields = $this->Event->invalidFields();
+                    if ($this->Event->booking_id_overlaped) {
+                        $this->loadModel('Booking');
+                        $this->Booking->id = $this->Event->booking_id_overlaped;
+                        $booking_overlaped = $this->Booking->read();
+                        $this->set('booking_overlaped', $booking_overlaped);
+                    } elseif ($this->Event->event_id_overlaped) {
+                        $this->Event->id = $this->Event->event_id_overlaped;
+                        $event_overlaped = $this->Event->read();
+                        $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                        $this->set('event_overlaped', $event_overlaped);
+                        $this->set('activity_overlaped', $activity_overlaped);
                     }
+                    $this->set('invalidFields', $invalidFields);
                 }
             }
             $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
@@ -256,9 +244,19 @@
                 $this->_add_days($final_hour, $deltaDays, $deltaMinutes);
                 $event['Event']['final_hour'] = $final_hour->format('Y-m-d H:i:s');
 
-                if (!($this->Event->save($event))) {
-                    $event = $this->Event->read();
-                    $this->set('event', $event);
+                if (($this->Event->save($event))) {
+                    $this->set('success', true);
+                } elseif ($this->Event->booking_id_overlaped) {
+                    $this->loadModel('Booking');
+                    $this->Booking->id = $this->Event->booking_id_overlaped;
+                    $booking_overlaped = $this->Booking->read();
+                    $this->set('booking_overlaped', $booking_overlaped);
+                } elseif ($this->Event->event_id_overlaped) {
+                    $this->Event->id = $this->Event->event_id_overlaped;
+                    $event_overlaped = $this->Event->read();
+                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                    $this->set('event_overlaped', $event_overlaped);
+                    $this->set('activity_overlaped', $activity_overlaped);
                 }
             } else
                 $this->set('notAllowed', true);
