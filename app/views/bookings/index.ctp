@@ -42,7 +42,7 @@
         return false;
     }
 
-    function toEventDateString(date){
+    function toEventDateString(date) {
         var day = date.getDate();
         var month = date.getMonth() + 1;
         var year = date.getFullYear();
@@ -194,7 +194,7 @@
                                     if (clipboardEventSource.id === event.id || clipboardEventSource.parent_id === event.id) {
                                         $('.menu [data-action="paste"]')
                                             .data('fc-clipboard', false)
-                                            .addClass('ui-state-disabled'); 
+                                            .addClass('ui-state-disabled');
                                     }
                                 }
                             }
@@ -254,6 +254,29 @@
             });
         }
 
+        function checkOverlap(calendar, event) {  
+            var aStart = Math.round(new Date(event.start));
+            var aEnd = Math.round(new Date(event.end));
+
+            var overlap = calendar.fullCalendar('clientEvents', function(currentEvent) {
+                if( currentEvent == event) {
+                    return false;
+                }
+                var bStart = Math.round(new Date(currentEvent.start));
+                var bEnd = Math.round(new Date(currentEvent.end));
+
+                return (
+                    (bStart <= aStart && bEnd > aStart)
+                    ||
+                    (bStart < aEnd && bEnd >= aEnd)
+                    ||
+                    (bStart >= aStart && bEnd <= aEnd)
+                );
+            });
+
+            return ! overlap.length;
+        }
+
         $('#calendar').fullCalendar({
             header: {
                 right: 'prev,next today',
@@ -286,6 +309,13 @@
                     $('#notice').html("No se pueden modificar las actividades académicas desde las reservas de aula. Vaya a programar curso si desea modificar una actividad académica.");
                     revertFunc();
                 } else {
+                    if (!checkOverlap($('#calendar'), event)) {
+                        revertFunc();
+                        $('#notice').removeClass('success');
+                        $('#notice').addClass('error');
+                        $('#notice').html("Los eventos no se pueden solapar.");
+                        return;
+                    }
                     id = event.id.match(/\d+/);
                     $.ajax({
                         cache: false,
@@ -335,8 +365,8 @@
             eventRender: function (event, element, view) {
                 if (!event.className || !event.className.length) {
                     element.bind('click', function (jsEvent) {
-                        $('.menu:visible').blur();  
-                    });                 
+                        $('.menu:visible').blur();
+                    });
                     return;
                 }
                 if (isMenusEnabled()) {
@@ -367,6 +397,13 @@
                     $('#notice').html("No se pueden modificar las actividades académicas desde las reservas de aula. Vaya a programar curso si desea modificar una actividad académica.");
                     revertFunc();
                 } else {
+                    if (!checkOverlap($('#calendar'), event)) {
+                        revertFunc();
+                        $('#notice').removeClass('success');
+                        $('#notice').addClass('error');
+                        $('#notice').html("Los eventos no se pueden solapar.");
+                        return;
+                    }
                     id = event.id.match(/\d+/);
                     $.ajax({
                         cache: false,
@@ -483,6 +520,15 @@
                 var initial_date = toEventDateString(date);
                 var final_date = toEventDateString(endDate);
                 currentEvent = [{title: "<<vacío>>", start: initial_date, end: final_date, allDay:false}];
+
+                if (!checkOverlap($('#calendar'), currentEvent[0])) {
+                    $('#notice').removeClass('success');
+                    $('#notice').addClass('error');
+                    $('#notice').html("Los eventos no se pueden solapar.");
+                    $('#calendar').fullCalendar('unselect');
+                    return;
+                }
+
                 $('#date').val(initial_date);
                 $('#BookingInitialHourHour').val(initial_hour);
                 $('#BookingInitialHourMin').val(initial_minute);
