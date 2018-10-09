@@ -1,10 +1,12 @@
 <?php
 
 $config['app']['logo'] = '/img/logo.jpg';
-$config['app']['audit_email'] = 'audit@correo.es';
+$config['app']['audit_email'] = 'admin@correo.es';
 $config['app']['fullcalendar']['menus'] = false;
 $config['app']['registration']['flexible_groups'] = true;
 $config['app']['activity']['teacher_can_block_groups_if_days_to_start'] = 7;
+$config['app']['activity']['teacher_can_block_groups_default_value'] = false;
+$config['app']['activity']['teacher_can_change_groups'] = false;
 $config['app']['event']['show_tv'] = false;
 $config['app']['booking']['show_tv'] = false;
 $config['app']['classroom']['show_tv'] = true;

@@ -5,6 +5,7 @@
 <?php $html->addCrumb('Crear actividad', "/activities/add/{$subject['Subject']['id']}"); ?>
 
 <?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>
+<?php $flexible_until_default_value = Configure::read('app.activity.teacher_can_block_groups_default_value'); ?>
 
 <h1>Crear actividad</h1>
 <?php
@@ -17,7 +18,7 @@
 		<?php echo $form->input('duration', array('label' => 'Duración', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl><span class="help-text">Si tiene que poner decimales utilice el punto (p.ej. 10.5)</span>')); ?>
 		<?php echo $form->input('notes', array('label' => 'Observaciones', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php if (is_int($flexible_until_days_to_start)): ?>
-			<?php echo $form->input('inflexible_groups', array('label' => 'Impedir que los usuarios cambien de grupo ' . ($flexible_until_days_to_start === 1 ? "$flexible_until_days_to_start día" : "$flexible_until_days_to_start días") . ' antes de empezar')); ?>
+			<?php echo $form->input('inflexible_groups', array('checked' => $flexible_until_default_value, 'label' => 'Impedir que los usuarios cambien de grupo ' . ($flexible_until_days_to_start === 1 ? "$flexible_until_days_to_start día" : "$flexible_until_days_to_start días") . ' antes de empezar')); ?>
 		<?php endif; ?>
 	</fieldset>
 		<?php echo $form->input('subject_id', array('type' => 'hidden', 'value' => $subject_id)); ?>
