@@ -48,3 +48,17 @@ $config['app']['subject']['types'] = array(
     )
 );
 $config['app']['subject']['default_type'] = 'Troncal';
+$config['app']['color_legend'] = array(
+    'legend_left' => array(
+        'prac_aula'        => 'Práctica aula',
+        'prac_problemas'   => 'Práctica problemas',
+        'prac_lab'         => 'Práctica laboratorio',
+        'clase_magistral' => 'Clase magistral'
+    ),
+    'legend_right' => array(
+        'seminario'       => 'Seminario',
+        'tutoria'         => 'Tutoría',
+        'evaluacion'      => 'Evaluación',
+        'otra_presencial' => 'Otra presencial'
+    )
+);

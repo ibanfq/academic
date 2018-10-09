@@ -89,28 +89,21 @@ $(document).ready(function() {
 	
 </div>
 <div id="legend" style="">
-	<div id="legend_left">
-		<ul>
-			<li id="prac_aula">Práctica aula</li>
-			<li id="prac_problemas">Práctica problemas</li>
-			<li id="prac_informatica">Práctica informática</li>
-			<li id="prac_micros">Práctica microscopía</li>
-			<li id="prac_lab">Práctica laboratorio</li>
-			<li id="prac_clin">Práctica clínica</li>
-			<li id="prac_ext">Práctica externa</li>
-		</ul>
-	</div>
+    <div id="legend_left">
+        <ul>
+            <?php foreach(Configure::read('app.color_legend.legend_left') as $id => $description): ?>
+                <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
 
-	<div id="legend_right">
-		<ul>
-			<li id="clase_magistral">Clase magistral</li>
-			<li id="seminario">Seminario</li>
-			<li id="taller_trabajo">Taller de trabajo</li>
-			<li id="tutoria">Tutoría</li>
-			<li id="evaluacion">Evaluación</li>
-			<li id="otra_presencial">Otra presencial</li>
-		</ul>			
-	</div>
+    <div id="legend_right">
+        <ul>
+            <?php foreach(Configure::read('app.color_legend.legend_right') as $id => $description): ?>
+                <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
 </div>
 
 <script type="text/javascript">
