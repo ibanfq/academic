@@ -43,6 +43,8 @@
 	
 		function edit($id = null) {
 			$administrator = $this->Auth->user('type') === "Administrador";
+			$profesor = $this->Auth->user('type') === "Profesor";
+			$canChangeGroup = $administrator || $profesor && Configure::read('app.activity.teacher_can_change_groups');
 						
 			$this->Activity->id = $id;
 			if (empty($this->data)) {
@@ -62,11 +64,11 @@
 					$student_id = $registration['Registration']['student_id'];
 					$group_id = isset($this->data['Students'][$student_id]['group_id'])? $this->data['Students'][$student_id]['group_id'] : false;
 					if ($group_id) {
-						if ($administrator || $group_id == -1) {
+						if ($canChangeGroup || $group_id == -1) {
 							$registration['Registration']['group_id'] = $group_id;
 						}
 					} else {
-						if ($administrator || $registration['Registration']['group_id'] == -1) {
+						if ($canChangeGroup || $registration['Registration']['group_id'] == -1) {
 							array_push($registrations_deleted, $registration['Registration']['id']);
 							unset($registrations[$i]);
 						}
@@ -75,7 +77,7 @@
 				}
 				if (isset($this->data['Students'])) {
 					foreach ($this->data['Students'] as $student_id => $student) {
-						if ($student['group_id'] && ($administrator || $student['group_id'] == -1)) {
+						if ($student['group_id'] && ($canChangeGroup || $student['group_id'] == -1)) {
 							array_push($registrations, array('group_id' => $student['group_id'], 'activity_id' => $id, 'student_id' => $student_id));
 						}
 					}

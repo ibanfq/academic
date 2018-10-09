@@ -6,6 +6,7 @@
 <?php $html->addCrumb('Modificar actividad', "/activities/edit/{$activity['Activity']['id']}"); ?>
 
 <?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>
+<?php $teacher_can_change_groups = Configure::read('app.activity.teacher_can_change_groups'); ?>
 
 <h1>Modificar actividad</h1>
 <?php
@@ -30,14 +31,18 @@
 			<thead>
 				<tr>
 					<th style="width:80%">Estudiante</th>
-					<th><?php echo $auth->user('type') == "Administrador"? 'Grupo' : ($isEvaluation? 'No se puede presentar' : 'Actividad aprobada') ?></th>
+					<?php if ($auth->user('type') == "Administrador" || $teacher_can_change_groups): ?>
+						<th>Grupo / <?php echo $isEvaluation? 'No se puede presentar' : 'Actividad aprobada' ?></th>
+					<?php else: ?>
+						<th><?php echo $isEvaluation? 'No se puede presentar' : 'Actividad aprobada' ?></th>
+					<?php endif; ?>
 				</th>
 			</thead>
 			<tbody>
 				<?php foreach ($registrations as $registration): ?>
 					<tr>
 						<td><?php echo rtrim($registration['Student']['last_name']).', '.$registration['Student']['first_name']; ?></td>
-						<?php if ($auth->user('type') == "Administrador"): ?>
+						<?php if ($auth->user('type') == "Administrador" || $teacher_can_change_groups): ?>
 							<td><?php echo $form->select("Students.{$registration['Student']['id']}.group_id", $groups, $registration['Registration']['group_id']); ?></td>
 						<?php else: ?>
 							<td><?php echo $form->checkbox("Students.{$registration['Student']['id']}.group_id", array('value' => '-1', 'checked' => $registration['Registration']['group_id'] == -1)); ?></td>
