@@ -58,7 +58,7 @@
 			<table width="95%" border="0" align="center">
 				<tr>
 					<td>
-						<img src="<?php echo PATH."/" ?>img/logo_ulpgc_white.gif" />
+						<img src="<?php echo PATH . Configure::read('app.logo_ulpgc_white') ?>">
 					</td>
 				</tr>
 				<tr style="height:10px" />

@@ -1,6 +1,9 @@
 <?php
 
-$config['app']['logo'] = '/img/logo.jpg';
+$config['app']['logo'] = '/img/logo_academic.jpg';
+$config['app']['logo_ulpgc'] = '/img/logo_ulpgc.jpg';
+$config['app']['logo_ulpgc_white'] = '/img/logo_ulpgc_white.jpg';
+$config['app']['logo_ulpgc_link'] = 'http://www.fv.ulpgc.es';
 $config['app']['audit_email'] = 'admin@correo.es';
 $config['app']['fullcalendar']['menus'] = false;
 $config['app']['registration']['flexible_groups'] = true;

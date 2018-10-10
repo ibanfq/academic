@@ -26,8 +26,8 @@
 						<img src="<?php echo PATH?>/img/divider.jpg">
 					</li>
 					<li>
-						<a href="http://www.fv.ulpgc.es">
-							<img src="<?php echo PATH?>/img/logo_ulpgc.jpg">
+						<a href="<?php echo h(Configure::read('app.logo_ulpgc_link')) ?>">
+							<img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
 						</a>
 					</li>
 				</ul>

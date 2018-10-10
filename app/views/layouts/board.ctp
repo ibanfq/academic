@@ -27,7 +27,7 @@
                         <img src="<?php echo PATH?>/img/divider.jpg">
                     </li>
                     <li>
-                        <img src="<?php echo PATH?>/img/logo_ulpgc.jpg">
+                        <img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
                     </li>
                 </ul>
             </div>

@@ -1,6 +1,9 @@
 <?php
 
-$config['app']['logo'] = '/img/logo.jpg';
+$config['app']['logo'] = '/img/logo_academic.jpg';
+$config['app']['logo_ulpgc'] = '/img/logo_eite.jpg';
+$config['app']['logo_ulpgc_white'] = '/img/logo_eite_white.png';
+$config['app']['logo_ulpgc_link'] = 'https://www.eite.ulpgc.es';
 $config['app']['audit_email'] = 'audit@correo.es';
 $config['app']['email']['attendance_register_forgotten'] = 'attendance_register_forgotten_school';
 $config['app']['fullcalendar']['menus'] = true;
