@@ -26,6 +26,7 @@
       <li><?php echo $html->link('Estadísticas profesor', array('action' => 'stats_by_teacher', 'controller' => 'courses', $course['Course']['id'])) ?></li>
       <li><?php echo $html->link('Estadísticas por aula', array('action' => 'stats', 'controller' => 'classrooms', $course['Course']['id'])) ?></li>
 
+      <li><?php echo $html->link('E-portfolio', array('controller' => 'competence', 'action' => 'by_course', $course['Course']['id'])) ?>
 
       <?php if ($auth->user('type') == "Administrador"): ?>
         <li><?php echo $html->link('Copiar curso', array('action' => 'copy', $course['Course']['id']), null, 'Cuando copia un curso, copia también las asignaturas, las actividades y los grupos. Esta operación puede durar hasta dos minutos, ¿está seguro que desea copiar el curso?') ?></li>
