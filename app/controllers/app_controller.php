@@ -107,4 +107,3 @@ class AppController extends Controller {
 		return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
 	}
 }
-?>

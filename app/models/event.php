@@ -11,74 +11,75 @@ class Event extends AcademicModel {
     var $belongsTo = array(
         'Group' => array(
             'className' => 'Group'
-            ),
+        ),
         'Activity' => array(
             'className' => 'Activity'
-            ),
+        ),
         'Classroom' => array(
             'className' => 'Classroom'
-            ),
+        ),
         'Teacher' => array(
             'className' => 'User',
             'conditions' => array("(Teacher.type = 'Profesor' OR Teacher.type = 'Administrador')")
-            ),
+        ),
         'Teacher_2' => array(
-          'className' => 'User',
-          'conditions' => array("(Teacher.type = 'Profesor' OR Teacher.type = 'Administrador')")
-          ),
+            'className' => 'User',
+            'conditions' => array("(Teacher.type = 'Profesor' OR Teacher.type = 'Administrador')")
+        ),
         'Parent' => array(
             'className' => 'Event',
             'foreignKey' => 'parent_id'
-            )
-        );
+        )
+    );
     var $hasMany = array(
         'Events' => array(
-                'className' => 'Event',
-                'foreignKey' => 'parent_id'
-            )
-        );
+            'className' => 'Event',
+            'foreignKey' => 'parent_id'
+        )
+    );
     var $validate = array(
         'classroom_id' => array(
             'notEmpty' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
                 'message' => 'Debe especificar un aula para este evento'
-                )
-            ),
+            )
+        ),
         'initial_hour' => array(
             'notEmpty' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
                 'message' => 'Debe especificar una fecha de inicio para este evento'
-                ),
+            ),
             'eventDontOverlap' => array(
                 'rule' => array('eventDontOverlap')
-                ),
+            ),
             'eventDurationDontExceedActivityDuration' => array(
                 'rule' => array('eventDurationDontExceedActivityDuration')
-                )
-            ),
+            )
+        ),
         'final_hour' => array(
             'notEmpty' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
                 'message' => 'Debe especificar una fecha de inicio para este evento'
-                ),
             ),
+        ),
         'teacher_id' => array(
             'notEmpty' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
                 'message' => 'Debe especificar un profesor'
-                )
             )
-        );
+        )
+    );
 
     function eventDontOverlap($initial_hour){
-        $initial_hour = $this->data['Event']['initial_hour'];
-        $final_hour = $this->data['Event']['final_hour'];
-        $classroom_id = $this->data['Event']['classroom_id'];
+        App::import('Sanitize');
 
+        $initial_hour = Sanitize::escape($this->data['Event']['initial_hour']);
+        $final_hour = Sanitize::escape($this->data['Event']['final_hour']);
+        $classroom_id = intval($this->data['Event']['classroom_id']);
 
         $query = "SELECT Booking.id AS id FROM bookings Booking WHERE ((Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}') OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}') OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')) AND (Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1)";
         
@@ -88,8 +89,8 @@ class Event extends AcademicModel {
             return false;
         }
 
-        $teacher_id = $this->data['Event']['teacher_id'];
-        $teacher_2_id = $this->data['Event']['teacher_2_id'];
+        $teacher_id = intval($this->data['Event']['teacher_id']);
+        $teacher_2_id = intval($this->data['Event']['teacher_2_id']);
         $teacher_condition = '';
         if ($teacher_id) {
             $teacher_condition .= " OR Event.teacher_id = {$teacher_id} OR Event.teacher_2_id = {$teacher_id}";
@@ -100,7 +101,8 @@ class Event extends AcademicModel {
         $query = "SELECT Event.id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')) AND (Event.classroom_id = {$classroom_id} {$teacher_condition})";
 
         if ((isset($this->data['Event']['id'])) && ($this->data['Event']['id'] > 0)) {
-            $query .= " AND Event.id <> {$this->data['Event']['id']}";
+            $id = intval($this->data['Event']['id']);
+            $query .= " AND Event.id <> {$id}";
         }
 
         $events_count = $this->query($query);
