@@ -85,13 +85,22 @@ class Course extends AcademicModel {
         return $final_date > $initial_date;
     }
     
-    function afterFind($results, $primary){
-        foreach ($results as $key => $val) {
-            if (array_key_exists('Course', $results[$key]) && array_key_exists('initial_date', $results[$key]['Course'])) {
-                $results[$key]['Course']['initial_date'] = $this->dateFormatUser($val['Course']['initial_date']);
+    function afterFind($results, $primary) {
+        if ($primary) {
+            foreach ($results as $key => $val) {
+                if (array_key_exists('Course', $results[$key]) && array_key_exists('initial_date', $results[$key]['Course'])) {
+                    $results[$key]['Course']['initial_date'] =  $this->dateFormatUser($val['Course']['initial_date']);
+                }
+                if (array_key_exists('Course', $results[$key]) && array_key_exists('final_date', $results[$key]['Course'])) {
+                    $results[$key]['Course']['final_date'] = $this->dateFormatUser($val['Course']['final_date']);
+                }
             }
-            if (array_key_exists('Course', $results[$key]) && array_key_exists('final_date', $results[$key]['Course'])) {
-                $results[$key]['Course']['final_date'] = $this->dateFormatUser($val['Course']['final_date']);
+        } else {
+            if (array_key_exists('initial_date', $results)) {
+                $results['initial_date'] =  $this->dateFormatUser($results['initial_date']);
+            }
+            if (array_key_exists('final_date', $results)) {
+                $results['final_date'] = $this->dateFormatUser($results['final_date']);
             }
         }
         return $results;
