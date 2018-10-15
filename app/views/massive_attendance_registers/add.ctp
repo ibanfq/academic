@@ -130,7 +130,7 @@
       firstDay: 1,
       yearRange: '-10:+10',
       showOn: 'button',
-      buttonImage: '/veterinaria/v2/img/ico/calendar.png',
+      buttonImage: '<?php echo PATH ?>/img/ico/calendar.png',
       buttonImageOnly: true,
       buttonText: '%s' });
     

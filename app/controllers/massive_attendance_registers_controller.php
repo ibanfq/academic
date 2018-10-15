@@ -31,7 +31,7 @@ class MassiveAttendanceRegistersController extends AppController {
                 $initial_hour = $initial_hour->format('Y-m-d H:i:s');
                 $final_hour = $final_hour->format('Y-m-d H:i:s');
 
-                $teacher_id = intval($data['teacher_id'])
+                $teacher_id = intval($data['teacher_id']);
                 if ($data['teacher_2_id'] == '') {
                     $teacher_2_id = "NULL";
                 } else {

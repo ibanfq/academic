@@ -37,14 +37,16 @@ class UsersController extends AppController {
         $this->User->id = $user['User']['id'];
         $this->User->data = $user;
         
+        $calendarName = Configure::read('app.vcalendar.name') ?: 'Academic';
+
         #header('Content-type: text/calendar; charset=utf-8');
         #header('Content-Disposition: attachment; filename=calendar.ics');
         
         echo "BEGIN:VCALENDAR\r\n";
         echo "VERSION:2.0\r\n";
         echo "PRODID:-//ULPGC//Academic\r\n";
-        echo "NAME:Facultad de Veterinaria ULPGC\r\n";
-        echo "X-WR-CALNAME:Facultad de Veterinaria ULPGC\r\n";
+        echo "NAME:{$calendarName}\r\n";
+        echo "X-WR-CALNAME:{$calendarName}\r\n";
         echo "TIMEZONE-ID:Atlantic/Canary\r\n";
         echo "X-WR-TIMEZONE:Atlantic/Canary\r\n";
         echo "REFRESH-INTERVAL;VALUE=DURATION:PT12H\r\n";
@@ -117,7 +119,11 @@ class UsersController extends AppController {
                 $this->Email->from = 'Academic <noreply@ulpgc.es>';
                 $this->Email->to = $this->data['User']['username'];
                 $this->Email->subject = "Alta en Academic";
-                $this->Email->send("Hola:\nUsted ha sido dado de alta en el gestor académico de la Facultad de Veterinaria (Academic) con los siguientes datos de acceso:\n\nNombre de usuario: {$this->data['User']['username']}\nContraseña: {$password}\n\nUn saludo,\nEl equipo de Academic.");
+                $this->Email->sendAs = 'both';
+                $this->Email->template = Configure::read('app.email.user_registered') ?: 'user_registered';
+                $this->set('user', $this->data);
+                $this->set('password', $password);
+                $this->Email->send();
                 $this->Session->setFlash('El usuario se ha guardado correctamente');
                 $this->redirect(array('action' => 'index'));
             }
@@ -267,7 +273,11 @@ class UsersController extends AppController {
                 $this->Email->from = 'Academic <noreply@ulpgc.es>';
                 $this->Email->to = $this->data['User']['username'];
                 $this->Email->subject = "Recordatorio de contraseña";
-                $this->Email->send("Hola:\nUsted ha solicitado una nueva contraseña. Los nuevos datos de acceso son:\n\nNombre de usuario: {$this->data['User']['username']}\nContraseña: {$password}\n\nUn saludo,\nEl equipo de Academic.");
+                $this->Email->sendAs = 'both';
+                $this->Email->template = Configure::read('app.email.user_remember_password') ?: 'user_remember_password';
+                $this->set('user', $this->data);
+                $this->set('password', $password);
+                $this->Email->send();
                 $this->Session->setFlash('Se ha enviado una nueva contraseña a su correo electrónico.');
                 $this->redirect(array('action' => 'login'));
             }
@@ -624,7 +634,11 @@ class UsersController extends AppController {
                 $this->Email->from = 'Academic <noreply@ulpgc.es>';
                 $this->Email->to = $user['User']['username'];
                 $this->Email->subject = "Alta en Academic";
-                $this->Email->send("Hola:\nUsted ha sido dado de alta en el gestor académico de la Facultad de Veterinaria (Academic) con los siguientes datos de acceso:\n\nNombre de usuario: {$user['User']['username']}\nContraseña: {$password}\n\nUn saludo,\nEl equipo de Academic.");
+                $this->Email->sendAs = 'both';
+                $this->Email->template = Configure::read('app.email.user_registered') ?: 'user_registered';
+                $this->set('user', $user);
+                $this->set('password', $password);
+                $this->Email->send();
             }
             
             $imported_subjects++;
