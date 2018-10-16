@@ -10,12 +10,13 @@ class CompetenceGoalsController extends AppController {
 
     function add_to_competence($competence_id)
     {
+        $competence_id = $competence_id === null ? null : intval($competence_id);
         if (is_null($competence_id)) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
         $competence = $this->CompetenceGoal->Competence->find('first', array(
-            'recursive' => 2,
+            'recursive' => -1,
             'conditions' => array('Competence.id' => $competence_id)
         ));
 
@@ -30,14 +31,22 @@ class CompetenceGoalsController extends AppController {
             }
         }
 
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        ));
+
         $this->set('competence', $competence);
-        $this->set('course', array('Course' => $competence['Course']));
+        $this->set('course', $course);
     }
 
     function view($id = null)
     {
+        $id = $id === null ? null : intval($id);
+        
+        $this->CompetenceGoal->Behaviors->attach('Containable');
         $competence_goal = $this->CompetenceGoal->find('first', array(
-            'recursive' => 2,
+            'contain' => array('CompetenceCriterion'),
             'conditions' => array('CompetenceGoal.id' => $id)
         ));
 
@@ -45,60 +54,69 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        ));
+
         $this->set('competence_goal', $competence_goal);
-        $this->set('competence', array('Competence' => $competence_goal['Competence']));
-        $this->set('course', array('Course' => $competence_goal['Competence']['Course']));
+        $this->set('competence', $competence);
+        $this->set('course', $course);
     }
 
     function edit($id = null)
     {
+        $id = $id === null ? null : intval($id);
         $this->CompetenceGoal->id = $id;
         if (empty($this->data)) {
             $this->data = $this->CompetenceGoal->find('first', array(
-                'recursive' => 2,
+                'recursive' => -1,
                 'conditions' => array('CompetenceGoal.id' => $id)
             ));
-            $this->set('competence_goal', $this->data);
-            $this->set('competence', array('Competence' => $this->data['Competence']));
-            $this->set('course', array('Course' => $this->data['Competence']['Course']));
         } else {
             if ($this->CompetenceGoal->save($this->data)) {
-                $this->Session->setFlash('La competencia se ha modificado correctamente.');
+                $this->Session->setFlash('La objetivo se ha modificado correctamente.');
                 $this->redirect(array('action' => 'view', $id));
-            } else {
-                $competence = $this->CompetenceGoal->Competence->find('first', array(
-                    'recursive' => -1,
-                    'conditions' => array('Competence.id' => $this->data['CompetenceGoal']['competence_id'])
-                ));
-                $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-                    'recursive' => -1,
-                    'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-                ));
-                $this->set('competence_goal', $this->data);
-                $this->set('competence', $competence);
-                $this->set('course', $course);
             }
         }
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $this->data['CompetenceGoal']['competence_id'])
+        ));
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        ));
+        $this->set('competence_goal', $this->data);
+        $this->set('competence', $competence);
+        $this->set('course', $course);
     }
 
     function delete($id = null)
     {
-        $this->Competence->id = $id;
-        $competence = $this->Competence->read();
+        $id = $id === null ? null : intval($id);
+        $competence_goal = $this->CompetenceGoal->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('CompetenceGoal.id' => $id)
+        ));
 
-        if (!$competence) {
+        if (!$competence_goal) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
-        $this->Competence->delete($id);
-        $this->Session->setFlash('La competencia ha sido eliminada correctamente');
-        $this->redirect(array('action' => 'by_course', $competence['Competence']['course_id']));
+        $this->CompetenceGoal->delete($id);
+        $this->Session->setFlash('El objetivo ha sido eliminada correctamente');
+        $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_goal['competence_id']));
     }
   
     function _authorize()
     {
         parent::_authorize();
-        $administrator_actions = array('add', 'edit', 'delete');
+        $administrator_actions = array('add', 'add_to_competence', 'edit', 'delete');
 
         $this->set('section', 'courses');
 

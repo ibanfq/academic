@@ -63,7 +63,7 @@ class CompetenceGoal extends AcademicModel {
         }
 
         $query = "SELECT '' FROM competence a INNER JOIN competence b ON a.course_id = b.course_id"
-            . ' INNER JOIN competence_goals goal ON goal.competence_id = b.id'
+            . " INNER JOIN competence_goals goal ON goal.competence_id = b.id"
             . " WHERE a.id = {$db->value($competence_goal['competence_id'])}"
             . " AND goal.code = {$db->value($code)}";
 

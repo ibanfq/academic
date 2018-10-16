@@ -42,11 +42,10 @@
               <?php foreach ($competence['CompetenceGoal'] as $goal): ?>
               <tr>
                   <td><?php echo $html->link($goal['code'], array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
-                  <td><?php echo $goal['definition'] ?></td>
+                  <td><?php echo h($goal['definition']) ?></td>
                   <td><?php echo $html->link('Criterios', array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
               </tr>
               <?php endforeach; ?>
-              
           </tbody>
       </table>
     </fieldset>

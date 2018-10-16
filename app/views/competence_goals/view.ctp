@@ -21,10 +21,14 @@
     <legend>Datos generales</legend>
         <dl>
             <dt>Código</dt>
-            <dd><?php echo h($competence['Competence']['code']) ?></dd>
+            <dd><?php echo h($competence_goal['CompetenceGoal']['code']) ?></dd>
         </dl>
         <dl>
             <dt>Definición</dt>
+            <dd><?php echo h($competence_goal['CompetenceGoal']['definition']) ?></dd>
+        </dl>
+        <dl>
+            <dt>Competencia</dt>
             <dd><?php echo h($competence['Competence']['definition']) ?></dd>
         </dl>
     </fieldset>
@@ -43,11 +47,10 @@
               <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
               <tr>
                   <td><?php echo $html->link($criterion['code'], array('controller' => 'competence_criteria', 'action' => 'view', $criterion['id'])) ?></td>
-                  <td><?php echo $criterion['definition'] ?></td>
-                  <td><?php echo $html->link('Asignaturas, profesores y rúbricas', array('controller' => 'competence_critera', 'action' => 'view', $criterion['id'])) ?></td>
+                  <td><?php echo h($criterion['definition']) ?></td>
+                  <td><?php echo $html->link('Rúbricas, asignaturas y profesores', array('controller' => 'competence_criteria', 'action' => 'view', $criterion['id'])) ?></td>
               </tr>
               <?php endforeach; ?>
-              
           </tbody>
       </table>
     </fieldset>
