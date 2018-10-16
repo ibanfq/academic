@@ -118,9 +118,10 @@
 					<td><?php echo $total_duration ?></td>
 					<td><?php echo $total_programmed ?></td>
 					<td></td>
+					<td></td>
 				  </tr>
 				  <tr>
-					<td colspan="5"><small><strong>Se expone el promedio de horas programadas por grupo y el promedio de estudiantes apuntados por grupo.</strong></small></td>
+					<td colspan="6"><small><strong>Se expone el promedio de horas programadas por grupo y el promedio de estudiantes apuntados por grupo.</strong></small></td>
 				  </tr>
 				</tfoot>
 			</table>
