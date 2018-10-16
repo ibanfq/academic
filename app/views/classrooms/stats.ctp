@@ -7,7 +7,7 @@
 <?php if (!(isset($classroom))) { ?>
   <h1>Ver estadísticas por aula</h1>
   
-  <form action="/veterinaria/v2/classrooms/stats" method="get">
+  <form action="<?php echo PATH ?>/classrooms/stats" method="get">
     <fieldset>
       <dl>
         <dt>Aula</dt>
