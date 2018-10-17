@@ -11,6 +11,7 @@ class CompetenceController extends AppController {
     function by_course($course_id)
     {
         $course_id = $course_id === null ? null : intval($course_id);
+
         if (is_null($course_id)) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
@@ -61,6 +62,7 @@ class CompetenceController extends AppController {
     function view($id = null)
     {
         $id = $id === null ? null : intval($id);
+
         $this->Competence->id = $id;
         $competence = $this->Competence->read();
 
@@ -75,7 +77,9 @@ class CompetenceController extends AppController {
     function edit($id = null)
     {
         $id = $id === null ? null : intval($id);
+
         $this->Competence->id = $id;
+
         if (empty($this->data)) {
             $this->data = $this->Competence->read();
             $this->set('competence', $this->data);
@@ -97,6 +101,7 @@ class CompetenceController extends AppController {
     function delete($id = null)
     {
         $id = $id === null ? null : intval($id);
+        
         $this->Competence->id = $id;
         $competence = $this->Competence->read();
 

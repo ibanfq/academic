@@ -11,6 +11,7 @@ class CompetenceGoalsController extends AppController {
     function add_to_competence($competence_id)
     {
         $competence_id = $competence_id === null ? null : intval($competence_id);
+        
         if (is_null($competence_id)) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
@@ -71,7 +72,7 @@ class CompetenceGoalsController extends AppController {
     function edit($id = null)
     {
         $id = $id === null ? null : intval($id);
-        $this->CompetenceGoal->id = $id;
+
         if (empty($this->data)) {
             $this->data = $this->CompetenceGoal->find('first', array(
                 'recursive' => -1,
@@ -83,6 +84,7 @@ class CompetenceGoalsController extends AppController {
                 $this->redirect(array('action' => 'view', $id));
             }
         }
+
         $competence = $this->CompetenceGoal->Competence->find('first', array(
             'recursive' => -1,
             'conditions' => array('Competence.id' => $this->data['CompetenceGoal']['competence_id'])
@@ -91,6 +93,7 @@ class CompetenceGoalsController extends AppController {
             'recursive' => -1,
             'conditions' => array('Course.id' => $competence['Competence']['course_id'])
         ));
+
         $this->set('competence_goal', $this->data);
         $this->set('competence', $competence);
         $this->set('course', $course);
@@ -99,6 +102,7 @@ class CompetenceGoalsController extends AppController {
     function delete($id = null)
     {
         $id = $id === null ? null : intval($id);
+
         $competence_goal = $this->CompetenceGoal->find('first', array(
             'recursive' => -1,
             'conditions' => array('CompetenceGoal.id' => $id)
@@ -110,7 +114,7 @@ class CompetenceGoalsController extends AppController {
 
         $this->CompetenceGoal->delete($id);
         $this->Session->setFlash('El objetivo ha sido eliminada correctamente');
-        $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_goal['competence_id']));
+        $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_goal['CompetenceGoal']['competence_id']));
     }
   
     function _authorize()

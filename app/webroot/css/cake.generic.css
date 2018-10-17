@@ -75,6 +75,9 @@ h4 {
 ul, li {
 	margin: 0 12px;
 }
+.line_through {
+	text-decoration: line-through;
+}
 
 /** Layout **/
 #container {

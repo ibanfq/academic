@@ -20,6 +20,11 @@ class CompetenceCriterion extends AcademicModel {
             'foreignKey' => 'criterion_id',
             'order' => array('CompetenceCriterionTeacher.teacher_id ASC'),
             'dependent' => true,
+        ),
+        'UserCompetenceGrade' => array(
+            'foreignKey' => 'criterion_id',
+            'order' => array('UserCompetenceGrade.criterion_id ASC'),
+            'dependent' => true,
         )
     );
 

@@ -9,8 +9,10 @@
 <?php if ($auth->user('type') != "Estudiante") : ?>
   <div class="actions">
     <ul>
-      <?php if ($auth->user('type') == "Administrador"): ?>
+      <?php if ($auth_is_admin || $auth_is_coordinator): ?>
         <li><?php echo $html->link('Editar criterio', array('controller' => 'competence_criteria', 'action' => 'edit', $competence_criterion['CompetenceCriterion']['id'])) ?></li>
+      <?php endif; ?>
+      <?php if ($auth_is_admin): ?>
         <li><?php echo $html->link('Eliminar criterio', array('action' => 'delete', $competence_criterion['CompetenceCriterion']['id']), null, 'Cuando elmina un criterio, elimina también las rúbricas y todas las calificaciones. ¿Está seguro que desea borrarlo?') ?></li>
       <?php endif; ?>
     </ul>

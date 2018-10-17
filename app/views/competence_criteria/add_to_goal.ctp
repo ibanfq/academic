@@ -5,7 +5,7 @@
 <?php $html->addCrumb("Objetivo {$competence_goal['CompetenceGoal']['code']}", "/competence_goals/view/{$competence_goal['CompetenceGoal']['id']}"); ?>
 <?php $html->addCrumb('Crear criterio', "/competence_criteria/add_to_goal/{$competence_goal['CompetenceGoal']['id']}"); ?>
 
-<h1>Crear objetivo</h1>
+<h1>Crear criterio</h1>
 <?php
 	echo $form->create('CompetenceCriterion', array('url' => "/competence_criteria/add_to_goal/{$competence_goal['CompetenceGoal']['id']}"));
 ?>
@@ -15,6 +15,10 @@
 		<?php echo $form->input('definition', array('label' => 'Definition', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php echo $form->input('goal_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'value' => $competence_goal['CompetenceGoal']['id'])); ?>
 	</fieldset>
+
+	<?php require('_form_relations.ctp') ?>
 <?php
 	echo $form->end('Crear');
 ?>
+
+<?php require('_form_script.ctp') ?>

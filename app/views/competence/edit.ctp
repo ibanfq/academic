@@ -3,6 +3,7 @@
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb("Modificar competencia", "/competence/edit/{$competence['Competence']['id']}"); ?>
 
+<h1>Modificar competencia</h1>
 <?php
 	echo $form->create('Competence', array('url' => "/competence/edit/{$competence['Competence']['id']}"));
 ?>

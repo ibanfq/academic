@@ -147,6 +147,9 @@ form .submit input[type=submit]:hover {
 .student_autocomplete {
 	padding:0;
 }
+.td_input {
+	padding: 4px;
+}
 
 .disabled { background-color:#ccc;}
 
