@@ -119,7 +119,7 @@ class CoursesController extends AppController {
             $subjectIds = implode(',', $savedSubjects);
             $this->Course->query("DELETE FROM activities WHERE activities.subject_id IN ($subjectIds)");
             $this->Course->query("DELETE FROM groups WHERE groups.subject_id IN ($subjectIds)");
-            $this->Course->query("DELETE FROM subjects WHERE course_id = {$this->Course->Subject->id}");
+            $this->Course->query("DELETE FROM subjects WHERE course_id = {$this->Course->id}");
             $this->Course->delete($this->Course->id);
             $this->Session->setFlash('El curso no se pudo copiar.');
             $this->redirect($this->referer());
