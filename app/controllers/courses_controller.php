@@ -143,6 +143,7 @@ class CoursesController extends AppController {
         $this->Course->query("DELETE FROM `attendance_registers` WHERE activity_id NOT IN ($currentActivitiesQuery)");
         $this->Course->query("DELETE FROM `events` WHERE activity_id NOT IN ($currentActivitiesQuery)");
         $this->Course->query("DELETE FROM `registrations` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Course->query("DELETE FROM `group_requests` WHERE activity_id NOT IN ($currentActivitiesQuery)");
 
         $this->Course->query("DELETE FROM `users_attendance_register` WHERE attendance_register_id NOT IN (SELECT DISTINCT `AttendanceRegister`.id FROM attendance_registers `AttendanceRegister`)");
 
