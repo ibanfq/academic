@@ -297,7 +297,7 @@ class CompetenceCriteriaController extends AppController {
 
         $this->CompetenceCriterion->delete($id);
         $this->Session->setFlash('El criterio ha sido eliminada correctamente');
-        $this->redirect(array('controller' => 'competence_goals', 'action' => 'view', $competence_criterion['goal_id']));
+        $this->redirect(array('controller' => 'competence_goals', 'action' => 'view', $competence_criterion['CompetenceCriterion']['goal_id']));
     }
 
     function delete_by_subject($subject_id = null, $id = null)
@@ -316,9 +316,14 @@ class CompetenceCriteriaController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $competence_criterion = $this->CompetenceCriterion->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('CompetenceCriterion.id' => $id)
+        ));
+
         $this->CompetenceCriterion->delete($id);
         $this->Session->setFlash('El criterio ha sido eliminada correctamente');
-        $this->redirect(array('controller' => 'competence_goals', 'action' => 'view', $competence_criterion['goal_id']));
+        $this->redirect(array('controller' => 'competence_goals', 'action' => 'view_by_subject', $subject_id, $competence_criterion['CompetenceCriterion']['goal_id']));
 
     }
 

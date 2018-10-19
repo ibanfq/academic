@@ -347,6 +347,7 @@ class SubjectsController extends AppController {
         $this->Subject->id = $id;
         $subject = $this->Subject->read();
         $course_id = $subject['Subject']['course_id'];
+        $this->Subject->query("DELETE FROM `competence_criterion_subjects` WHERE subject_id = {$id}");
         $this->Subject->delete($id);
         $this->Session->setFlash('La asignatura ha sido eliminada correctamente');
         $this->redirect(array('controller' => 'courses', 'action' => 'index', $course_id));
