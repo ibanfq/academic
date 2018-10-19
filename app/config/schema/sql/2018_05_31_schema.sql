@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `activities` (
   KEY `subject_id_idxfk` (`subject_id`),
   KEY `type_idx` (`type`(6)),
   KEY `name_idx` (`name`(10))
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12156 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `attendance_registers` (
   KEY `teacher_id_idxfk` USING BTREE (`teacher_id`),
   KEY `activity_id_idxfk` USING BTREE (`activity_id`),
   KEY `group_id` USING BTREE (`group_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 PACK_KEYS=0 AUTO_INCREMENT=84958 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   KEY `user_id_idxfk` (`user_id`),
   KEY `classroom_id_idxfk` (`classroom_id`),
   KEY `user_type_idx` (`user_type`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4006 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `classrooms` (
   PRIMARY KEY  (`id`),
   KEY `name_idx` (`name`(7)),
   KEY `type_idx` (`type`(7))
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=144 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   KEY `initial_date_idx` (`initial_date`),
   KEY `end_date_idx` (`final_date`),
   KEY `name_idx` (`name`(10))
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=34 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   KEY `teacher_id` (`teacher_id`),
   KEY `owner_id_idxfk` (`owner_id`),
   KEY `initial_hour` (`initial_hour`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=65601 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS `groups` (
   KEY `subject_id_idxfk` (`subject_id`),
   KEY `name_idx` (`name`),
   KEY `type_idx` (`type`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=13078 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS `group_requests` (
   PRIMARY KEY  (`id`),
   KEY `user_group_index` (`group_id`,`student_id`),
   KEY `user_group_2_index` (`student_2_id`,`group_2_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4313 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS `massive_attendance_registers` (
   `modified` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `fk_subject_id` (`subject_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `registrations` (
   KEY `group_id_idxfk` (`group_id`),
   KEY `activity_id_idxfk` (`activity_id`),
   KEY `student_id_idxfk` (`student_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=697959 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS `subjects` (
   KEY `type_idx` (`type`),
   KEY `semester_idx` (`semester`),
   KEY `level_idx` (`level`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1409 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS `subjects_users` (
   KEY `subjects_index` USING BTREE (`subject_id`),
   KEY `user_id` USING BTREE (`user_id`),
   KEY `course_idx` (`course_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=49700 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `first_name_idx` (`first_name`),
   KEY `last_name_idx` (`last_name`),
   KEY `username_idx` (`username`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2251 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
