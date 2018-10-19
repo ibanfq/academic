@@ -47,6 +47,8 @@ class CoursesController extends AppController {
      * @version 2012-07-29
      */
     function copy($id) {
+        $this->loadModel('Competence');
+
         $id = $id === null ? null : intval($id);
         $course = $this->Course->findById($id);
 
@@ -64,9 +66,13 @@ class CoursesController extends AppController {
         }
         $new_course_id = $this->Course->id;
 
-        // Duplicate every subject
-        $savedSubjects = array();
         $error = false;
+        $savedSubjects = array();
+        $savedCompetence = array();
+        $savedCompetenceGoals = array();
+        $savedCompetenceCriteria = array();
+
+        // Duplicate every subject
         foreach ($course['Subject'] as $subject) {
             $subject['course_id'] = $new_course_id;
             $newSubject['Subject'] = $subject;
@@ -78,7 +84,7 @@ class CoursesController extends AppController {
             $this->Course->Subject->create();
             if ($this->Course->Subject->save($newSubject)) {
                 $new_subject_id = $this->Course->Subject->id;
-                $savedSubjects[] = $new_subject_id;
+                $savedSubjects[$subject['id']] = $new_subject_id;
             } else {
                 $error = true;
                 break;
@@ -115,8 +121,162 @@ class CoursesController extends AppController {
             }
         }
 
+        // Duplicate every competence
+        $competenceList = $this->Competence->find(
+            'all',
+            array(
+                'conditions' => array('Competence.course_id' => $id),
+                'recursive' => -1
+            )
+        );
+        foreach ($competenceList as $competence) {
+            $newCompetence['Competence'] = $competence['Competence'];
+            $newCompetence['Competence']['course_id'] = $new_course_id;
+            unset($newCompetence['Competence']['id']);
+            unset($newCompetence['Competence']['created']);
+            unset($newCompetence['Competence']['modified']);
+
+            $new_competence_id = null;
+            $this->Competence->create();
+            if ($this->Competence->save($newCompetence)) {
+                $new_competence_id = $this->Competence->id;
+                $savedCompetence[] = $new_competence_id;
+            } else {
+                $error = true;
+                break;
+            }
+
+            // Duplicate all goals of this competence
+            $competenceGoals = $this->Competence->CompetenceGoal->find(
+                'all',
+                array(
+                    'conditions' => array('CompetenceGoal.competence_id' => $competence['Competence']['id']),
+                    'recursive' => -1
+                )
+            );
+            foreach ($competenceGoals as $competenceGoal) {
+                $newCompetenceGoal['CompetenceGoal'] = $competenceGoal['CompetenceGoal'];
+                $newCompetenceGoal['CompetenceGoal']['competence_id'] = $new_competence_id;
+                unset($newCompetenceGoal['CompetenceGoal']['id']);
+                unset($newCompetenceGoal['CompetenceGoal']['created']);
+                unset($newCompetenceGoal['CompetenceGoal']['modified']);
+
+                $new_competence_goal_id = null;
+                $this->Competence->CompetenceGoal->create();
+                if ($this->Competence->CompetenceGoal->save($newCompetenceGoal)) {
+                    $new_competence_goal_id = $this->Competence->CompetenceGoal->id;
+                    $savedCompetenceGoals[] = $new_competence_goal_id;
+                } else {
+                    $error = true;
+                    break(2);
+                }
+
+                // Duplicate all criteria of this goal
+                $competenceCriteria = $this->Competence->CompetenceGoal->CompetenceCriterion->find(
+                    'all',
+                    array(
+                        'conditions' => array('CompetenceCriterion.goal_id' => $competenceGoal['CompetenceGoal']['id']),
+                        'recursive' => -1
+                    )
+                );
+                foreach ($competenceCriteria as $competenceCriterion) {
+                    $newCompetenceCriterion['CompetenceCriterion'] = $competenceCriterion['CompetenceCriterion'];
+                    $newCompetenceCriterion['CompetenceCriterion']['goal_id'] = $new_competence_goal_id;
+                    unset($newCompetenceCriterion['CompetenceCriterion']['id']);
+                    unset($newCompetenceCriterion['CompetenceCriterion']['created']);
+                    unset($newCompetenceCriterion['CompetenceCriterion']['modified']);
+
+                    $new_competence_criterion_id = null;
+                    $this->Competence->CompetenceGoal->CompetenceCriterion->create();
+                    if ($this->Competence->CompetenceGoal->CompetenceCriterion->save($newCompetenceCriterion)) {
+                        $new_competence_criterion_id = $this->Competence->CompetenceGoal->CompetenceCriterion->id;
+                        $savedCompetenceCriteria[] = $new_competence_criterion_id;
+                    } else {
+                        $error = true;
+                        break(2);
+                    }
+
+                    // Duplicate all rubrics of this criterion
+                    $competenceRubrics = $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->find(
+                        'all',
+                        array(
+                            'conditions' => array('CompetenceCriterionRubric.criterion_id' => $competenceCriterion['CompetenceCriterion']['id']),
+                            'recursive' => -1
+                        )
+                    );
+                    foreach ($competenceRubrics as $competenceRubric) {
+                        $newCompetenceRubric['CompetenceCriterionRubric'] = $competenceRubric['CompetenceCriterionRubric'];
+                        $newCompetenceRubric['CompetenceCriterionRubric']['criterion_id'] = $new_competence_criterion_id;
+                        unset($newCompetenceRubric['CompetenceCriterionRubric']['id']);
+                        unset($newCompetenceRubric['CompetenceCriterionRubric']['created']);
+                        unset($newCompetenceRubric['CompetenceCriterionRubric']['modified']);
+
+                        $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->create();
+                        if ($this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->save($newCompetenceRubric) === false) {
+                            $error = true;
+                            break(3);
+                        }
+                    }
+
+                    // Duplicate all subjects of this criterion
+                    $competenceSubjects = $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionSubject->find(
+                        'all',
+                        array(
+                            'conditions' => array('CompetenceCriterionSubject.criterion_id' => $competenceCriterion['CompetenceCriterion']['id']),
+                            'recursive' => -1
+                        )
+                    );
+                    foreach ($competenceSubjects as $competenceSubject) {
+                        $newCompetenceSubject['CompetenceCriterionSubject'] = $competenceSubject['CompetenceCriterionSubject'];
+                        $newCompetenceSubject['CompetenceCriterionSubject']['criterion_id'] = $new_competence_criterion_id;
+                        $newCompetenceSubject['CompetenceCriterionSubject']['subject_id'] = $savedSubjects[$competenceSubject['CompetenceCriterionSubject']['subject_id']];
+                        unset($newCompetenceSubject['CompetenceCriterionSubject']['id']);
+                        unset($newCompetenceSubject['CompetenceCriterionSubject']['created']);
+                        unset($newCompetenceSubject['CompetenceCriterionSubject']['modified']);
+
+                        $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionSubject->create();
+                        if ($this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionSubject->save($newCompetenceSubject) === false) {
+                            $error = true;
+                            break(3);
+                        }
+                    }
+
+                    // Duplicate all teachers of this criterion
+                    $competenceTeachers = $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionTeacher->find(
+                        'all',
+                        array(
+                            'conditions' => array('CompetenceCriterionTeacher.criterion_id' => $competenceCriterion['CompetenceCriterion']['id']),
+                            'recursive' => -1
+                        )
+                    );
+                    foreach ($competenceTeachers as $competenceTeacher) {
+                        $newCompetenceTeacher['CompetenceCriterionTeacher'] = $competenceTeacher['CompetenceCriterionTeacher'];
+                        $newCompetenceTeacher['CompetenceCriterionTeacher']['criterion_id'] = $new_competence_criterion_id;
+                        unset($newCompetenceTeacher['CompetenceCriterionTeacher']['id']);
+                        unset($newCompetenceTeacher['CompetenceCriterionTeacher']['created']);
+                        unset($newCompetenceTeacher['CompetenceCriterionTeacher']['modified']);
+
+                        $this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionTeacher->create();
+                        if ($this->Competence->CompetenceGoal->CompetenceCriterion->CompetenceCriterionTeacher->save($newCompetenceTeacher) === false) {
+                            $error = true;
+                            break(3);
+                        }
+                    }
+                }
+            }
+        }
+
         if ($error) {
+            $competenceCriterionIds = implode(',', $savedCompetenceCriteria);
+            $competenceGoalIds = implode(',', $savedCompetenceGoals);
+            $competenceIds = implode(',', $savedCompetence);
             $subjectIds = implode(',', $savedSubjects);
+            $this->Course->query("DELETE FROM competence_criterion_teachers WHERE competence_criterion_teachers.criterion_id IN ($competenceCriterionIds)");
+            $this->Course->query("DELETE FROM competence_criterion_subjects WHERE competence_criterion_subjects.criterion_id IN ($competenceCriterionIds)");
+            $this->Course->query("DELETE FROM competence_criterion_rubrics WHERE competence_criterion_rubrics.criterion_id IN ($competenceCriterionIds)");
+            $this->Course->query("DELETE FROM competence_criteria WHERE competence_criteria.goal_id IN ($competenceGoalIds)");
+            $this->Course->query("DELETE FROM competence_goals WHERE competence_goals.competence_id IN ($competenceIds)");
+            $this->Course->query("DELETE FROM competence WHERE competence.course_id = {$this->Course->id}");
             $this->Course->query("DELETE FROM activities WHERE activities.subject_id IN ($subjectIds)");
             $this->Course->query("DELETE FROM groups WHERE groups.subject_id IN ($subjectIds)");
             $this->Course->query("DELETE FROM subjects WHERE course_id = {$this->Course->id}");

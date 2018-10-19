@@ -31,7 +31,7 @@
   	  <?php endif; ?>
 
       <?php if ($auth->user('type') == "Administrador"): ?>
-        <li><?php echo $html->link('Copiar curso', array('action' => 'copy', $course['Course']['id']), null, 'Cuando copia un curso, copia también las asignaturas, las actividades y los grupos. Esta operación puede durar hasta dos minutos, ¿está seguro que desea copiar el curso?') ?></li>
+        <li><?php echo $html->link('Copiar curso', array('action' => 'copy', $course['Course']['id']), null, 'Cuando copia un curso, copia también las asignaturas, las actividades, los grupos y las competencias. Esta operación puede durar hasta dos minutos, ¿está seguro que desea copiar el curso?') ?></li>
         <li><?php echo $html->link('Eliminar curso', array('action' => 'delete', $course['Course']['id']), null, 'Cuando elmina un curso, elimina también los grupos, las asignaturas, las actividades y toda la programación. ¿Está seguro que desea borrarlo?') ?></li>
       <?php endif; ?>
     </ul>
