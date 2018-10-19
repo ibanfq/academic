@@ -16,6 +16,7 @@ $config['app']['event']['show_tv'] = false;
 $config['app']['booking']['show_tv'] = false;
 $config['app']['classroom']['show_tv'] = true;
 $config['app']['classroom']['teachers_can_booking'] = false;
+$config['app']['competence']['enable'] = true;
 $config['app']['degrees'] = false;
 $config['app']['subject']['levels'] = array(
     "Primero"   => "Primero",

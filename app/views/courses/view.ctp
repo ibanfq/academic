@@ -26,7 +26,7 @@
       <li><?php echo $html->link('Estadísticas profesor', array('action' => 'stats_by_teacher', 'controller' => 'courses', $course['Course']['id'])) ?></li>
       <li><?php echo $html->link('Estadísticas por aula', array('action' => 'stats', 'controller' => 'classrooms', $course['Course']['id'])) ?></li>
 
-      <?php if ($auth->user('type') == "Administrador" || $auth->user('type') == "Profesor"): ?>
+      <?php if (Configure::read('app.competence.enable') && ($auth->user('type') == "Administrador" || $auth->user('type') == "Profesor")): ?>
       	<li><?php echo $html->link('E-portfolio', array('controller' => 'competence', 'action' => 'by_course', $course['Course']['id'])) ?>
   	  <?php endif; ?>
 

@@ -17,6 +17,7 @@ $config['app']['event']['show_tv'] = true;
 $config['app']['booking']['show_tv'] = true;
 $config['app']['classroom']['show_tv'] = false;
 $config['app']['classroom']['teachers_can_booking'] = true;
+$config['app']['competence']['enable'] = false;
 $config['app']['degrees'] = array(
     'GITT'        => 'GITT (Grado en Ingeniería en Tecnologías de la Telecomunicación)',
     'DG-GITT-ADE' => 'DG-GITT+ADE (Doble Grado en GITT y ADE)',
