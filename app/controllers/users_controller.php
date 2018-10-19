@@ -148,6 +148,7 @@ class UsersController extends AppController {
     
     function delete($id = null){
         $id = $id === null ? null : intval($id);
+        $this->User->query("DELETE FROM group_requests WHERE student_id = {$id} OR student_2_id = {$id}");
         $this->User->delete($id);
         $this->Session->setFlash('El usuario ha sido eliminado correctamente');
         $this->redirect(array('contoller' => 'users', 'action' => 'index'));

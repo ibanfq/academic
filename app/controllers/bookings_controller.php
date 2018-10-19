@@ -272,8 +272,9 @@ class BookingsController extends AppController {
                 $this->set('notAllowed', true);
                 return;
             }
-            $ids = $this->Booking->query("SELECT Booking.id FROM bookings Booking where Booking.id = {$id} OR Booking.parent_id = {$id}");
+            $ids = $this->Booking->query("SELECT `Booking`.id FROM bookings `Booking` where `Booking`.id = {$id} OR `Booking`.parent_id = {$id}");
             $this->Booking->query("DELETE FROM bookings WHERE id = {$id} OR parent_id = {$id}");
+            $this->Booking->query("DELETE FROM users_booking WHERE booking_id NOT IN (SELECT DISTINCT `Booking`.id FROM bookings `Booking`)");
         }
 
         if ($this->RequestHandler->isAjax()) {

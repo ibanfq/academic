@@ -61,6 +61,7 @@ class GroupsController extends AppController {
         $this->Group->id = $id;
         $group = $this->Group->read();
         $subject_id = $group['Subject']['id'];
+        $this->Group->query("DELETE FROM group_requests WHERE group_id = {$id} OR group_2_id = {$id}");
         $this->Group->query("DELETE FROM events WHERE group_id = {$id}");
         $this->Group->delete($id);
         $this->Session->setFlash('El grupo ha sido eliminado correctamente');
