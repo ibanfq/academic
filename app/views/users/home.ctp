@@ -75,7 +75,7 @@ $(document).ready(function() {
             $('#edit_form').html(data);
             $('#edit_form').dialog({
               width:500,
-              position:'top'
+              position: {at: 'top'}
             });
           }
         }

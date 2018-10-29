@@ -5,9 +5,9 @@
 <?php $html->addCrumb("Competencia {$competence['Competence']['code']}", "/competence/view_by_subject/{$subject['Subject']['id']}/{$competence['Competence']['id']}"); ?>
 
 <?php if ($auth->user('type') == "Profesor"): ?>
-    <h1>Mis objetivos de aprendizaje</h1>
+    <h1>Mis objetivos de aprendizaje por asignatura: <?php echo h($subject['Subject']['name']) ?></h1>
 <?php else: ?>
-    <h1>Objetivos de aprendizaje</h1>
+    <h1>Objetivos de aprendizaje por asignatura: <?php echo h($subject['Subject']['name']) ?></h1>
 <?php endif; ?>
 
 <?php if ($auth->user('type') != "Estudiante") : ?>

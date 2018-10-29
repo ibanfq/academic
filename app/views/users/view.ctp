@@ -6,31 +6,35 @@
 	<?php echo $userModel->full_name($user)?> - <?php echo $user['User']['type'] ?></h1>
 <div class="actions">	
 	<ul>
-	  <?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Administrativo")) {?>
-		  <li><?php echo $html->link('Modificar usuario', array('action' => 'edit', $user['User']['id'])) ?></li>
-		<?php } ?>
+	    <?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Administrativo")): ?>
+		    <li><?php echo $html->link('Modificar usuario', array('action' => 'edit', $user['User']['id'])) ?></li>
+	    <?php endif; ?>
 		
-		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Conserje")) {
-		  if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")) { ?>
-		    <li><?php echo $html->link('Ver estadísticas', array('action' => 'teacher_stats', $user['User']['id'])) ?></li>
-      <?php } ?>
+		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Conserje")): ?>
+		    <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")): ?>
+		    	<li><?php echo $html->link('Ver estadísticas', array('action' => 'teacher_stats', $user['User']['id'])) ?></li>
+      		<?php endif; ?>
       
-      <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")) { ?>
-		    <li><?php echo $html->link('Ver horario', array('action' => 'teacher_schedule', $user['User']['id'])) ?></li>
-      <?php } ?>
+		    <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")): ?>
+				<li><?php echo $html->link('Ver horario', array('action' => 'teacher_schedule', $user['User']['id'])) ?></li>
+		    <?php endif; ?>
 		
-		  <?php if (($user['User']['type'] == "Estudiante") || ($user['User']['type'] == "Administrativo")) { ?>
-		    <li><?php echo $html->link('Ver asistencia', array('action' => 'student_stats', $user['User']['id'])) ?></li>
-		  <?php } ?>
-		<?php } ?>
+			<?php if (($user['User']['type'] == "Estudiante")): ?>
+			    <li><?php echo $html->link('Ver asistencia', array('action' => 'student_stats', $user['User']['id'])) ?></li>
+
+			    <?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Profesor")): ?>
+			    	<li><?php echo $html->link('E-portfolio', array('controller' => 'competence', 'action' => 'by_student', $user['User']['id'])) ?></li>
+		    	<?php endif; ?>
+			<?php endif; ?>
+		<?php endif; ?>
 		
-		<?php if ((($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")) && ($user['User']['type'] == "Estudiante")) { ?>
+		<?php if ((($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")) && ($user['User']['type'] == "Estudiante")): ?>
 			<li><?php echo $html->link('Modificar matrícula', array('action' => 'edit_registration', $user['User']['id'])) ?></li>
-		<?php } ?>
+		<?php endif; ?>
 		
-		<?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Administrativo")) {?>
+		<?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Administrativo")): ?>
 		  <li><?php echo $html->link('Eliminar usuario', array('action' => 'delete', $user['User']['id']), null, '¿Está seguro que desea eliminar este usuario?') ?></li>
-		<?php } ?>
+		<?php endif; ?>
 	</ul>
 </div>
 

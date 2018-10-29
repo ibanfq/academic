@@ -15,6 +15,7 @@
 <?php if ($auth->user('type') != "Estudiante") : ?>
     <div class="actions">
         <ul>
+            <li><?php echo $html->link('Evaluar', array('controller' => 'competence_criteria', 'action' => 'grade_by_subject', $subject['Subject']['id'], $competence_criterion['CompetenceCriterion']['id'])) ?></li>
             <?php if ($auth_is_admin || $auth_is_coordinator): ?>
                 <li><?php echo $html->link('Editar criterio', array('controller' => 'competence_criteria', 'action' => 'edit_by_subject', $subject['Subject']['id'], $competence_criterion['CompetenceCriterion']['id'])) ?></li>
             <?php endif; ?>
@@ -25,5 +26,6 @@
     </div>
 <?php endif; ?>
 <div class="<?php if ($auth->user('type') != "Estudiante"): ?>view<?php endif; ?>">
-    <?php require('_view_fieldsets.ctp') ?>
+    <?php require('_view_resume.ctp') ?>
+    <?php require('_view_relations.ctp') ?>
 </div>

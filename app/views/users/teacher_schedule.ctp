@@ -33,7 +33,7 @@
             $('#EventDetails').html(data);
             $('#EventDetails').dialog({
               width:500,
-              position:'top'
+              position: {at: 'top'}
             });
           }
         }

@@ -234,11 +234,23 @@ class CompetenceGoalsController extends AppController {
             'fields' => array('distinct CompetenceGoal.*, CompetenceCriterion.*'),
             'joins' => $competence_goal_joins,
             'conditions' => $competence_goal_conditions,
-            'order' => array('CompetenceGoal.code asc')
+            'order' => array('CompetenceCriterion.code asc')
         ));
 
         if (!$competence_goal_result) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $competence_goal = $this->CompetenceGoal->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('CompetenceGoal.id' => $id)
+            ));
+            if ($competence_goal) {
+                 $this->redirect(array(
+                    'controller' => 'competence',
+                    'action' => 'view_by_subject',
+                    $subject_id,
+                    $competence_goal['CompetenceGoal']['competence_id']
+                ));
+            }
+            $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
         }
 
         $competence_goal = array(
@@ -260,6 +272,166 @@ class CompetenceGoalsController extends AppController {
         $this->set('competence', $competence);
         $this->set('course', $course);
         $this->set('subject', $subject);
+    }
+
+    function view_by_student($student_id = null, $id = null)
+    {
+        $student_id = $student_id === null ? null : intval($student_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($student_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->loadModel('User');
+
+        $student = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $student_id,
+                'User.type' => 'Estudiante'
+            )
+        ));
+
+        if (!$student) {
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->current();
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course['Course'] = $course;
+
+        $competence_goal = $this->_getCompetenceGoalByStudent($student_id, $id, $this->Auth->user());
+
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        ));
+
+        $this->set('student', $student);
+        $this->set('competence_goal', $competence_goal);
+        $this->set('competence', $competence);
+        $this->set('course', $course);
+    }
+
+    function grade_by_student($student_id = null, $id = null)
+    {
+        $student_id = $student_id === null ? null : intval($student_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($student_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->loadModel('User');
+
+        $student = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $student_id,
+                'User.type' => 'Estudiante'
+            )
+        ));
+
+        if (!$student) {
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->current();
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course['Course'] = $course;
+
+        $competence_goal = $this->_getCompetenceGoalByStudent($student_id, $id, $this->Auth->user());
+
+        if (!$competence_goal) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $competence_grades = array(
+            'UserCompetenceGrade' => set::combine($competence_goal, 'CompetenceCriterion.{n}.id', 'CompetenceCriterion.{n}.UserCompetenceGrade')
+        );
+
+        if (empty($this->data)) {
+            $this->data = $competence_grades;
+        } else {
+            $data_criterion_rubrics = Set::combine(
+                isset($this->data['UserCompetenceGrade']) ? $this->data['UserCompetenceGrade'] : array(),
+                '{n}.criterion_id',
+                '{n}.rubric_id'
+            );
+            $competence_criterion_rubric_ids = set::combine(
+                $competence_goal['CompetenceCriterion'],
+                '{n}.id',
+                '{n}.CompetenceCriterionRubric.{n}.id'
+            );
+            $filteredData = Set::extract('/UserCompetenceGrade', $competence_grades);
+            $deletedGrades = [];
+
+            foreach ($competence_goal['CompetenceCriterion'] as $i => $criterion) {
+                $criterion_id = $criterion['id'];
+
+                if (isset($data_criterion_rubrics[$criterion_id])) {
+                    $rubric_id = $data_criterion_rubrics[$criterion_id];
+                    
+                    if (in_array($rubric_id, $competence_criterion_rubric_ids[$criterion_id])) {
+                        $filteredData[$i]['UserCompetenceGrade']['student_id'] = $student_id;
+                        $filteredData[$i]['UserCompetenceGrade']['criterion_id'] = $criterion_id;
+                        $filteredData[$i]['UserCompetenceGrade']['rubric_id'] = $rubric_id;
+                    } elseif (empty(trim($rubric_id))) {
+                        // Remove
+                        unset($filteredData[$i]);
+                        if (isset($criterion['UserCompetenceGrade']['id'])) {
+                            $deletedGrades[] = $criterion['UserCompetenceGrade']['id'];
+                        }
+                    }
+                }
+            }
+
+            if (empty($filteredData) || $this->CompetenceGoal->CompetenceCriterion->UserCompetenceGrade->saveAll($filteredData)) {
+                if (!empty($deletedGrades)) {
+                    $this->CompetenceGoal->CompetenceCriterion->UserCompetenceGrade->deleteAll(
+                        array('UserCompetenceGrade.id' => $deletedGrades)
+                    );
+                }
+
+                $this->Session->setFlash('La evaluación se ha modificado correctamente.');
+
+                if (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence') {
+                    $competence_id = $competence_goal['CompetenceGoal']['competence_id'];
+                    $this->redirect(array('controller' => 'competence', 'action' => 'view_by_student', $student_id, $competence_id));
+                }
+
+                $this->redirect(array('action' => 'view_by_student', $student_id, $id));
+            }
+        }
+
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        ));
+
+        $this->set('student', $student);
+        $this->set('competence_goal', $competence_goal);
+        $this->set('competence', $competence);
+        $this->set('course', $course);
     }
 
     function edit($id = null)
@@ -317,12 +489,129 @@ class CompetenceGoalsController extends AppController {
         $this->Session->setFlash('El objetivo ha sido eliminada correctamente');
         $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_goal['CompetenceGoal']['competence_id']));
     }
+
+    function _getCompetenceGoalByStudent($student_id, $goal_id, $auth_user = null)
+    {
+        $competence_goal_joins = array(
+            array(
+                'table' => 'competence_criteria',
+                'alias' => 'CompetenceCriterion',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterion.goal_id = CompetenceGoal.id'
+                )
+            ),
+            array(
+                'table' => 'competence_criterion_subjects',
+                'alias' => 'CompetenceCriterionSubject',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
+                )
+            ),
+            array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $student_id
+                )
+            ),
+            array(
+                'table' => 'user_competence_grades',
+                'alias' => 'UserCompetenceGrade',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'UserCompetenceGrade.criterion_id = CompetenceCriterion.id',
+                    'UserCompetenceGrade.student_id' => $student_id
+                )
+            )
+        );
+
+        $competence_goal_conditions = array(
+            'AND' => array(
+                'CompetenceGoal.id' => $goal_id
+            )
+        );
+
+        if ($auth_user && $auth_user['User']['type'] === "Profesor") {
+            $user_id = $auth_user['User']['id'];
+
+            $competence_goal_joins[] = array(
+                'table' => 'subjects',
+                'alias' => 'Subject',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'Subject.id = CompetenceCriterionSubject.subject_id'
+                )
+            );
+
+            $competence_goal_joins[] = array(
+                'table' => 'competence_criterion_teachers',
+                'alias' => 'CompetenceCriterionTeacher',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id'
+                )
+            );
+
+            $competence_goal_conditions['AND'][] = array(
+                'OR' => array(
+                    array('Subject.coordinator_id' => $user_id),
+                    array('Subject.practice_responsible_id' => $user_id),
+                    array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                )
+            );
+        }
+
+        $competence_goal_result = $this->CompetenceGoal->find('all', array(
+            'recursive' => -1,
+            'fields' => array('distinct CompetenceGoal.*, CompetenceCriterion.*, UserCompetenceGrade.*'),
+            'joins' => $competence_goal_joins,
+            'conditions' => $competence_goal_conditions,
+            'order' => array('CompetenceCriterion.code asc')
+        ));
+
+        if (!$competence_goal_result) {
+            return false;
+        }
+
+        $competence_goal = array(
+            'CompetenceGoal' => Set::extract($competence_goal_result, '0.CompetenceGoal'),
+            'CompetenceCriterion' => Set::filter(Set::merge(
+                Set::extract($competence_goal_result, '{n}.CompetenceCriterion'),
+                Set::extract($competence_goal_result, '/UserCompetenceGrade')
+            )
+        ));
+
+        foreach ($competence_goal['CompetenceCriterion'] as $i => $competence_criterion) {
+            $rubrics = $this->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->find('all', array(
+                'recursive' => -1,
+                'conditions' => array('CompetenceCriterionRubric.criterion_id' => $competence_criterion['id'])
+            ));
+            $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionRubric'] = Set::combine(
+                $rubrics,
+                '{n}.CompetenceCriterionRubric.id',
+                '{n}.CompetenceCriterionRubric'
+            );
+        }
+
+        return $competence_goal;
+    }
   
     function _authorize()
     {
         parent::_authorize();
-        $administrator_actions = array('add_to_competence', 'view', 'view_by_subject', 'edit', 'delete');
-        $teacher_actions = array('view', 'view_by_subject');
+        $administrator_actions = array(
+            'view', 'view_by_subject', 'view_by_student',
+            'grade_by_student',
+            'add_to_competence', 'edit', 'delete'
+        );
+        $teacher_actions = array(
+            'view', 'view_by_subject', 'view_by_student',
+            'grade_by_student'
+        );
 
         $this->set('section', 'courses');
 

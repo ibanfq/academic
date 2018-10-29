@@ -1,12 +1,12 @@
-<?php $html->addCrumb('Cursos', '/courses'); ?>
+<?php $html->addCrumb('Usuarios', '/users'); ?>
+<?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", "/users/view/{$student['User']['id']}"); ?>
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_subject/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb('E-portfolio', "/competence/by_student/{$student['User']['id']}"); ?>
 
 <?php if ($auth->user('type') == "Profesor"): ?>
-    <h1>Mis competencias por asignatura: <?php echo h($subject['Subject']['name']) ?></h1>
+    <h1>Mis competencias por estudiante: <?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?></h1>
 <?php else: ?>
-    <h1>Competencias por asignatura: <?php echo h($subject['Subject']['name']) ?></h1>
+    <h1>Competencias por estudiante: <?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?></h1>
 <?php endif; ?>
 
 <?php if ($auth->user('type') != "Estudiante") : ?>
@@ -31,9 +31,9 @@
             <tbody>
                 <?php foreach ($competence as $row): ?>
                 <tr>
-                    <td><?php echo $html->link($row['Competence']['code'], array('controller' => 'competence', 'action' => 'view_by_subject', $subject['Subject']['id'], $row['Competence']['id'])) ?></td>
+                    <td><?php echo $html->link($row['Competence']['code'], array('controller' => 'competence', 'action' => 'view_by_student', $student['User']['id'], $row['Competence']['id'])) ?></td>
                     <td><?php echo $row['Competence']['definition'] ?></td>
-                    <td><?php echo $html->link('Objetivos', array('controller' => 'competence', 'action' => 'view_by_subject', $subject['Subject']['id'], $row['Competence']['id'])) ?></td>
+                    <td><?php echo $html->link('Objetivos', array('controller' => 'competence', 'action' => 'view_by_student', $student['User']['id'], $row['Competence']['id'])) ?></td>
                 </tr>
                 <?php endforeach; ?>
                 

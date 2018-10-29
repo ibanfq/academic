@@ -1,4 +1,44 @@
 <script type="text/javascript">
+	$(function () {
+		<?php if (isset($competence_criterion_rubrics_definitions)): ?>
+			var user_competence_grade_definitions = <?php echo $this->Javascript->object($competence_criterion_rubrics_definitions); ?>;
+
+			$.widget( "custom.rubricselectmenu", $.ui.selectmenu, {
+		      	_renderItem: function(ul, item) {
+				  	var li = $("<li>"),
+				  		definition = user_competence_grade_definitions[item.value] || '--- Sin evaluar ---',
+				  		col1 = $('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label);
+				  		col2 = $('<div class="ui-menu-item-cell">').text(definition);
+
+				  	if ( item.disabled ) {
+				    	li.addClass( "ui-state-disabled" );
+				  	}
+
+				  	return li.append(col1).append(col2).appendTo(ul);
+				},
+				_renderMenu: function(ul, items) {
+					var that = this;
+					$.each(items, function(index, item) {
+					    that._renderItemData( ul, item );
+					});
+					$(ul).addClass('ui-menu--table').find("li:odd").addClass("ui-menu-item--odd");
+				},
+				_resizeMenu: function () {
+				}
+		    });
+
+	    	$('#user_competence_grades select').each(function () {
+	    		$(this).rubricselectmenu({
+		    		change: function(event, data) {
+			    		$(this).closest('tr').find('.user_competence_grade_rubric_definition').text(
+			    			user_competence_grade_definitions[data.item.value] || ''
+		    			);
+			       	}
+		    	});
+	    	});
+		<?php endif; ?>
+  	});
+
 	function addRubricRow() {
 		var container = $(document.getElementById('rubrics'));
 		var index = "_new_" + (new Date).getTime();

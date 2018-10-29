@@ -40,39 +40,42 @@
   </table>
 </fieldset>
 
-<fieldset>
-<legend>Asignaturas asignadas</legend>
-    <table>
-      <thead>
-          <tr>
-              <th></th>
-          </tr>
-      </thead>
-      <tbody>
-          <?php foreach ($competence_criterion['CompetenceCriterionSubject'] as $competenceCriterionSubject): ?>
-          <tr>
-              <td><?php echo h($competenceCriterionSubject['Subject']['name']) ?></td>
-          </tr>
-          <?php endforeach; ?>
-      </tbody>
-  </table>
-</fieldset>
+<?php if (!isset($subject)): ?>
+  <fieldset>
+  <legend>Asignaturas asignadas</legend>
+      <table>
+        <thead>
+            <tr>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($competence_criterion['CompetenceCriterionSubject'] as $competenceCriterionSubject): ?>
+            <tr>
+                <td><?php echo h($competenceCriterionSubject['Subject']['name']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+  </fieldset>
+<?php endif; ?>
 
-
-<fieldset>
-<legend>Profesores evaluadores</legend>
-    <table>
-      <thead>
-          <tr>
-              <th></th>
-          </tr>
-      </thead>
-      <tbody>
-          <?php foreach ($competence_criterion['CompetenceCriterionTeacher'] as $competenceCriterionTeacher): ?>
-          <tr>
-              <td><?php echo h("{$competenceCriterionTeacher['Teacher']['first_name']} {$competenceCriterionTeacher['Teacher']['last_name']}") ?></td>
-          </tr>
-          <?php endforeach; ?>
-      </tbody>
-  </table>
-</fieldset>
+<?php if ($auth_is_admin || $auth_is_coordinator): ?>
+  <fieldset>
+  <legend>Profesores evaluadores</legend>
+      <table>
+        <thead>
+            <tr>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($competence_criterion['CompetenceCriterionTeacher'] as $competenceCriterionTeacher): ?>
+            <tr>
+                <td><?php echo h("{$competenceCriterionTeacher['Teacher']['first_name']} {$competenceCriterionTeacher['Teacher']['last_name']}") ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+  </fieldset>
+<?php endif; ?>

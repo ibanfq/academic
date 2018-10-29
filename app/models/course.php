@@ -125,7 +125,10 @@ class Course extends AcademicModel {
     function current(){
         $today = date("Y-m-d");
         
-        $course = $this->find('first', array('conditions' => array("Course.initial_date <= '{$today}' AND Course.final_date >= '{$today}'")));
+        $course = $this->find('first', array(
+            'conditions' => array("Course.initial_date <= '{$today}' AND Course.final_date >= '{$today}'"),
+            'recursive' => -1
+        ));
 
         if ($course == null)
             $course = $this->find('first');

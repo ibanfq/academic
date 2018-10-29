@@ -70,21 +70,22 @@ class CompetenceCriteriaController extends AppController {
         $this->CompetenceCriterion->Behaviors->attach('Containable');
         $competence_criterion = $this->CompetenceCriterion->find('first', array(
             'contain' => array(
-                'CompetenceCriterionRubric',
-                'CompetenceCriterionSubject.Subject.Coordinator.id',
-                'CompetenceCriterionSubject.Subject.Responsible.id',
+                'CompetenceCriterionRubric' => array(
+                    'order' => 'CompetenceCriterionRubric.value asc'
+                ),
+                'CompetenceCriterionSubject.Subject',
                 'CompetenceCriterionTeacher.Teacher'
             ),
-            'conditions' => array('CompetenceCriterion.id' => $id)
+            'conditions' => array('CompetenceCriterion.id' => $id),
         ));
-
+        
         if (!$competence_criterion) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
         $coordinator_ids = array_merge(
-            Set::extract('/CompetenceCriterionSubject/Subject/Coordinator/id', $competence_criterion),
-            Set::extract('/CompetenceCriterionSubject/Subject/Responsible/id', $competence_criterion)
+            Set::extract('/CompetenceCriterionSubject/Subject/coordinator_id', $competence_criterion),
+            Set::extract('/CompetenceCriterionSubject/Subject/practice_responsible_id', $competence_criterion)
         );
         $teacher_ids = array_merge(
             Set::extract('/CompetenceCriterionTeacher/teacher_id', $competence_criterion)
@@ -97,6 +98,26 @@ class CompetenceCriteriaController extends AppController {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
+
+        // Sort subjects
+        $competence_criterion['CompetenceCriterionSubject'] = set::sort(
+            $competence_criterion['CompetenceCriterionSubject'],
+            '{n}.Subject.name',
+            'asc'
+        );
+
+        // Sort teachers
+        $teachers_first_names = Set::extract('/CompetenceCriterionTeacher/Teacher/first_name', $competence_criterion);
+        $teachers_last_names = Set::extract('/CompetenceCriterionTeacher/Teacher/last_name', $competence_criterion);
+        array_multisort(
+            $teachers_first_names,
+            SORT_ASC,
+            SORT_LOCALE_STRING,
+            $teachers_last_names,
+            SORT_ASC,
+            SORT_LOCALE_STRING,
+            $competence_criterion['CompetenceCriterionTeacher']
+        );
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
             'recursive' => -1,
@@ -132,6 +153,25 @@ class CompetenceCriteriaController extends AppController {
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
 
         if (!$subject) {
+            $competence_criterion = $this->CompetenceCriterion->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('CompetenceCriterion.id' => $id)
+            ));
+            if ($competence_criterion) {
+                $this->redirect(array(
+                    'controller' => 'competence_goals',
+                    'action' => 'view_by_subject',
+                    $subject_id,
+                    $competence_criterion['CompetenceCriterion']['goal_id']
+                ));
+            }
+            $subject = $this->CompetenceCriterion->CompetenceCriterionSubject->Subject->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('Subject.id' => $subject_idid)
+            ));
+            if ($subject) {
+                $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
+            }
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -150,12 +190,13 @@ class CompetenceCriteriaController extends AppController {
         $this->CompetenceCriterion->Behaviors->attach('Containable');
         $competence_criterion = $this->CompetenceCriterion->find('first', array(
             'contain' => array(
-                'CompetenceCriterionRubric',
-                'CompetenceCriterionSubject.Subject.Coordinator.id',
-                'CompetenceCriterionSubject.Subject.Responsible.id',
+                'CompetenceCriterionRubric' => array(
+                    'order' => 'CompetenceCriterionRubric.value asc'
+                ),
+                'CompetenceCriterionSubject.Subject',
                 'CompetenceCriterionTeacher.Teacher'
             ),
-            'conditions' => array('CompetenceCriterion.id' => $id)
+            'conditions' => array('CompetenceCriterion.id' => $id),
         ));
 
         if (!$competence_criterion) {
@@ -163,8 +204,8 @@ class CompetenceCriteriaController extends AppController {
         }
 
         $coordinator_ids = array_merge(
-            Set::extract('/CompetenceCriterionSubject/Subject/Coordinator/id', $competence_criterion),
-            Set::extract('/CompetenceCriterionSubject/Subject/Responsible/id', $competence_criterion)
+            Set::extract('/CompetenceCriterionSubject/Subject/coordinator_id', $competence_criterion),
+            Set::extract('/CompetenceCriterionSubject/Subject/practice_responsible_id', $competence_criterion)
         );
         $auth_is_admin = $this->Auth->user('type') === 'Administrador';
         $auth_is_coordinator = in_array($this->Auth->user('id'), $coordinator_ids);
@@ -174,12 +215,35 @@ class CompetenceCriteriaController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        // Sort subjects
+        $competence_criterion['CompetenceCriterionSubject'] = set::sort(
+            $competence_criterion['CompetenceCriterionSubject'],
+            '{n}.Subject.name',
+            'asc'
+        );
+
+        // Sort teachers
+        $teachers_first_names = Set::extract('/CompetenceCriterionTeacher/Teacher/first_name', $competence_criterion);
+        $teachers_last_names = Set::extract('/CompetenceCriterionTeacher/Teacher/last_name', $competence_criterion);
+        array_multisort(
+            $teachers_first_names,
+            SORT_ASC,
+            SORT_LOCALE_STRING,
+            $teachers_last_names,
+            SORT_ASC,
+            SORT_LOCALE_STRING,
+            $competence_criterion['CompetenceCriterionTeacher']
+        );
+
         if (empty($this->data)) {
             $this->data = $competence_criterion;
         } else {
             if ($this->_saveAll($id, $this->data, $auth_is_admin, $auth_is_coordinator)) {
-                $this->Session->setFlash('El criterio se ha modificado correctamente.');
-                $this->redirect(array('action' => 'view', $id));
+                if (__FUNCTION__ === $this->action) {
+                    $this->Session->setFlash('El criterio se ha modificado correctamente.');
+                    $this->redirect(array('action' => 'view', $id));
+                }
+                return true;
             }
         }
 
@@ -216,6 +280,43 @@ class CompetenceCriteriaController extends AppController {
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
 
         if (!$subject) {
+            $competence_criterion = $this->CompetenceCriterion->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('CompetenceCriterion.id' => $id)
+            ));
+            if ($competence_criterion) {
+                $this->redirect(array(
+                    'controller' => 'competence_goals',
+                    'action' => 'view_by_subject',
+                    $subject_id,
+                    $competence_criterion['CompetenceCriterion']['goal_id']
+                ));
+            }
+            $subject = $this->CompetenceCriterion->CompetenceCriterionSubject->Subject->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('Subject.id' => $subject_idid)
+            ));
+            if ($subject) {
+                $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
+            }
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->set('subject', $subject);
+
+        if (empty($this->data)) {
+            $this->edit($id);
+        } elseif ($this->edit($id)) {
+            $this->Session->setFlash('El criterio se ha modificado correctamente.');
+            $this->redirect(array('action' => 'view_by_subject', $subject_id, $id));
+        }
+    }
+
+    function grade($id = null)
+    {
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($id)) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -223,9 +324,9 @@ class CompetenceCriteriaController extends AppController {
         $competence_criterion = $this->CompetenceCriterion->find('first', array(
             'contain' => array(
                 'CompetenceCriterionRubric',
-                'CompetenceCriterionSubject.Subject.Coordinator.id',
-                'CompetenceCriterionSubject.Subject.Responsible.id',
-                'CompetenceCriterionTeacher.Teacher'
+                'CompetenceCriterionSubject.Subject',
+                'CompetenceCriterionTeacher',
+                'UserCompetenceGrade'
             ),
             'conditions' => array('CompetenceCriterion.id' => $id)
         ));
@@ -235,29 +336,145 @@ class CompetenceCriteriaController extends AppController {
         }
 
         $coordinator_ids = array_merge(
-            Set::extract('/CompetenceCriterionSubject/Subject/Coordinator/id', $competence_criterion),
-            Set::extract('/CompetenceCriterionSubject/Subject/Responsible/id', $competence_criterion)
+            Set::extract('/CompetenceCriterionSubject/Subject/coordinator_id', $competence_criterion),
+            Set::extract('/CompetenceCriterionSubject/Subject/practice_responsible_id', $competence_criterion)
+        );
+        $teacher_ids = array_merge(
+            Set::extract('/CompetenceCriterionTeacher/teacher_id', $competence_criterion)
         );
         $auth_is_admin = $this->Auth->user('type') === 'Administrador';
         $auth_is_coordinator = in_array($this->Auth->user('id'), $coordinator_ids);
+        $auth_is_teacher = in_array($this->Auth->user('id'), $teacher_ids);
 
-        if (!$auth_is_admin && !$auth_is_coordinator) {
+        if (!$auth_is_admin && !$auth_is_coordinator && !$auth_is_teacher) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $competence_criterion_rubrics_values = Set::combine(
+            $competence_criterion['CompetenceCriterionRubric'],
+            '{n}.id',
+            '{n}.title'
+        );
+        $competence_criterion_rubrics_definitions = Set::combine(
+            $competence_criterion['CompetenceCriterionRubric'],
+            '{n}.id',
+            '{n}.definition'
+        );
+
+        $dbo = $this->CompetenceCriterion->getDataSource();
+
+        $join_CompetenceCriterionSubject_condition = array(
+            'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
+        );
+
+        if ($this->action === 'grade_by_subject') {
+            $join_CompetenceCriterionSubject_condition['CompetenceCriterionSubject.subject_id'] = $this->params['pass'][0];
+        }
+        
+        $students = $dbo->fetchAll(
+            $dbo->buildStatement(
+                array(
+                    'table' => 'competence_criteria',
+                    'alias' => 'CompetenceCriterion',
+                    'fields' => array('distinct Student.*, UserCompetenceGrade.*'),
+                    'recursive' => -1,
+                    'joins' => array(
+                        array(
+                            'table' => 'competence_criterion_subjects',
+                            'alias' => 'CompetenceCriterionSubject',
+                            'type'  => 'INNER',
+                            'conditions' => $join_CompetenceCriterionSubject_condition
+                        ),
+                        array(
+                            'table' => 'subjects_users',
+                            'alias' => 'SubjectUser',
+                            'type'  => 'INNER',
+                            'conditions' => array(
+                                'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id'
+                            )
+                        ),
+                        array(
+                            'table' => 'users',
+                            'alias' => 'Student',
+                            'type'  => 'INNER',
+                            'conditions' => array(
+                                'Student.id = SubjectUser.user_id'
+                            )
+                        ),
+                        array(
+                            'table' => 'user_competence_grades',
+                            'alias' => 'UserCompetenceGrade',
+                            'type'  => 'LEFT',
+                            'conditions' => array(
+                                'UserCompetenceGrade.student_id = Student.id',
+                                'UserCompetenceGrade.criterion_id' => $id
+                            )
+                        ),
+                    ),
+                    'order' => 'Student.first_name asc, Student.last_name asc',
+                    'limit' => null,
+                    'group' => null,
+                    'conditions' => array('CompetenceCriterion.id' => $id)
+                ),
+                $this->CompetenceCriterion
+            )
+        );
+        
         if (empty($this->data)) {
-            $this->data = $competence_criterion;
+            $this->data = array(
+                'UserCompetenceGrade' => set::combine($students, '{n}.Student.id', '{n}.UserCompetenceGrade')
+            );
         } else {
-            if ($this->_saveAll($id, $this->data, $auth_is_admin, $auth_is_coordinator)) {
-                $this->Session->setFlash('El criterio se ha modificado correctamente.');
-                $this->redirect(array('action' => 'view_by_subject', $subject_id, $id));
+            $data_user_rubrics = Set::combine(
+                isset($this->data['UserCompetenceGrade']) ? $this->data['UserCompetenceGrade'] : array(),
+                '{n}.student_id',
+                '{n}.rubric_id'
+            );
+            $filteredData = Set::extract('/UserCompetenceGrade', $students);
+            $deletedGrades = [];
+
+            foreach ($students as $i => $student) {
+                $student_id = $student['Student']['id'];
+
+                if (isset($data_user_rubrics[$student_id])) {
+                    $rubric_id = $data_user_rubrics[$student_id];
+
+                    if (isset($competence_criterion_rubrics_values[$rubric_id])) {
+                        $filteredData[$i]['UserCompetenceGrade']['student_id'] = $student_id;
+                        $filteredData[$i]['UserCompetenceGrade']['criterion_id'] = $id;
+                        $filteredData[$i]['UserCompetenceGrade']['rubric_id'] = $rubric_id;
+                    } elseif (empty(trim($rubric_id))) {
+                        // Remove
+                        unset($filteredData[$i]);
+                        if (isset($student['UserCompetenceGrade']['id'])) {
+                            $deletedGrades[] = $student['UserCompetenceGrade']['id'];
+                        }
+                    }
+                }
+            }
+
+            if (empty($filteredData) || $this->CompetenceCriterion->UserCompetenceGrade->saveAll($filteredData)) {
+                if (!empty($deletedGrades)) {
+                    $this->CompetenceCriterion->UserCompetenceGrade->deleteAll(
+                        array('UserCompetenceGrade.id' => $deletedGrades)
+                    );
+                }
+                if (__FUNCTION__ === $this->action) {
+                    $this->Session->setFlash('La evaluación se ha modificado correctamente.');
+                    if (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence_goals') {
+                        $competence_goal_id = $competence_criterion['CompetenceCriterion']['goal_id'];
+                        $this->redirect(array('controller' => 'competence_goals', 'action' => 'view', $competence_goal_id));
+                    }
+                    $this->redirect(array('action' => 'view', $id));
+                }
+                return true;
             }
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
             'recursive' => -1,
-            'conditions' => array('CompetenceGoal.id' => $this->data['CompetenceCriterion']['goal_id'])
+            'conditions' => array('CompetenceGoal.id' => $competence_criterion['CompetenceCriterion']['goal_id'])
         ));
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
             'recursive' => -1,
@@ -268,13 +485,47 @@ class CompetenceCriteriaController extends AppController {
             'conditions' => array('Course.id' => $competence['Competence']['course_id'])
         ));
 
-        $this->set('auth_is_admin', $auth_is_admin);
-        $this->set('auth_is_coordinator', $auth_is_coordinator);
-        $this->set('competence_criterion', $this->data);
+        $this->set('students', $students);
+        $this->set('competence_criterion', $competence_criterion);
+        $this->set('competence_criterion_rubrics_values', $competence_criterion_rubrics_values);
+        $this->set('competence_criterion_rubrics_definitions', $competence_criterion_rubrics_definitions);
         $this->set('competence_goal', $competence_goal);
         $this->set('competence', $competence);
         $this->set('course', $course);
+    }
+
+    function grade_by_subject($subject_id = null, $id = null)
+    {
+        $subject_id = $subject_id === null ? null : intval($subject_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($subject_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $subject = $this->_getSubjectByCriterion($subject_id, $id);
+
+        if (!$subject) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $this->set('subject', $subject);
+
+        if (empty($this->data)) {
+            $this->grade($id);
+        } elseif ($this->grade($id)) {
+            $this->Session->setFlash('La evaluación se ha modificado correctamente.');
+            if (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence_goals') {
+                $competence_criterion = $this->CompetenceCriterion->find('first', array(
+                    'fields' => array('goal_id'),
+                    'recursive' => -1,
+                    'conditions' => array('CompetenceCriterion.id' => $id)
+                ));
+                $competence_goal_id = $competence_criterion['CompetenceCriterion']['goal_id'];
+                $this->redirect(array('controller' => 'competence_goals', 'action' => 'view_by_subject', $subject_id, $competence_goal_id));
+            }
+            $this->redirect(array('action' => 'view_by_subject', $subject_id, $id));
+        }
     }
 
     function delete($id = null)
@@ -529,8 +780,17 @@ class CompetenceCriteriaController extends AppController {
     function _authorize()
     {
         parent::_authorize();
-        $administrator_actions = array('add_to_goal', 'view', 'view_by_subject', 'edit', 'edit_by_subject', 'delete', 'delete_by_suject');
-        $teacher_actions = array('view', 'view_by_subject', 'edit', 'edit_by_subject');
+        $administrator_actions = array(
+            'view', 'view_by_subject',
+            'grade', 'grade_by_subject',
+            'edit', 'edit_by_subject',
+            'add_to_goal', 'delete', 'delete_by_suject'
+        );
+        $teacher_actions = array(
+            'view', 'view_by_subject',
+            'grade', 'grade_by_subject',
+            'edit', 'edit_by_subject'
+        );
 
         $this->set('section', 'courses');
 

@@ -154,7 +154,7 @@
                     $('#edit_form').html(data);
                     $('#edit_form').dialog({
                         width:500, 
-                        position:'top', 
+                        position: {at: 'top'},
                         close: function(event, ui) {
                             if (currentEvent != null){
                                 $('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -628,7 +628,7 @@
                     var show_form = function() {
                         $('#form').dialog({
                             width:500, 
-                            position:'top', 
+                            position: {at: 'top'},
                             close: function(event, ui) {
                                 $('#calendar').fullCalendar('unselect');
                                 if (currentEvent != null){
@@ -704,28 +704,30 @@
         </div>
     </div>
 
-    <ul id="menu-event" class="menu" style="display:none;">
-      <li data-action="edit"><a href="#">Mostrar</a></li>
-      <li data-action="copy"><a href="#">Copiar</a></li>
-      <li data-action="delete" class="ui-state-disabled"><a href="#">Borrar</a></li>
-      <li data-action="cancel"><a href="#">Cancelar</a></li>
-    </ul>
-    <ul id="menu-slot" class="menu" style="display:none;">
-      <li data-fc-view="month,basicDay" data-action="select"><a href="#">Crear evento</a></li>
-      <li data-fc-view="agendaWeek"><a href="#">Crear evento</a>
-          <ul>
-              <li data-action="select" data-duration="60"><a href="#">1 hora</a></li>
-              <li data-action="select" data-duration="90"><a href="#">1 hora y 30 minutos</a></li>
-              <li data-action="select" data-duration="120"><a href="#">2 horas</a></li>
-              <li data-action="select" data-duration="150"><a href="#">2 horas y 30 minutos</a></li>
-              <li data-action="select" data-duration="180"><a href="#">3 horas</a></li>
-              <li data-action="select" data-duration="210"><a href="#">3 horas y 30 minutos</a></li>
-              <li data-action="select" data-duration="240"><a href="#">4 horas</a></li>
+    <div style="position: absolute;">
+        <ul id="menu-event" class="menu menu--context" style="display:none;">
+          <li data-action="edit"><div>Mostrar</div></li>
+          <li data-action="copy"><div>Copiar</div></li>
+          <li data-action="delete" class="ui-state-disabled"><div>Borrar</div></li>
+          <li data-action="cancel"><div>Cancelar</div></li>
         </ul>
-        </li>
-      <li data-action="paste" class="ui-state-disabled"><a href="#">Pegar</a></li>
-      <li data-action="cancel"><a href="#">Cancelar</a></li>
-    </ul>
+        <ul id="menu-slot" class="menu menu--context" style="display:none;">
+            <li data-fc-view="month,basicDay" data-action="select"><div>Crear evento</div></li>
+            <li data-fc-view="agendaWeek"><div>Crear evento</div>
+                <ul>
+                    <li data-action="select" data-duration="60"><div>1 hora</div></li>
+                    <li data-action="select" data-duration="90"><div>1 hora y 30 minutos</div></li>
+                    <li data-action="select" data-duration="120"><div>2 horas</div></li>
+                    <li data-action="select" data-duration="150"><div>2 horas y 30 minutos</div></li>
+                    <li data-action="select" data-duration="180"><div>3 horas</div></li>
+                    <li data-action="select" data-duration="210"><div>3 horas y 30 minutos</div></li>
+                    <li data-action="select" data-duration="240"><div>4 horas</div></li>
+                </ul>
+            </li>
+            <li data-action="paste" class="ui-state-disabled"><div>Pegar</div></li>
+            <li data-action="cancel"><div>Cancelar</div></li>
+        </ul>
+    </div>
 
     <div id="edit_form">
         

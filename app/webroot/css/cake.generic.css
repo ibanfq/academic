@@ -374,6 +374,51 @@ div.related {
 	display: block;
 }
 
+/** Jquery UI */
+body .ui-dialog .ui-dialog-titlebar {
+	padding: .1em 1em;
+	border-color: #BF2A00;
+}
+body .ui-dialog .ui-dialog-titlebar .ui-button {
+	background: transparent;
+	border-color: transparent;
+}
+body .ui-dialog .ui-dialog-titlebar .ui-button .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_ffffff_256x240.png")
+}
+body .ui-dialog .ui-dialog-titlebar .ui-button:hover .ui-icon,
+body .ui-dialog .ui-dialog-titlebar .ui-button:focus .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_555555_256x240.png");
+}
+
+body .ui-widget-content .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_444444_256x240.png");
+}
+body .ui-widget-header .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_ffffff_256x240.png");
+}
+body .ui-state-hover .ui-icon,
+body .ui-state-focus .ui-icon,
+body .ui-button:hover .ui-icon,
+body .ui-button:focus .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_555555_256x240.png");
+}
+body .ui-state-active .ui-icon,
+body .ui-button:active .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_ffffff_256x240.png");
+}
+body .ui-state-highlight .ui-icon,
+body .ui-button .ui-state-highlight.ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_777620_256x240.png");
+}
+body .ui-state-error .ui-icon,
+body .ui-state-error-text .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_cc0000_256x240.png");
+}
+body .ui-button .ui-icon {
+	background-image: url("../img/jquery-ui/ui-icons_777777_256x240.png");
+}
+
 /** Debugging **/
 pre {
 	color: #000;
@@ -658,7 +703,7 @@ ul.groups li {
 }
 .ui-widget-overlay {
     position: fixed !important;
-    z-index: 1000;
+    z-index: 99;
     display: none !important;
 }
 @media (max-width: 767px) {
@@ -769,9 +814,36 @@ body .ui-menu {
 	width: auto;
 	z-index: 99999;
 }
-body .ui-menu .ui-menu-item a {
-	padding: 2px 7px;
+body .menu--context .ui-menu-item div {
 	white-space: nowrap;
+}
+td .ui-button {
+	padding: .1em 3px .1em 1em;
+}
+#user_competence_grades .ui-selectmenu-button.ui-button {
+    box-sizing: border-box;
+	width: 100%;
+}
+.ui-menu--table {
+	max-width: 500px;
+	max-width: calc(400px + 30vw);
+	display: table;
+}
+.ui-menu--table li {
+    display: table-row;
+}
+.ui-menu .ui-menu-item-wrapper {
+	border: 1px solid transparent;
+}
+.ui-menu--table .ui-menu-item-cell {
+	display: table-cell;
+}
+.ui-menu--table .ui-menu-item-cell:first-child {
+}
+.ui-menu--table .ui-menu-item-cell.ui-menu-item-cell--nowrap {
+	white-space: nowrap;
+	padding-left: .6em;
+	padding-right: .6em;
 }
 
 /* Full calendar */

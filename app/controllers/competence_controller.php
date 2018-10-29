@@ -25,7 +25,7 @@ class CompetenceController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
-        $competence_joins = array(); 
+        $competence_joins = array();
 
         $competence_conditions = array(
             'AND' => array(
@@ -192,6 +192,122 @@ class CompetenceController extends AppController {
         $this->set('competence', $competence);
         $this->set('course', $course);
         $this->set('subject', $subject);
+    }
+
+    function by_student($student_id)
+    {
+        $student_id = $student_id === null ? null : intval($student_id);
+
+        if (is_null($student_id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->loadModel('User');
+
+        $student = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $student_id,
+                'User.type' => 'Estudiante'
+            )
+        ));
+
+        if (!$student) {
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->Competence->Course->current();
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course['Course'] = $course;
+
+        $competence_joins = array(
+            array(
+                'table' => 'competence_goals',
+                'alias' => 'CompetenceGoal',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceGoal.competence_id = Competence.id'
+                )
+            ),
+            array(
+                'table' => 'competence_criteria',
+                'alias' => 'CompetenceCriterion',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterion.goal_id = CompetenceGoal.id'
+                )
+            ),
+            array(
+                'table' => 'competence_criterion_subjects',
+                'alias' => 'CompetenceCriterionSubject',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
+                )
+            ),
+            array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $student_id
+                )
+            )
+        );
+
+        $competence_conditions = array(
+            'AND' => array(
+                'Competence.course_id' => $course['Course']['id']
+            )
+        );
+
+        if ($this->Auth->user('type') === "Profesor")
+        {
+            $user_id = $this->Auth->user('id');
+
+            $competence_joins[] = array(
+                'table' => 'subjects',
+                'alias' => 'Subject',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'Subject.id = CompetenceCriterionSubject.subject_id'
+                )
+            );
+
+            $competence_joins[] = array(
+                'table' => 'competence_criterion_teachers',
+                'alias' => 'CompetenceCriterionTeacher',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id'
+                )
+            );
+
+            $competence_conditions['AND'][] = array(
+                'OR' => array(
+                    array('Subject.coordinator_id' => $user_id),
+                    array('Subject.practice_responsible_id' => $user_id),
+                    array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                )
+            );
+        }
+
+        $competence = $this->Competence->find('all', array(
+            'fields' => array('distinct Competence.*'),
+            'recursive' => -1,
+            'joins' => $competence_joins,
+            'conditions' => $competence_conditions,
+            'order' => array('Competence.code asc')
+        ));
+
+        $this->set('student', $student);
+        $this->set('competence', $competence);
+        $this->set('course', $course);
     }
 
     function add_to_course($course_id = null)
@@ -419,7 +535,7 @@ class CompetenceController extends AppController {
         ));
 
         if (!$competence_result) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
         }
 
         $competence = array(
@@ -429,6 +545,135 @@ class CompetenceController extends AppController {
 
         $this->set('competence', $competence);
         $this->set('subject', $subject);
+        $this->set('course', $this->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+        )));
+    }
+
+    function view_by_student($student_id = null, $id = null)
+    {
+        $student_id = $student_id === null ? null : intval($student_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($student_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->loadModel('User');
+
+        $student = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $student_id,
+                'User.type' => 'Estudiante'
+            )
+        ));
+
+        if (!$student) {
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->Competence->Course->current();
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course['Course'] = $course;
+
+        $competence_joins = array(
+            array(
+                'table' => 'competence_goals',
+                'alias' => 'CompetenceGoal',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceGoal.competence_id = Competence.id'
+                )
+            ),
+            array(
+                'table' => 'competence_criteria',
+                'alias' => 'CompetenceCriterion',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterion.goal_id = CompetenceGoal.id'
+                )
+            ),
+            array(
+                'table' => 'competence_criterion_subjects',
+                'alias' => 'CompetenceCriterionSubject',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
+                )
+            ),
+            array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $student_id
+                )
+            )
+        );
+
+        $competence_conditions = array(
+            'AND' => array(
+                'Competence.id' => $id
+            )
+        );
+
+        if ($this->Auth->user('type') === "Profesor")
+        {
+            $user_id = $this->Auth->user('id');
+
+            $competence_joins[] = array(
+                'table' => 'subjects',
+                'alias' => 'Subject',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'Subject.id = CompetenceCriterionSubject.subject_id'
+                )
+            );
+
+            $competence_joins[] = array(
+                'table' => 'competence_criterion_teachers',
+                'alias' => 'CompetenceCriterionTeacher',
+                'type'  => 'LEFT',
+                'conditions' => array(
+                    'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id'
+                )
+            );
+
+            $competence_conditions['AND'][] = array(
+                'OR' => array(
+                    array('Subject.coordinator_id' => $user_id),
+                    array('Subject.practice_responsible_id' => $user_id),
+                    array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                )
+            );
+        }
+
+        $competence_result = $this->Competence->find('all', array(
+            'recursive' => -1,
+            'fields' => array('distinct Competence.*, CompetenceGoal.*'),
+            'joins' => $competence_joins,
+            'conditions' => $competence_conditions,
+            'order' => array('CompetenceGoal.code asc')
+        ));
+
+        if (!$competence_result) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $competence = array(
+            'Competence' => Set::extract($competence_result, '0.Competence'),
+            'CompetenceGoal' => Set::filter(Set::extract($competence_result, '{n}.CompetenceGoal'))
+        );
+
+        $this->set('student', $student);
+        $this->set('competence', $competence);
         $this->set('course', $this->Competence->Course->find('first', array(
             'recursive' => -1,
             'conditions' => array('Course.id' => $competence['Competence']['course_id'])
@@ -489,8 +734,15 @@ class CompetenceController extends AppController {
     function _authorize()
     {
         parent::_authorize();
-        $administrator_actions = array('by_course', 'by_subject', 'add_to_course', 'view', 'view_by_subject', 'edit', 'delete');
-        $teacher_actions = array('by_course', 'by_subject', 'view', 'view_by_subject');
+        $administrator_actions = array(
+            'by_course', 'by_subject', 'by_student',
+            'view', 'view_by_subject','view_by_student',
+            'add_to_course', 'edit', 'delete'
+        );
+        $teacher_actions = array(
+            'by_course', 'by_subject', 'by_student',
+            'view', 'view_by_subject', 'view_by_student'
+        );
 
         $this->set('section', 'courses');
 
