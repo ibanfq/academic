@@ -103,7 +103,7 @@ class CompetenceGoalRequestsController extends AppController {
         }
 
         if ($this->Auth->user('type') === "Profesor") {
-            $competence_joins[] = array(
+            $competence_goal_request_joins[] = array(
                 'table' => 'subjects',
                 'alias' => 'Subject',
                 'type'  => 'LEFT',
@@ -112,7 +112,7 @@ class CompetenceGoalRequestsController extends AppController {
                 )
             );
 
-            $competence_joins[] = array(
+            $competence_goal_request_joins[] = array(
                 'table' => 'competence_criterion_teachers',
                 'alias' => 'CompetenceCriterionTeacher',
                 'type'  => 'LEFT',

@@ -360,6 +360,7 @@ class CompetenceGoalsController extends AppController {
                 'recursive' => -1,
                 'conditions' => array(
                     'id' => $this->params['named']['request_id'],
+                    'teacher_id' => $this->Auth->user('id'),
                     'completed is null AND canceled is null AND rejected is null'
                 )
             ));

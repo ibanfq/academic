@@ -1,6 +1,7 @@
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('Solicitudes de evaluación', "/competence_goal_requests/by_course/{$course['Course']['id']}"); ?>
 
 <h1>Mis solicitudes de evaluación</h1>
 
