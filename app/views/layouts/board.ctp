@@ -15,7 +15,7 @@
   echo $html->css('board.css');
 ?>
 </head>
-<body>
+<body <?php if (Configure::read('debug') > 0): ?>class="debug"<?php endif; ?>>
 <div id="container">
         <div id="header">
             <div class="left">
