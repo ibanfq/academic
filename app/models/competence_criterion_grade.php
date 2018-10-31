@@ -10,17 +10,16 @@ class CompetenceCriterionGrade extends AcademicModel {
             'className' => 'CompetenceCriterion',
             'foreignKey' => 'criterion_id'
         ),
-        'CompetenceCriterionRubric' => array(
-            'className' => 'CompetenceCriterion',
-            'foreignKey' => 'criterion_id'
-        ),
         'Student' => array(
             'className' => 'User',
             'foreignKey' => 'student_id'
+        ),
+        'CompetenceCriterionRubric' => array(
+            'className' => 'CompetenceCriterion',
+            'foreignKey' => 'criterion_id'
         )
     );
 
     var $validate = array(
     );
 }
-

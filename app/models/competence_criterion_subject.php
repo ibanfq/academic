@@ -19,4 +19,3 @@ class CompetenceCriterionSubject extends AcademicModel {
     var $validate = array(
     );
 }
-

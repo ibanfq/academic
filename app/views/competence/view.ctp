@@ -15,7 +15,7 @@
             <?php if ($auth->user('type') == "Administrador"): ?>
                 <li><?php echo $html->link('Crear objetivo', array('controller' => 'competence_goals', 'action' => 'add_to_competence', $competence['Competence']['id'])) ?></li>
                 <li><?php echo $html->link('Editar competencia', array('controller' => 'competence', 'action' => 'edit', $competence['Competence']['id'])) ?></li>
-                <li><?php echo $html->link('Eliminar competencia', array('action' => 'delete', $competence['Competence']['id']), null, 'Cuando elmina una competencia, elimina también los objetivos, criterios, rúbricas y todas las calificaciones. ¿Está seguro que desea borrarlo?') ?></li>
+                <li><?php echo $html->link('Eliminar competencia', array('action' => 'delete', $competence['Competence']['id']), null, 'Cuando elimina una competencia, elimina también los objetivos, criterios, rúbricas y todas las calificaciones. ¿Está seguro que desea borrarlo?') ?></li>
             <?php endif; ?>
         </ul>
     </div>

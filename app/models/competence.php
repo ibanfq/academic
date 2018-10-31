@@ -72,4 +72,3 @@ class Competence extends AcademicModel {
         return 0 == $this->find('count', array('recursive' => -1, 'conditions' => $conditions));
     }
 }
-

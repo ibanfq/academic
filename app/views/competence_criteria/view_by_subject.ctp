@@ -20,7 +20,7 @@
                 <li><?php echo $html->link('Editar criterio', array('controller' => 'competence_criteria', 'action' => 'edit_by_subject', $subject['Subject']['id'], $competence_criterion['CompetenceCriterion']['id'])) ?></li>
             <?php endif; ?>
             <?php if ($auth_is_admin): ?>
-                <li><?php echo $html->link('Eliminar criterio', array('action' => 'delete_by_subject', $subject['Subject']['id'], $competence_criterion['CompetenceCriterion']['id']), null, 'Cuando elmina un criterio, elimina también las rúbricas y todas las calificaciones. ¿Está seguro que desea borrarlo?') ?></li>
+                <li><?php echo $html->link('Eliminar criterio', array('action' => 'delete_by_subject', $subject['Subject']['id'], $competence_criterion['CompetenceCriterion']['id']), null, 'Cuando elimina un criterio, elimina también las rúbricas y todas las calificaciones. ¿Está seguro que desea borrarlo?') ?></li>
             <?php endif; ?>
         </ul>
     </div>

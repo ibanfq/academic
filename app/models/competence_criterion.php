@@ -92,4 +92,3 @@ class CompetenceCriterion extends AcademicModel {
         return ! $this->query($query . ' LIMIT 1');
     }
 }
-

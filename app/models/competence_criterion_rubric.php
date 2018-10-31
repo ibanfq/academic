@@ -20,4 +20,3 @@ class CompetenceCriterionRubric extends AcademicModel {
         )
     );
 }
-

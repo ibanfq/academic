@@ -18,7 +18,7 @@
                 <tr><td colspan="4"><a href="javascript:;" onclick="addRubricRow()" title="Haga click para añadir un nuevo nivel">Añadir nivel</a></td></tr>
             <?php endif; ?>
         </tfoot>
-        <tbody id="rubrics" data-delete-confirm="Cuando elmina un nivel de calificación, elimina también las calificaciones con ese valor. ¿Está seguro que desea borrarlo?">
+        <tbody id="rubrics" data-delete-confirm="Cuando elimina un nivel de calificación, elimina también las calificaciones con ese valor. ¿Está seguro que desea borrarlo?">
         <?php if (isset($competence_criterion['CompetenceCriterionRubric']) && is_array($competence_criterion['CompetenceCriterionRubric'])): ?>
             <?php $i = 0 ?>
             <?php foreach ($competence_criterion['CompetenceCriterionRubric'] as $competenceCriterionRubric): ?>
