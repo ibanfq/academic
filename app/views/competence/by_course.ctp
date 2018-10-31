@@ -14,6 +14,9 @@
       <?php if ($auth->user('type') == "Administrador"): ?>
         <li><?php echo $html->link('Crear competencia', array('action' => 'add_to_course', $course['Course']['id'])) ?></li>
       <?php endif; ?>
+      <?php if ($auth->user('type') == "Administrador" || $auth->user('type') == "Profesor"): ?>
+        <li><?php echo $html->link('Solicitudes de evaluación', array('controller' => 'competence_requests', 'action' => 'by_course', $course['Course']['id'])) ?></li>
+      <?php endif; ?>
     </ul>
   </div>
 <?php endif; ?>

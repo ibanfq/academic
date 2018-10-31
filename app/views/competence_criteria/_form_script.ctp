@@ -1,12 +1,12 @@
 <script type="text/javascript">
 	$(function () {
 		<?php if (isset($competence_criterion_rubrics_definitions)): ?>
-			var user_competence_grade_definitions = <?php echo $this->Javascript->object($competence_criterion_rubrics_definitions); ?>;
+			var rubrics_definitions = <?php echo $this->Javascript->object($competence_criterion_rubrics_definitions); ?>;
 
 			$.widget( "custom.rubricselectmenu", $.ui.selectmenu, {
 		      	_renderItem: function(ul, item) {
 				  	var li = $("<li>"),
-				  		definition = user_competence_grade_definitions[item.value] || '--- Sin evaluar ---',
+				  		definition = rubrics_definitions[item.value] || '--- Sin evaluar ---',
 				  		col1 = $('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label);
 				  		col2 = $('<div class="ui-menu-item-cell">').text(definition);
 
@@ -27,11 +27,11 @@
 				}
 		    });
 
-	    	$('#user_competence_grades select').each(function () {
+	    	$('#competence_criterion_grades select').each(function () {
 	    		$(this).rubricselectmenu({
 		    		change: function(event, data) {
-			    		$(this).closest('tr').find('.user_competence_grade_rubric_definition').text(
-			    			user_competence_grade_definitions[data.item.value] || ''
+			    		$(this).closest('tr').find('.competence_rubric_definition').text(
+			    			rubrics_definitions[data.item.value] || ''
 		    			);
 			       	}
 		    	});

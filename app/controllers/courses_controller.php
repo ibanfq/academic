@@ -312,13 +312,13 @@ class CoursesController extends AppController {
 
         $currentCompetenceGoalsQuery = "SELECT DISTINCT `CompetenceGoal`.id FROM competence_goals `CompetenceGoal`";
         $this->Course->query("DELETE FROM `competence_criteria` WHERE goal_id NOT IN ($currentCompetenceGoalsQuery)");
-        $this->Course->query("DELETE FROM `user_competence_grade_requests` WHERE goal_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Course->query("DELETE FROM `competence_goal_requests` WHERE goal_id NOT IN ($currentCompetenceGoalsQuery)");
 
         $currentCompetenceCriteriaQuery = "SELECT DISTINCT `CompetenceCriterion`.id FROM competence_criteria `CompetenceCriterion`";
         $this->Course->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Course->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Course->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
-        $this->Course->query("DELETE FROM `user_competence_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Course->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
 
         $this->Session->setFlash('El curso ha sido eliminado correctamente');
         $this->redirect(array('action' => 'index'));

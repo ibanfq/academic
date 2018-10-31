@@ -10,7 +10,7 @@
 
 <?php require('_view_resume.ctp') ?>
 
-<?php echo $form->create('UserCompetenceGrade', array('url' => $this->here));?>
+<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->here));?>
 
 <fieldset>
 <legend>Criterios de evaluación</legend>
@@ -23,7 +23,7 @@
 	            <th style="width:50%">Rúbrica</th>
         	</tr>
       	</thead>
-      	<tbody id="user_competence_grades">
+      	<tbody id="competence_criterion_grades">
             <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
         	<?php $criterion_id = $criterion['id'] ?>
         	<?php $competence_criterion_rubrics_values = set::combine($criterion, 'CompetenceCriterionRubric.{n}.id', 'CompetenceCriterionRubric.{n}.title'); ?>
@@ -36,11 +36,11 @@
 		                <?php echo h($criterion['definition']) ?>
 	              	</td>
 	              	<td>
-		                <?php echo $form->hidden("UserCompetenceGrade.{$criterion_id}.criterion_id", array('value' => $criterion_id)); ?>
-		                <?php echo $form->select("UserCompetenceGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
+		                <?php echo $form->hidden("CompetenceCriterionGrade.{$criterion_id}.criterion_id", array('value' => $criterion_id)); ?>
+		                <?php echo $form->select("CompetenceCriterionGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
 	              	</td>
 	              	<td>
-		                <span class="user_competence_grade_rubric_definition"><?php echo $this->data['UserCompetenceGrade'][$criterion_id]['rubric_id'] ? h($competence_criterion_rubrics_definitions[$this->data['UserCompetenceGrade'][$criterion_id]['rubric_id']]) : '' ?></span>
+		                <span class="competence_rubric_definition"><?php echo $this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id'] ? h($competence_criterion_rubrics_definitions[$this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']]) : '' ?></span>
 	              	</td>
 		        </tr>
 	        <?php endforeach; ?>
@@ -77,12 +77,12 @@
 			}
 	    });
 
-		$('#user_competence_grades select').each(function () {
+		$('#competence_criterion_grades select').each(function () {
 			$(this).rubricselectmenu({
 	    		change: function(event, data) {
 	    			var select = $(this),
 	    				definitions = select.data('definitions');
-		    		select.closest('tr').find('.user_competence_grade_rubric_definition').text(
+		    		select.closest('tr').find('.competence_rubric_definition').text(
 		    			definitions[data.item.value] || ''
 	    			);
 		       	}

@@ -11,9 +11,9 @@ class CompetenceGoal extends AcademicModel {
             'order' => array('CompetenceCriterion.code ASC'),
             'dependent' => true,
         ),
-        'UserCompetenceGradeRequest' => array(
+        'CompetenceGoalRequest' => array(
             'foreignKey' => 'goal_id',
-            'order' => array('UserCompetenceGradeRequest.goal_id ASC'),
+            'order' => array('CompetenceGoalRequest.goal_id ASC'),
             'dependent' => true,
         )
     );

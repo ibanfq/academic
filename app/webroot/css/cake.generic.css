@@ -158,12 +158,13 @@ div.index,
 div.view {
 	float:right;
 	width:74%;
+	width:calc(84% - 9em);
 	border-left:1px solid #666;
 	padding:10px 2%;
 }
 div.actions {
 	float:left;
-	width:18%;
+	width:calc(8% + 9em);
 	padding:10px 1.5%;
 }
 form div.actions {
@@ -820,7 +821,7 @@ body .menu--context .ui-menu-item div {
 td .ui-button {
 	padding: .1em 3px .1em 1em;
 }
-#user_competence_grades .ui-selectmenu-button.ui-button {
+#competence_criterion_grades .ui-selectmenu-button.ui-button {
     box-sizing: border-box;
 	width: 100%;
 }

@@ -150,8 +150,8 @@ class UsersController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->User->query("DELETE FROM group_requests WHERE student_id = {$id} OR student_2_id = {$id}");
         $this->User->query("DELETE FROM `competence_criterion_teachers` WHERE teacher_id = {$id}");
-        $this->User->query("DELETE FROM `user_competence_grade_requests` WHERE student_id = {$id} OR teacher_id = {$id}");
-        $this->User->query("DELETE FROM `user_competence_grades` WHERE student_id = {$id}");
+        $this->User->query("DELETE FROM `competence_criterion_grades` WHERE student_id = {$id}");
+        $this->User->query("DELETE FROM `competence_goal_requests` WHERE student_id = {$id} OR teacher_id = {$id}");
         $this->User->delete($id);
         $this->Session->setFlash('El usuario ha sido eliminado correctamente');
         $this->redirect(array('contoller' => 'users', 'action' => 'index'));

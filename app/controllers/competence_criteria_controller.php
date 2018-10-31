@@ -326,7 +326,7 @@ class CompetenceCriteriaController extends AppController {
                 'CompetenceCriterionRubric',
                 'CompetenceCriterionSubject.Subject',
                 'CompetenceCriterionTeacher',
-                'UserCompetenceGrade'
+                'CompetenceCriterionGrade'
             ),
             'conditions' => array('CompetenceCriterion.id' => $id)
         ));
@@ -377,7 +377,7 @@ class CompetenceCriteriaController extends AppController {
                 array(
                     'table' => 'competence_criteria',
                     'alias' => 'CompetenceCriterion',
-                    'fields' => array('distinct Student.*, UserCompetenceGrade.*'),
+                    'fields' => array('distinct Student.*, CompetenceCriterionGrade.*'),
                     'recursive' => -1,
                     'joins' => array(
                         array(
@@ -403,12 +403,12 @@ class CompetenceCriteriaController extends AppController {
                             )
                         ),
                         array(
-                            'table' => 'user_competence_grades',
-                            'alias' => 'UserCompetenceGrade',
+                            'table' => 'competence_criterion_grades',
+                            'alias' => 'CompetenceCriterionGrade',
                             'type'  => 'LEFT',
                             'conditions' => array(
-                                'UserCompetenceGrade.student_id = Student.id',
-                                'UserCompetenceGrade.criterion_id' => $id
+                                'CompetenceCriterionGrade.student_id = Student.id',
+                                'CompetenceCriterionGrade.criterion_id' => $id
                             )
                         ),
                     ),
@@ -423,15 +423,15 @@ class CompetenceCriteriaController extends AppController {
         
         if (empty($this->data)) {
             $this->data = array(
-                'UserCompetenceGrade' => set::combine($students, '{n}.Student.id', '{n}.UserCompetenceGrade')
+                'CompetenceCriterionGrade' => set::combine($students, '{n}.Student.id', '{n}.CompetenceCriterionGrade')
             );
         } else {
             $data_user_rubrics = Set::combine(
-                isset($this->data['UserCompetenceGrade']) ? $this->data['UserCompetenceGrade'] : array(),
+                isset($this->data['CompetenceCriterionGrade']) ? $this->data['CompetenceCriterionGrade'] : array(),
                 '{n}.student_id',
                 '{n}.rubric_id'
             );
-            $filteredData = Set::extract('/UserCompetenceGrade', $students);
+            $filteredData = Set::extract('/CompetenceCriterionGrade', $students);
             $deletedGrades = [];
 
             foreach ($students as $i => $student) {
@@ -441,23 +441,23 @@ class CompetenceCriteriaController extends AppController {
                     $rubric_id = $data_user_rubrics[$student_id];
 
                     if (isset($competence_criterion_rubrics_values[$rubric_id])) {
-                        $filteredData[$i]['UserCompetenceGrade']['student_id'] = $student_id;
-                        $filteredData[$i]['UserCompetenceGrade']['criterion_id'] = $id;
-                        $filteredData[$i]['UserCompetenceGrade']['rubric_id'] = $rubric_id;
+                        $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
+                        $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $id;
+                        $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
                     } elseif (empty(trim($rubric_id))) {
                         // Remove
                         unset($filteredData[$i]);
-                        if (isset($student['UserCompetenceGrade']['id'])) {
-                            $deletedGrades[] = $student['UserCompetenceGrade']['id'];
+                        if (isset($student['CompetenceCriterionGrade']['id'])) {
+                            $deletedGrades[] = $student['CompetenceCriterionGrade']['id'];
                         }
                     }
                 }
             }
 
-            if (empty($filteredData) || $this->CompetenceCriterion->UserCompetenceGrade->saveAll($filteredData)) {
+            if (empty($filteredData) || $this->CompetenceCriterion->CompetenceCriterionGrade->saveAll($filteredData)) {
                 if (!empty($deletedGrades)) {
-                    $this->CompetenceCriterion->UserCompetenceGrade->deleteAll(
-                        array('UserCompetenceGrade.id' => $deletedGrades)
+                    $this->CompetenceCriterion->CompetenceCriterionGrade->deleteAll(
+                        array('CompetenceCriterionGrade.id' => $deletedGrades)
                     );
                 }
                 if (__FUNCTION__ === $this->action) {

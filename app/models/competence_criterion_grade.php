@@ -2,8 +2,8 @@
 
 App::import('model', 'academicModel');
 
-class UserCompetenceGrade extends AcademicModel {
-    var $name = "UserCompetenceGrade";
+class CompetenceCriterionGrade extends AcademicModel {
+    var $name = "CompetenceCriterionGrade";
 
     var $belongsTo = array(
         'CompetenceCriterion' => array(

@@ -36,7 +36,7 @@
             </thead>
             <tbody>
                 <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
-                <?php $rubric_id = $criterion['UserCompetenceGrade']['rubric_id'] ?>
+                <?php $rubric_id = $criterion['CompetenceCriterionGrade']['rubric_id'] ?>
                     <tr>
                         <td><?php echo h($criterion['code']) ?></td>
                         <td><?php echo h($criterion['definition']) ?></td>

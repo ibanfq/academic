@@ -6,9 +6,9 @@ class CompetenceCriterionRubric extends AcademicModel {
     var $name = "CompetenceCriterionRubric";
 
     var $hasMany = array(
-        'UserCompetenceGrade' => array(
+        'CompetenceCriterionGrade' => array(
             'foreignKey' => 'rubric_id',
-            'order' => array('UserCompetenceGrade.criterion_id ASC'),
+            'order' => array('CompetenceCriterionGrade.criterion_id ASC'),
             'dependent' => true,
         )
     );
