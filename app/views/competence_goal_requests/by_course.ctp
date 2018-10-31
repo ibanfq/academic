@@ -45,7 +45,7 @@
                         <td>Cancelar</td>
                     <?php else: ?>
                         <td><?php echo $html->link('Evaluar', array('controller' => 'competence_goals', 'action' => 'grade_by_student', $row['Student']['id'], $row['CompetenceGoal']['id'], 'request_id' => $row['CompetenceGoalRequest']['id'])) ?></td>
-                        <td><?php echo $html->link('Rechazar', array('action' => 'delete_by_course', $course['Course']['id'], $row['CompetenceGoalRequest']['id']), null, 'Va a proceder a rechazar la solicitud de evaluación. ¿Está seguro que deseas continuar?') ?></td>
+                        <td><?php echo $html->link('Rechazar', array('action' => 'reject_by_course', $course['Course']['id'], $row['CompetenceGoalRequest']['id']), null, 'Va a proceder a rechazar la solicitud de evaluación. ¿Está seguro que deseas continuar?') ?></td>
                     <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>

@@ -8,7 +8,7 @@ class CompetenceGoalRequestsController extends AppController {
         'order' => array('CompetenceGoalRequest.id' => 'asc'),
     );
 
-    function by_course($course_id)
+    function by_course($course_id = null)
     {
         $course_id = $course_id === null ? null : intval($course_id);
 
@@ -88,18 +88,18 @@ class CompetenceGoalRequestsController extends AppController {
             )
         );
 
+        $competence_goal_request_conditions = array(
+            'AND' => array(
+                'CompetenceGoalRequest.completed is null',
+                'CompetenceGoalRequest.canceled is null',
+                'CompetenceGoalRequest.rejected is null',
+            )
+        );
+
         if ($this->Auth->user('type') === "Estudiante") {
-            $competence_goal_request_conditions = array(
-                'AND' => array(
-                    'CompetenceGoalRequest.student_id' => $user_id
-                )
-            );
+            $competence_goal_request_conditions['AND']['CompetenceGoalRequest.student_id'] = $user_id;
         } else {
-            $competence_goal_request_conditions = array(
-                'AND' => array(
-                    'CompetenceGoalRequest.teacher_id' => $user_id
-                )
-            );
+            $competence_goal_request_conditions['AND']['CompetenceGoalRequest.teacher_id'] = $user_id;
         }
 
         if ($this->Auth->user('type') === "Profesor") {
@@ -144,6 +144,62 @@ class CompetenceGoalRequestsController extends AppController {
 
         $this->set('competence_goal_requests', $competence_goal_requests);
         $this->set('course', $course);
+    }
+
+    function reject_by_course($course_id = null, $id = null)
+    {
+        $course_id = $course_id === null ? null : intval($course_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($course_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $course_id)
+        ));
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->CompetenceGoalRequest->Behaviors->attach('Containable');
+        $competence_goal_request = $this->CompetenceGoalRequest->find('first', array(
+            'contain' => array(
+                'Student',
+                'CompetenceGoal.Competence'
+            ),
+            'conditions' => array(
+                'CompetenceGoalRequest.id' => $id,
+                'CompetenceGoalRequest.completed is null',
+                'CompetenceGoalRequest.canceled is null',
+                'CompetenceGoalRequest.rejected is null'
+            )
+        ));
+
+        if (!$competence_goal_request) {
+            $this->redirect(array('action' => 'by_course', $course_id));
+        }
+
+        $competence_goal_request['CompetenceGoalRequest']['rejected'] = date('Y-m-d H:i:s');
+
+        if ($this->CompetenceGoalRequest->save(array('CompetenceGoalRequest' => $competence_goal_request['CompetenceGoalRequest']))) {
+            $this->Email->reset();
+            $this->Email->from = 'Academic <noreply@ulpgc.es>';
+            $this->Email->to = $competence_goal_request['Student']['username'];
+            $this->Email->subject = "Petición de evaluación rechazada por el profesor";
+            $this->Email->sendAs = 'both';
+            $this->Email->template = Configure::read('app.email.competence_goal_request_rejected') ?: 'competence_goal_request_rejected';
+            $this->set('competence_goal_request', $competence_goal_request);
+            $this->set('teacher', $this->Auth->user());
+            $this->Email->send();
+            $this->Session->setFlash('La solicitud de evaluación se ha rechazado correctamente');
+        } else {
+            $this->Session->setFlash('No se ha podido rechazar la solicitud de evaluación');
+        }
+        
+        $this->redirect(array('action' => 'by_course', $course_id));
     }
 
     function _authorize()

@@ -358,10 +358,14 @@ class CompetenceGoalsController extends AppController {
         if (!empty($this->params['named']['request_id'])) {
             $competence_goal_request = $this->CompetenceGoal->CompetenceGoalRequest->find('first', array(
                 'recursive' => -1,
-                'conditions' => array('id' => $this->params['named']['request_id'])
+                'conditions' => array(
+                    'id' => $this->params['named']['request_id'],
+                    'completed is null AND canceled is null AND rejected is null'
+                )
             ));
 
             if (!$competence_goal_request) {
+                $this->Session->setFlash('La solicitud de evaluación ya no se encuentra disponible.');
                 $this->redirect(array(
                     'controller' => 'competence_goal_requests',
                     'action' => 'by_course',
@@ -419,7 +423,8 @@ class CompetenceGoalsController extends AppController {
                 $this->Session->setFlash('La evaluación se ha modificado correctamente.');
 
                 if ($competence_goal_request) {
-                    $this->CompetenceGoal->CompetenceGoalRequest->delete($competence_goal_request['CompetenceGoalRequest']['id']);
+                    $competence_goal_request['CompetenceGoalRequest']['completed'] = date('Y-m-d H:i:s');
+                    $this->CompetenceGoal->CompetenceGoalRequest->save($competence_goal_request);
                     $this->Email->reset();
                     $this->Email->from = 'Academic <noreply@ulpgc.es>';
                     $this->Email->to = $student['User']['username'];
