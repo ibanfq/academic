@@ -29,6 +29,22 @@ body {
 	font-size:90%;
 	margin: 0;
 }
+body.debug {
+	padding: 5px;
+}
+body.debug:after {
+	content: '';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: 5px solid #c73e14;
+    z-index: 99999;
+    will-change: transform;
+}
 a {
 	color: #0e448a;
 	text-decoration: underline;
