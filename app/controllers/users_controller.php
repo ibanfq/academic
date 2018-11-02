@@ -32,7 +32,7 @@ class UsersController extends AppController {
     function calendars($token) {
         $user = $this->User->findByCalendarToken($token);
         if ($user === false) {
-            $this->cakeError('error404');
+            return $this->cakeError('error404');
         }
         $this->User->id = $user['User']['id'];
         $this->User->data = $user;

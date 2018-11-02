@@ -46,12 +46,87 @@ class CompetenceGoalRequestsController extends AppController {
         $this->set('course', $course);
     }
 
+    function add()
+    {
+        if ($this->Auth->user('type') !== "Estudiante") {
+            $this->redirect(array('action' => 'index'));
+        }
+
+        if (!isset($this->data['CompetenceGoalRequest']['goal_id'], $this->data['CompetenceGoalRequest']['teacher_id'])) {
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $goal_id = $this->data['CompetenceGoalRequest']['goal_id'];
+        $teacher_id = $this->data['CompetenceGoalRequest']['teacher_id'];
+
+        $this->CompetenceGoalRequest->CompetenceGoal->Behaviors->attach('Containable');
+        $competence_goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
+            'contain' => array(
+                'Competence'
+            ),
+            'conditions' => array(
+                'CompetenceGoal.id' => $goal_id
+            )
+        ));
+
+        if (!$competence_goal) {
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->loadModel('User');
+
+        $teacher = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $teacher_id,
+                'OR' => array(
+                    array('User.type' => 'Profesor'),
+                    array('User.type' => 'Administrador')
+                ),
+            )
+        ));
+
+        if (!$teacher) {
+            $this->Session->setFlash('El profesor seleccionado no puede evaluar ese objetivo');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $clean_data = array(
+            'CompetenceGoalRequest' => array(
+                'goal_id' => $goal_id,
+                'teacher_id' => $teacher_id,
+                'student_id' => $this->Auth->user('id')
+            )
+        );
+
+        if ($this->CompetenceGoalRequest->save($clean_data)) {
+            $this->Email->reset();
+            $this->Email->from = 'Academic <noreply@ulpgc.es>';
+            $this->Email->to = $teacher['User']['username'];
+            $this->Email->subject = "Nueva solicitud de evaluación";
+            $this->Email->sendAs = 'both';
+            $this->Email->template = Configure::read('app.email.competence_goal_request_added') ?: 'competence_goal_request_added';
+            $this->set('competence', array('Competence' => $competence_goal['Competence']));
+            $this->set('competence_goal', array('CompetenceGoal' => $competence_goal['CompetenceGoal']));
+            $this->set('student', $this->Auth->user());
+            $this->Email->send();
+            $this->Session->setFlash('La solicitud se ha realizado correctamente');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->index();
+    }
+
     function reject($id = null)
     {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            if (__FUNCTION__ === $this->action) {
+                $this->redirect(array('action' => 'index'));
+            } else {
+                return false;
+            }
         }
 
         $user_id = $this->Auth->user('id');
@@ -77,7 +152,11 @@ class CompetenceGoalRequestsController extends AppController {
         ));
 
         if (!$competence_goal_request) {
-            $this->redirect(array('action' => 'by_course', $course_id));
+            if (__FUNCTION__ === $this->action) {
+                $this->redirect(array('action' => 'index'));
+            } else {
+                return false;
+            }
         }
 
         if ($this->Auth->user('type') === "Estudiante") {
