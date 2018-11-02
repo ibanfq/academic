@@ -8,6 +8,21 @@ class CompetenceGoalRequestsController extends AppController {
         'order' => array('CompetenceGoalRequest.id' => 'asc'),
     );
 
+    function index()
+    {
+        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
+
+        if (!$course) {
+            $this->Session->setFlash('No hay ningún curso activo actualmente.');
+            $this->redirect(array('controller' => 'users', 'action' => 'home'));
+        }
+
+        $competence_goal_requests = $this->_get_from_course_id($course['id']);
+
+        $this->set('competence_goal_requests', $competence_goal_requests);
+        $this->set('course', array('Course' => $course));
+    }
+
     function by_course($course_id = null)
     {
         $course_id = $course_id === null ? null : intval($course_id);
@@ -25,6 +40,127 @@ class CompetenceGoalRequestsController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $competence_goal_requests = $this->_get_from_course_id($course_id);
+
+        $this->set('competence_goal_requests', $competence_goal_requests);
+        $this->set('course', $course);
+    }
+
+    function reject($id = null)
+    {
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $user_id = $this->Auth->user('id');
+
+        $this->CompetenceGoalRequest->Behaviors->attach('Containable');
+        $competence_goal_request = $this->CompetenceGoalRequest->find('first', array(
+            'contain' => array(
+                'Teacher',
+                'Student',
+                'CompetenceGoal.Competence'
+            ),
+            'conditions' => array(
+                (
+                    $this->Auth->user('type') === "Estudiante"
+                        ? 'CompetenceGoalRequest.student_id'
+                        : 'CompetenceGoalRequest.teacher_id'
+                ) => $user_id,
+                'CompetenceGoalRequest.id' => $id,
+                'CompetenceGoalRequest.completed is null',
+                'CompetenceGoalRequest.canceled is null',
+                'CompetenceGoalRequest.rejected is null'
+            )
+        ));
+
+        if (!$competence_goal_request) {
+            $this->redirect(array('action' => 'by_course', $course_id));
+        }
+
+        if ($this->Auth->user('type') === "Estudiante") {
+            $competence_goal_request['CompetenceGoalRequest']['canceled'] = date('Y-m-d H:i:s');
+        } else {
+            $competence_goal_request['CompetenceGoalRequest']['rejected'] = date('Y-m-d H:i:s');
+        }
+
+        if ($this->CompetenceGoalRequest->save(array('CompetenceGoalRequest' => $competence_goal_request['CompetenceGoalRequest']))) {
+            $this->Email->reset();
+            $this->Email->from = 'Academic <noreply@ulpgc.es>';
+            if ($this->Auth->user('type') === 'Estudiante') {
+                $this->Email->to = $competence_goal_request['Teacher']['username'];
+                $this->Email->subject = "Petición de evaluación cancelada por el alumno";
+                $this->Email->sendAs = 'both';
+                $this->Email->template = Configure::read('app.email.competence_goal_request_canceled') ?: 'competence_goal_request_canceled';
+            } else {
+                $this->Email->to = $competence_goal_request['Student']['username'];
+                $this->Email->subject = "Petición de evaluación rechazada por el profesor";
+                $this->Email->sendAs = 'both';
+                $this->Email->template = Configure::read('app.email.competence_goal_request_rejected') ?: 'competence_goal_request_rejected';
+            }
+            $this->set('competence_goal_request', $competence_goal_request);
+            $this->Email->send();
+            if (__FUNCTION__ === $this->action) {
+                if ($this->Auth->user('type') === "Estudiante") {
+                    $this->Session->setFlash('La solicitud de evaluación se ha cancelado correctamente');
+                } else {
+                    $this->Session->setFlash('La solicitud de evaluación se ha rechazado correctamente');
+                }
+                $this->redirect(array('action' => 'index'));
+            }
+            return true;
+        }
+
+        if (__FUNCTION__ === $this->action) {
+            if ($this->Auth->user('type') === "Estudiante") {
+                $this->Session->setFlash('No se ha podido cancelar la solicitud de evaluación');
+            } else {
+                $this->Session->setFlash('No se ha podido rechazar la solicitud de evaluación');
+            }
+            $this->redirect(array('action' => 'index'));
+        }
+        return false;
+    }
+
+    function reject_by_course($course_id = null, $id = null)
+    {
+        $course_id = $course_id === null ? null : intval($course_id);
+        $id = $id === null ? null : intval($id);
+
+        if (is_null($course_id) || is_null($id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $course_id)
+        ));
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        if ($this->reject($id)) {
+            if ($this->Auth->user('type') === "Estudiante") {
+                $this->Session->setFlash('La solicitud de evaluación se ha cancelado correctamente');
+            } else {
+                $this->Session->setFlash('La solicitud de evaluación se ha rechazado correctamente');
+            }
+        } else {
+            if ($this->Auth->user('type') === "Estudiante") {
+                $this->Session->setFlash('No se ha podido cancelar la solicitud de evaluación');
+            } else {
+                $this->Session->setFlash('No se ha podido rechazar la solicitud de evaluación');
+            }
+        }
+        
+        $this->redirect(array('action' => 'by_course', $course_id));
+    }
+
+    function _get_from_course_id($course_id)
+    {
         $user_id = $this->Auth->user('id');
 
         $competence_goal_request_joins = array(
@@ -130,7 +266,7 @@ class CompetenceGoalRequestsController extends AppController {
             );
         }
 
-        $competence_goal_requests = $this->CompetenceGoalRequest->find('all', array(
+        return $this->CompetenceGoalRequest->find('all', array(
             'fields' => array('distinct CompetenceGoalRequest.*, Competence.*, CompetenceGoal.*, Student.*, Teacher.*'),
             'recursive' => -1,
             'joins' => $competence_goal_request_joins,
@@ -141,65 +277,6 @@ class CompetenceGoalRequestsController extends AppController {
                     : 'Student.last_name asc, Student.first_name asc, Competence.code asc, CompetenceGoal.code asc'
             )
         ));
-
-        $this->set('competence_goal_requests', $competence_goal_requests);
-        $this->set('course', $course);
-    }
-
-    function reject_by_course($course_id = null, $id = null)
-    {
-        $course_id = $course_id === null ? null : intval($course_id);
-        $id = $id === null ? null : intval($id);
-
-        if (is_null($course_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
-        }
-
-        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $course_id)
-        ));
-
-        if (!$course) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
-        }
-
-        $this->CompetenceGoalRequest->Behaviors->attach('Containable');
-        $competence_goal_request = $this->CompetenceGoalRequest->find('first', array(
-            'contain' => array(
-                'Student',
-                'CompetenceGoal.Competence'
-            ),
-            'conditions' => array(
-                'CompetenceGoalRequest.id' => $id,
-                'CompetenceGoalRequest.completed is null',
-                'CompetenceGoalRequest.canceled is null',
-                'CompetenceGoalRequest.rejected is null'
-            )
-        ));
-
-        if (!$competence_goal_request) {
-            $this->redirect(array('action' => 'by_course', $course_id));
-        }
-
-        $competence_goal_request['CompetenceGoalRequest']['rejected'] = date('Y-m-d H:i:s');
-
-        if ($this->CompetenceGoalRequest->save(array('CompetenceGoalRequest' => $competence_goal_request['CompetenceGoalRequest']))) {
-            $this->Email->reset();
-            $this->Email->from = 'Academic <noreply@ulpgc.es>';
-            $this->Email->to = $competence_goal_request['Student']['username'];
-            $this->Email->subject = "Petición de evaluación rechazada por el profesor";
-            $this->Email->sendAs = 'both';
-            $this->Email->template = Configure::read('app.email.competence_goal_request_rejected') ?: 'competence_goal_request_rejected';
-            $this->set('competence_goal_request', $competence_goal_request);
-            $this->set('teacher', $this->Auth->user());
-            $this->Email->send();
-            $this->Session->setFlash('La solicitud de evaluación se ha rechazado correctamente');
-        } else {
-            $this->Session->setFlash('No se ha podido rechazar la solicitud de evaluación');
-        }
-        
-        $this->redirect(array('action' => 'by_course', $course_id));
     }
 
     function _authorize()
@@ -212,9 +289,10 @@ class CompetenceGoalRequestsController extends AppController {
             'by_course'
         );
         $student_actions = array(
+            'index', 'reject', 'add'
         );
 
-        $this->set('section', 'courses');
+        $this->set('section', 'competence');
 
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') !== "Administrador")) {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {

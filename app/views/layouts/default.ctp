@@ -14,88 +14,91 @@
 </head>
 <body <?php if (Configure::read('debug') > 0): ?>class="debug"<?php endif; ?>>
 <div id="container">
-	<div id="header">
-			<div class="left">
-				<ul class="logo">
-					<li class="hidden-phone">
-						<a href="<?php echo PATH?>/courses">
-							<img src="<?php echo PATH . Configure::read('app.logo') ?>">
-						</a>
-					</li>
-					<li class="hidden-phone">
-						<img src="<?php echo PATH?>/img/divider.jpg">
-					</li>
-					<li>
-						<a href="<?php echo h(Configure::read('app.logo_ulpgc_link')) ?>">
-							<img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
-						</a>
-					</li>
-				</ul>
-			</div>
-			<div class="right">
-				<?php if (isset($auth)) {?>
-					<a href="<?php echo PATH?>/editProfile" title="Haga clic aquí para editar sus datos" class="profile"><?php echo "{$auth->user('first_name')} {$auth->user('last_name')}" ?></a>
-					<a href="<?php echo PATH?>/users/logout" class="logout">Salir</a>
-				<?php } ?>
-			</div>
+    <div id="header">
+            <div class="left">
+                <ul class="logo">
+                    <li class="hidden-phone">
+                        <a href="<?php echo PATH?>/courses">
+                            <img src="<?php echo PATH . Configure::read('app.logo') ?>">
+                        </a>
+                    </li>
+                    <li class="hidden-phone">
+                        <img src="<?php echo PATH?>/img/divider.jpg">
+                    </li>
+                    <li>
+                        <a href="<?php echo h(Configure::read('app.logo_ulpgc_link')) ?>">
+                            <img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="right">
+                <?php if (isset($auth)) {?>
+                    <a href="<?php echo PATH?>/editProfile" title="Haga clic aquí para editar sus datos" class="profile"><?php echo "{$auth->user('first_name')} {$auth->user('last_name')}" ?></a>
+                    <a href="<?php echo PATH?>/users/logout" class="logout">Salir</a>
+                <?php } ?>
+            </div>
       <div class="tabs">
         <ul>
           <?php $section = isset($section)? $section : null ?>
-    			<?php if (isset($auth)) { ?>
-            <li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Mi agenda</a></li>
-						<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
-							<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")) { ?>
-								<li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
-								<li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
-							<?php } ?>
-							<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Becario")) { ?>
-								<li class="<?php echo ($section == 'users' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users">Usuarios</a></li>
-							<?php } ?>
-						<?php } else { 
-							if ($auth->user('type') == "Estudiante") {
-						?>
-              <li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
-							<li class="<?php echo ($section == 'my_subjects' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users/my_subjects">Mis asignaturas</a></li>
-              <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
-						<?php }} ?>
-						<?php if (($auth->user('type') == 'Administrador') || ($auth->user('type') == 'Becario') || ($auth->user('type') == 'Administrativo')) { ?>
-							<li class="<?php echo ($section == 'attendance_registers' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/attendance_registers">Registros de impartición</a></li>
-						<?php } ?>
-						
-						<?php if ($auth->user('type') == 'Conserje') { ?>
-						    <li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
-						<?php } ?>
-						
-						<?php if (($auth->user('type') == 'Conserje') || ($auth->user('type') == 'Administrativo') || ($auth->user('type') == 'Administrador') || (Configure::read('app.classroom.teachers_can_booking') && $auth->user('type') == 'Profesor')) { ?>
-							<li class="<?php echo ($section == 'bookings' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/bookings">Gestión de aulas</a></li>
-						<?php }?>
-          <?php } else { ?>
+            <?php if (isset($auth)): ?>
+                <li class="<?php echo ($section == 'home' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Mi agenda</a></li>
+                <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")): ?>
+
+                    <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrativo")): ?>
+                        <li class="<?php echo ($section == 'courses' || $section == 'competence' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
+                        <li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
+                    <?php endif; ?>
+
+                    <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Profesor") || ($auth->user('type') == "Becario")): ?>
+                        <li class="<?php echo ($section == 'users' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users">Usuarios</a></li>
+                    <?php endif; ?>
+
+                <?php elseif ($auth->user('type') == "Estudiante"): ?>
+                    <li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
+                    <li class="<?php echo ($section == 'my_subjects' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users/my_subjects">Mis asignaturas</a></li>
+                    <li class="<?php echo ($section == 'competence' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/competence_goal_requests">Competencias</a></li>
+                    <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
+                <?php endif; ?>
+                
+                <?php if (($auth->user('type') == 'Administrador') || ($auth->user('type') == 'Becario') || ($auth->user('type') == 'Administrativo')): ?>
+                    <li class="<?php echo ($section == 'attendance_registers' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/attendance_registers">Registros de impartición</a></li>
+                <?php endif; ?>
+                    
+                <?php if ($auth->user('type') == 'Conserje'): ?>
+                    <li class="<?php echo ($section == 'classrooms' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/classrooms">Aulas</a></li>
+                <?php endif; ?>
+                    
+                <?php if (($auth->user('type') == 'Conserje') || ($auth->user('type') == 'Administrativo') || ($auth->user('type') == 'Administrador') || (Configure::read('app.classroom.teachers_can_booking') && $auth->user('type') == 'Profesor')): ?>
+                    <li class="<?php echo ($section == 'bookings' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/bookings">Gestión de aulas</a></li>
+                <?php endif; ?>
+          <?php else: ?>
               <li class="<?php echo ($section == 'users' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/">Identificarse</a></li>
               <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
-          <?php } ?>
+          <?php endif; ?>
         </ul>
       </div>
-	</div>
-	
-	<div id="content">
-		<?php if (isset($auth)) { ?>
-			<div class="nav">
-				Estás en: <?php echo $html->getCrumbs(' > ', 'Inicio'); ?>
-			</div>
-		<?php } ?>
-		<?php echo $this->Session->flash(); ?>
-		<?php echo $content_for_layout ?>
+    </div>
+    
+    <div id="content">
+        <?php if (isset($auth)) { ?>
+            <div class="nav">
+                Estás en: <?php echo $html->getCrumbs(' > ', 'Inicio'); ?>
+            </div>
+        <?php } ?>
+        <?php echo $this->Session->flash(); ?>
+        <?php echo $content_for_layout ?>
     <?php if (Configure::read('debug') > 0) echo $this->Session->flash('email') ?>
-	</div>
+    </div>
 
-	<div id="footer">
+    <div id="footer">
     <p class="logo visible-block-phone">
       <a href="<?php echo PATH?>/courses">
         <img src="<?php echo PATH . Configure::read('app.logo') ?>">
       </a>
     </p>
-		<?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
-	</div>
+        <?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
+    </div>
 
 </body>
 </html>

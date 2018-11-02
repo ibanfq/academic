@@ -792,7 +792,7 @@ class CompetenceCriteriaController extends AppController {
             'edit', 'edit_by_subject'
         );
 
-        $this->set('section', 'courses');
+        $this->set('section', 'competence');
 
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') !== "Administrador")) {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {

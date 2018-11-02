@@ -1,8 +1,8 @@
 <p>Hola</p>
-<p>Desde Academic te informarmos que la solicitud de evaluación del siguiente objetivo ha sido rechazado por el profesor solicitado.</p>
+<p>Desde Academic te informarmos que la solicitud de evaluación del siguiente objetivo ha sido cancelada por el alumno.</p>
 <p>
 Competencia: <?php echo "{$competence_goal_request['CompetenceGoal']['Competence']['code']} - {$competence_goal_request['CompetenceGoal']['Competence']['definition']}" ?><br />
 Objetivo: <?php echo "{$competence_goal_request['CompetenceGoal']['code']} - {$competence_goal_request['CompetenceGoal']['definition']}" ?><br />
-Profesor evaluador: <?php echo "{$competence_goal_request['Teacher']['first_name']} {$competence_goal_request['Teacher']['last_name']}" ?><br />
+Alumno: <?php echo "{$competence_goal_request['Student']['first_name']} {$competence_goal_request['Student']['last_name']}" ?><br />
 </p>
 <p>Un saludo,<br />El equipo de Academic.</p>

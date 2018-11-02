@@ -644,7 +644,7 @@ class CompetenceGoalsController extends AppController {
             'grade_by_student'
         );
 
-        $this->set('section', 'courses');
+        $this->set('section', 'competence');
 
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {
