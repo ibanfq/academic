@@ -44,6 +44,10 @@
     array('controller' => 'api_users', 'action' => 'index', '[method]' => 'GET')
   );
   Router::connect(
+    '/api/users/login',
+    array('controller' => 'api_users', 'action' => 'login', '[method]' => 'GET')
+  );
+  Router::connect(
     '/api/users/me',
     array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET')
   );

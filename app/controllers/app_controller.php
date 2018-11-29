@@ -32,24 +32,44 @@ class AppController extends Controller {
     $this->Security->validatePost = false;
     
     if ($this->isApi) {
+      // Fake php sessions
+      session_set_save_handler(
+        array(__CLASS__, '__fakeSessionWrite'),
+        array(__CLASS__, '__fakeSessionWrite'),
+        array(__CLASS__, '__fakeSessionWrite'),
+        array(__CLASS__, '__fakeSessionWrite'),
+        array(__CLASS__, '__fakeSessionWrite'),
+        array(__CLASS__, '__fakeSessionWrite')
+      );
+      ini_set('session.use_cookies', 0);
+      session_start();
+
+      // Set login options
       $this->Security->loginOptions = array(
         'type' => 'basic',
         'realm' => 'academic',
         'login' => '_api_authenticate'
       );
       
+      // Read Authorization header
       $authorization = env('HTTP_AUTHORIZATION');
       if (empty($authorization)) {
         $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
       }
       
+      // Authorize
       if ($authorization || !$this->_authorize()) {
-        if (!env('PHP_AUTH_USER') && preg_match('/Basic\s+(.*)$/i', $authorization, $matches)) {
-          $name_and_password = explode(':', base64_decode($matches[1]));
-          $name = $name_and_password[0];
-          $password = isset($name_and_password[1])? $name_and_password[1] : '';
-          $_SERVER['PHP_AUTH_USER'] = strip_tags($name);
-          $_SERVER['PHP_AUTH_PW'] = strip_tags($password);
+        if (!env('PHP_AUTH_USER') && preg_match('/(Basic|Bearer)\s+(.*)$/i', $authorization, $matches)) {
+          if (strtolower($matches[1]) === 'basic') {
+            $name_and_password = explode(':', base64_decode($matches[2]));
+            $name = $name_and_password[0];
+            $password = isset($name_and_password[1])? $name_and_password[1] : '';
+            $_SERVER['PHP_AUTH_USER'] = strip_tags($name);
+            $_SERVER['PHP_AUTH_PW'] = strip_tags($password);
+          } else {
+            $_SERVER['PHP_AUTH_USER'] = $matches[2];
+            $_SERVER['PHP_AUTH_PWD'] = null;
+          }
         }
         $this->Security->requireLogin();
       } else {
@@ -85,16 +105,29 @@ class AppController extends Controller {
   function _api_authenticate($login) {
     $this->Auth->sessionKey = 'Api.Auth.User';
     
-    $data[ $this->Auth->fields['username'] ] = $login['username'];  
-    $data[ $this->Auth->fields['password'] ] = $this->Auth->password($login['password']);
-    
-    if (!$this->Auth->login($data) || !$this->_authorize()) {
-      $this->redirect(null, 401, true);
+    if ($login['password']) {
+      $data[ $this->Auth->fields['username'] ] = $login['username'];
+      $data[ $this->Auth->fields['password'] ] = $this->Auth->password($login['password']);
+      
+      if (!$this->Auth->login($data) || !$this->_authorize()) {
+        $this->redirect(null, 401, true);
+      }
+    } else {
+      try {
+        $secretKey = base64_decode(Configure::read('Security.secret'));
+        $token = \Firebase\JWT\JWT::decode($login['username'], $secretKey, array('HS512'));
+        $this->Auth->login($token->data->id);
+      } catch (Exception $e) {
+        /*
+         * the token was not able to be decoded.
+         * this is likely because the signature was not able to be verified (tampered token)
+         */
+        $this->redirect(null, 401, true);
+      }
     }
   }
 
 	function _authorize() {
-    
 		if ($this->Auth->user('id') != null) {
 			$this->set("auth", $this->Auth);
       return true;
@@ -105,5 +138,9 @@ class AppController extends Controller {
 	function _parse_date($date, $separator = "/") {
 		$date_components = split($separator, $date);
 		return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
-	}
+  }
+  
+  function __fakeSessionWrite() {
+    return true;
+  }
 }
