@@ -32,6 +32,12 @@ class ApiUsersController extends AppController {
         return true;
     }
     
+    function me()
+    {
+        $this->Api->setData($this->Auth->user());
+        $this->Api->respond($this);
+    }
+    
     function index()
     {
         App::import('Sanitize');

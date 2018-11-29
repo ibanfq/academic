@@ -4,18 +4,22 @@
  * Api component
  */
 class ApiComponent extends Object {
+  var $components = array('RequestHandler');
+  
   var $_data = null;
   var $_fail_data = array();
   var $_error_message = null;
   var $_error_code = null;
   var $_error_data = null;
   var $_request = null;
+  var $_raw_input = null;
   
   function call($verb, $url, $data = null) {
     $old_request_method = $_SERVER['REQUEST_METHOD'];
     $old_get = &$_GET;
     $old_post = &$_POST;
     $old_request = &$_REQUEST;
+    $old_raw_input = $this->_raw_input;
 
     $url = parse_url($url);
     $_SERVER['REQUEST_METHOD'] = $verb;
@@ -26,10 +30,12 @@ class ApiComponent extends Object {
     }
     $_POST = (array) $data;
     $_REQUEST = array_merge($_GET, $_POST);
+    $this->_raw_input = '';
     
     $dispatcher = new Dispatcher();
     $content = $dispatcher->dispatch($url['path'], array('return' => true));
     
+    $this->_raw_input = $old_raw_input;
     $_REQUEST = &$old_request;
     $_POST = &$old_post;
     $_GET = &$old_get;
@@ -39,6 +45,14 @@ class ApiComponent extends Object {
   }
   
   function getParameter($name, $filters = null, $default = null) {
+    if ($this->_raw_input === null && empty($_POST) && $this->RequestHandler->requestedWith('json')) {
+      $this->_raw_input = file_get_contents('php://input');
+      $json_input = json_decode($this->_raw_input, true);
+      if (is_array($json_input)) {
+        $_POST = $json_input;
+        $_REQUEST = array_merge($_REQUEST, $_POST);
+      }
+    }
     $value = $_REQUEST;
     $filters = (array)$filters;
 
