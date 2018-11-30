@@ -1,5 +1,6 @@
 <?php
 
+$config['app']['issuer'] = 'academic-fv';
 $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_ulpgc.jpg';
 $config['app']['logo_ulpgc_white'] = '/img/logo_ulpgc_white.jpg';

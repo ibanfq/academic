@@ -1,5 +1,6 @@
 <?php
 
+$config['app']['issuer'] = 'academic-eite';
 $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_eite.jpg';
 $config['app']['logo_ulpgc_white'] = '/img/logo_eite_white.png';

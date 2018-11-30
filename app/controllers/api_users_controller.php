@@ -32,6 +32,44 @@ class ApiUsersController extends AppController {
         return true;
     }
     
+    function me()
+    {
+        $this->Api->setData($this->Auth->user());
+        $this->Api->respond($this);
+    }
+
+    function login()
+    {
+        $issuer    = Configure::read('app.issuer');
+        $issuedAt  = time();
+        $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
+        $secretKey = base64_decode(Configure::read('Security.secret'));
+
+        $responseData = $this->Auth->user();
+        
+        /*
+        * Create the token as an array
+        */
+        $jwtData = array(
+            'iat'  => $issuedAt, // Issued at: time when the token was generated
+            'jti'  => $tokenId,  // Json Token Id: an unique identifier for the token
+            'iss'  => $issuer,   // Issuer
+            'data' => array(     // Data related to the signed user
+                'id'       => $responseData['User']['id'],       // id from the auth user
+                'username' => $responseData['User']['username'], // username from the auth user
+            )
+        );
+
+        $responseData['Auth']['token'] = \Firebase\JWT\JWT::encode(
+            $jwtData,   //Data to be encoded in the JWT
+            $secretKey, // The signing key
+            'HS512'     // Algorithm used to sign the token, see https://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-40#section-3
+        );
+
+        $this->Api->setData($responseData);
+        $this->Api->respond($this);
+    }
+    
     function index()
     {
         App::import('Sanitize');
