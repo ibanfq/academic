@@ -69,11 +69,17 @@ class CompetenceGoalRequest extends AcademicModel {
             return false;
         }
 
+        if (! isset($competence_goal_request['teacher_id'])) {
+            return false;
+        }
+
         $student_id = $competence_goal_request['student_id'];
+        $teacher_id = $competence_goal_request['teacher_id'];
 
         $query = "SELECT '' FROM competence_goal_requests CompetenceGoalRequest"
             . " WHERE CompetenceGoalRequest.goal_id = {$db->value($goal_id)}"
             . " AND CompetenceGoalRequest.student_id = {$db->value($student_id)}"
+            . " AND CompetenceGoalRequest.teacher_id = {$db->value($teacher_id)}"
             . " AND rejected is null AND canceled is null";
 
         if (!empty($this->id)) {
