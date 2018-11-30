@@ -87,7 +87,17 @@ class CompetenceGoalRequestsController extends AppController {
         ));
 
         if (!$teacher) {
-            $this->Session->setFlash('El profesor seleccionado no puede evaluar ese objetivo');
+            $this->Session->setFlash('No se ha podido encontrar al profesor');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $response = $this->Api->call(
+            'GET',
+            '/api/competence_goals/by_teacher/'.urlencode($teacher_id).'?goal_id='.urlencode($goal_id)
+        );
+
+        if (empty($response['data'])) {
+            $this->Session->setFlash('El profesor elegido no puede evaluarte ese objetivo');
             $this->redirect(array('action' => 'index'));
         }
 

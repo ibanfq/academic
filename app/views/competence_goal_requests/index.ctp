@@ -96,7 +96,7 @@
         $("input#teacher")
             .autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem})
             .result(function(event, item) {
-                var url = <?php echo $this->Javascript->object($this->Html->url(array('controller' => 'competence_goals', 'action' => 'by_teacher', '%teacher_id%'))); ?>;
+                var url = <?php echo $this->Javascript->object($this->Html->url(array('controller' => 'api_competence_goals', 'action' => 'by_teacher', 'teacher_id' => '00000000'))); ?>;
                 var teacher_id = item[1];
                 $("input#CompetenceGoalRequestTeacherId").val(teacher_id);
                 var goalIdSelect =  $("#CompetenceGoalRequestGoalId").prop('disabled', true);
@@ -105,8 +105,9 @@
                     cache: false,
                     type: "GET",
                     dataType: "json",
-                    url: url.replace('%teacher_id%', teacher_id),
-                    success: function(data) {
+                    url: url.replace('00000000', teacher_id),
+                    success: function(response) {
+                        var data = response.data;
                         goalIdSelect.find(':not(:first)').remove();
                         $.each(data, function (competence_id, goals) {
                             var competence = goals[Object.keys(goals)[0]].Competence;

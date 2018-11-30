@@ -16,6 +16,7 @@ class ApiComponent extends Object {
   
   function call($verb, $url, $data = null) {
     $old_request_method = $_SERVER['REQUEST_METHOD'];
+    $old_requested_with = isset($_SERVER['HTTP_X_REQUESTED_WITH']) ? $_SERVER['HTTP_X_REQUESTED_WITH'] : null;
     $old_get = &$_GET;
     $old_post = &$_POST;
     $old_request = &$_REQUEST;
@@ -23,6 +24,7 @@ class ApiComponent extends Object {
 
     $url = parse_url($url);
     $_SERVER['REQUEST_METHOD'] = $verb;
+    $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
     if (isset($url['query'])) {
       parse_str($url['query'], $_GET);
     } else {
@@ -39,6 +41,7 @@ class ApiComponent extends Object {
     $_REQUEST = &$old_request;
     $_POST = &$old_post;
     $_GET = &$old_get;
+    $_SERVER['HTTP_X_REQUESTED_WITH'] = $old_requested_with;
     $_SERVER['REQUEST_METHOD'] = $old_request_method;
     
     return $content;
