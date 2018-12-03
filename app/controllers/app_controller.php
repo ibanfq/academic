@@ -32,10 +32,6 @@ class AppController extends Controller {
     $this->Security->validatePost = false;
     
     if ($this->isApi) {
-      if (!$this->RequestHandler->isAjax()) {
-        return $this->cakeError('error404');
-      }
-
       if (empty($_COOKIE[Configure::read('Session.cookie')])) {
         // Disable sessions (Faking php session write)
         session_set_save_handler(
@@ -121,7 +117,7 @@ class AppController extends Controller {
     } else {
       try {
         $secretKey = base64_decode(Configure::read('Security.secret'));
-        $token = \Firebase\JWT\JWT::decode($login['username'], $secretKey, array('HS512'));
+        $token = JWT::decode($login['username'], $secretKey, array('HS512'));
         $this->Auth->login($token->data->id);
       } catch (Exception $e) {
         /*

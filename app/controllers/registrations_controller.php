@@ -335,7 +335,9 @@ class RegistrationsController extends AppController {
         $this->Email->to = $user['username'];
         $this->Email->subject = "Cambio de grupo solicitado en Academic";
         $this->Email->sendAs = 'both';
-        $this->Email->template = Configure::read('app.email.group_request_added') ?: 'group_request_added';
+        $this->Email->template = Configure::read('app.email.group_request_added')
+            ? Configure::read('app.email.group_request_added')
+            : 'group_request_added';
         $this->set('user', $user);
         $this->set('subject', $subject);
         $this->set('activity', $activity);
@@ -351,7 +353,9 @@ class RegistrationsController extends AppController {
         $this->Email->to = $user['username'];
         $this->Email->subject = "Cambio de grupo aceptado en Academic";
         $this->Email->sendAs = 'both';
-        $this->Email->template = Configure::read('app.email.group_request_accepted') ?: 'group_request_accepted';
+        $this->Email->template = Configure::read('app.email.group_request_accepted')
+            ? Configure::read('app.email.group_request_accepted')
+            : 'group_request_accepted';
         $this->set('user', $user);
         $this->set('subject', $subject);
         $this->set('activity', $activity);
@@ -365,7 +369,9 @@ class RegistrationsController extends AppController {
         $this->Email->to = $user['username'];
         $this->Email->subject = "Cambio de grupo cancelado en Academic";
         $this->Email->sendAs = 'both';
-        $this->Email->template = Configure::read('app.email.group_request_canceled') ?: 'group_request_canceled';
+        $this->Email->template = Configure::read('app.email.group_request_canceled')
+            ? Configure::read('app.email.group_request_canceled')
+            : 'group_request_canceled';
         $this->set('user', $user);
         $this->set('subject', $subject);
         $this->set('activity', $activity);

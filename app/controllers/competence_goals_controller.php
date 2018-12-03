@@ -393,7 +393,7 @@ class CompetenceGoalsController extends AppController {
                 '{n}.CompetenceCriterionRubric.{n}.id'
             );
             $filteredData = Set::extract('/CompetenceCriterionGrade', $competence_grades);
-            $deletedGrades = [];
+            $deletedGrades = array();
 
             foreach ($competence_goal['CompetenceCriterion'] as $i => $criterion) {
                 $criterion_id = $criterion['id'];
@@ -431,7 +431,9 @@ class CompetenceGoalsController extends AppController {
                     $this->Email->to = $student['User']['username'];
                     $this->Email->subject = "Objetivo evaluado por el profesor solicitado";
                     $this->Email->sendAs = 'both';
-                    $this->Email->template = Configure::read('app.email.competence_goal_request_completed') ?: 'competence_goal_request_completed';
+                    $this->Email->template = Configure::read('app.email.competence_goal_request_completed')
+                        ? Configure::read('app.email.competence_goal_request_completed')
+                        : 'competence_goal_request_completed';
                     $this->set('competence', $competence);
                     $this->set('competence_goal', $competence_goal);
                     $this->set('teacher', $this->Auth->user());

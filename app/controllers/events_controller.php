@@ -27,7 +27,7 @@ class EventsController extends AppController {
         $db = $this->Event->getDataSource();
         $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.classroom_id = {$db->value($classroom_id)}");
         
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
     
@@ -36,7 +36,7 @@ class EventsController extends AppController {
         $db = $this->Event->getDataSource();
         $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Activity.subject_id = {$db->value($subject_id)}");
         
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
     
@@ -44,7 +44,7 @@ class EventsController extends AppController {
         $db = $this->Event->getDataSource();
         $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Subject.level = {$db->value($level)}");
         
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
 
@@ -52,7 +52,7 @@ class EventsController extends AppController {
         $db = $this->Event->getDataSource();
         $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Subject.degree = {$db->value($degree)} AND Subject.level = {$db->value($level)}");
         
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
     
@@ -155,7 +155,7 @@ class EventsController extends AppController {
             }
             $this->set('invalidFields', $invalidFields);
         }
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
     }
     
     function copy($id) {
@@ -178,7 +178,7 @@ class EventsController extends AppController {
             }
             $duration = $this->_getDuration($event_initial_hour, new DateTime($event['Event']['final_hour']));
             $final_hour = $this->_addDuration($initial_hour, $duration);
-            $this->data = [
+            $this->data = array(
                 'id'           => null,
                 'group_id'     => $event['Event']['group_id'],
                 'activity_id'  => $event['Event']['activity_id'],
@@ -190,7 +190,7 @@ class EventsController extends AppController {
                 'owner_id'     => $this->Auth->user('id'),
                 'teacher_2_id' => $event['Event']['teacher_2_id'],
                 'show_tv'      => $event['Event']['show_tv']
-            ];
+            );
             if ($this->Event->save($this->data)) {
                 array_push($events, $this->Event->read());
                 $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
@@ -214,7 +214,7 @@ class EventsController extends AppController {
                 $this->set('invalidFields', $invalidFields);
             }
         }
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
     }        
 
     function edit($id = null) {
@@ -275,7 +275,7 @@ class EventsController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->Event->id = $id;
         $event = $this->Event->read();
-        $ids = [];
+        $ids = array();
         if ($this->_authorizeDelete($event)) {
             $ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
             $this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");
@@ -631,12 +631,6 @@ class EventsController extends AppController {
         return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Profesor");
     }
 
-    function _getAuthorizeDeleteClosure() {
-        return function ($event) {
-            return $this->_authorizeDelete($event);
-        };
-    }
-    
     function _authorize() {
         parent::_authorize();
 

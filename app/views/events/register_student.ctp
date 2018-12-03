@@ -2,7 +2,7 @@
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
 <?php $html->addCrumb($subject['Subject']['name'], '/users/my_subjects'); ?>
 
-<?php $flexible_groups = !empty(Configure::read('app.registration.flexible_groups')); ?>
+<?php $flexible_groups = !Configure::read('app.registration.flexible_groups') !== null; ?>
 <?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>
 
 <h1>Grupos de la asignatura <?php echo $subject['Subject']['name'] ?></h1>

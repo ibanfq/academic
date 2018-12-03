@@ -115,7 +115,9 @@ class CompetenceGoalRequestsController extends AppController {
             $this->Email->to = $teacher['User']['username'];
             $this->Email->subject = "Nueva solicitud de evaluación";
             $this->Email->sendAs = 'both';
-            $this->Email->template = Configure::read('app.email.competence_goal_request_added') ?: 'competence_goal_request_added';
+            $this->Email->template = Configure::read('app.email.competence_goal_request_added')
+                ? Configure::read('app.email.competence_goal_request_added')
+                : 'competence_goal_request_added';
             $this->set('competence', array('Competence' => $competence_goal['Competence']));
             $this->set('competence_goal', array('CompetenceGoal' => $competence_goal['CompetenceGoal']));
             $this->set('student', $this->Auth->user());
@@ -182,12 +184,16 @@ class CompetenceGoalRequestsController extends AppController {
                 $this->Email->to = $competence_goal_request['Teacher']['username'];
                 $this->Email->subject = "Petición de evaluación cancelada por el alumno";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.competence_goal_request_canceled') ?: 'competence_goal_request_canceled';
+                $this->Email->template = Configure::read('app.email.competence_goal_request_canceled')
+                    ? Configure::read('app.email.competence_goal_request_canceled')
+                    : 'competence_goal_request_canceled';
             } else {
                 $this->Email->to = $competence_goal_request['Student']['username'];
                 $this->Email->subject = "Petición de evaluación rechazada por el profesor";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.competence_goal_request_rejected') ?: 'competence_goal_request_rejected';
+                $this->Email->template = Configure::read('app.email.competence_goal_request_rejected')
+                    ? Configure::read('app.email.competence_goal_request_rejected')
+                    : 'competence_goal_request_rejected';
             }
             $this->set('competence_goal_request', $competence_goal_request);
             $this->Email->send();

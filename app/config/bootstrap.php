@@ -21,7 +21,7 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-require_once ROOT . '/vendors/plugins/autoload.php'; 
+require_once ROOT . '/vendors/plugins/autoload_52.php'; 
 
 /**
  * The settings below can be used to set additional paths to models, views and controllers.

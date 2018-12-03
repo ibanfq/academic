@@ -327,7 +327,9 @@ class AttendanceRegister extends AcademicModel {
         $controller->Email->to = $attendanceRegister['Teacher']['username'];
         $controller->Email->subject = "Evento registrado";
         $controller->Email->sendAs = 'both';
-        $controller->Email->template = Configure::read('app.email.attendance_register_closed') ?: 'attendance_register_closed';
+        $controller->Email->template = Configure::read('app.email.attendance_register_closed')
+            ? Configure::read('app.email.attendance_register_closed')
+            : 'attendance_register_closed';
         $controller->set('teacher', $attendanceRegister['Teacher']);
         $controller->set('attendanceRegister', $attendanceRegister);
         $controller->Email->send();

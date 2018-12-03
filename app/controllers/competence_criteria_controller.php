@@ -432,7 +432,7 @@ class CompetenceCriteriaController extends AppController {
                 '{n}.rubric_id'
             );
             $filteredData = Set::extract('/CompetenceCriterionGrade', $students);
-            $deletedGrades = [];
+            $deletedGrades = array();
 
             foreach ($students as $i => $student) {
                 $student_id = $student['Student']['id'];
@@ -622,9 +622,9 @@ class CompetenceCriteriaController extends AppController {
         }
 
         $filteredData = $competence_criterion;
-        $deletedRubrics = [];
-        $deletedSubjects = [];
-        $deletedTeachers = [];
+        $deletedRubrics = array();
+        $deletedSubjects = array();
+        $deletedTeachers = array();
 
         // Criterion
         if ($auth_is_admin) {
@@ -641,7 +641,7 @@ class CompetenceCriteriaController extends AppController {
         if ($auth_is_admin || $auth_is_coordinator) {
             if (isset($this->data['CompetenceCriterionRubric'])) {
                 if (!is_array($this->data['CompetenceCriterionRubric'])) {
-                    $this->data['CompetenceCriterionRubric'] = [];
+                    $this->data['CompetenceCriterionRubric'] = array();
                 }
 
                 if ($auth_is_admin) {
@@ -680,7 +680,7 @@ class CompetenceCriteriaController extends AppController {
         if ($auth_is_admin) {
             if (isset($this->data['CompetenceCriterionSubject'])) {
                 if (!is_array($this->data['CompetenceCriterionSubject'])) {
-                    $this->data['CompetenceCriterionSubject'] = [];
+                    $this->data['CompetenceCriterionSubject'] = array();
                 }
 
                 foreach ($filteredData['CompetenceCriterionSubject'] as $i => $subject) {
@@ -719,7 +719,7 @@ class CompetenceCriteriaController extends AppController {
         if ($auth_is_admin || $auth_is_coordinator) {
             if (isset($this->data['CompetenceCriterionTeacher'])) {
                 if (!is_array($this->data['CompetenceCriterionTeacher'])) {
-                    $this->data['CompetenceCriterionTeacher'] = [];
+                    $this->data['CompetenceCriterionTeacher'] = array();
                 }
 
                 foreach ($filteredData['CompetenceCriterionTeacher'] as $i => $teacher) {

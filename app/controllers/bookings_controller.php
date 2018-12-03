@@ -88,7 +88,7 @@ class BookingsController extends AppController {
                 $this->set('activity_overlaped', $activity_overlaped);
             }
         }
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
     }
 
     function copy($id) {
@@ -111,7 +111,7 @@ class BookingsController extends AppController {
             }
             $duration = $this->_getDuration($booking_initial_hour, new DateTime($booking['Booking']['final_hour']));
             $final_hour = $this->_addDuration($initial_hour, $duration);
-            $this->data = [
+            $this->data = array(
                 'id'           => null,
                 'user_id'      => $this->Auth->user('id'),
                 'user_type'    => $booking['Booking']['user_type'],
@@ -121,7 +121,7 @@ class BookingsController extends AppController {
                 'reason'    => $booking['Booking']['reason'],
                 'required_equipment'    => $booking['Booking']['required_equipment'],
                 'show_tv'      => $booking['Booking']['show_tv']
-            ];
+            );
             if ($this->Booking->save($this->data)){
                 array_push($bookings, $this->Booking->read());
                 $this->set('success', true);
@@ -139,7 +139,7 @@ class BookingsController extends AppController {
                 $this->set('activity_overlaped', $activity_overlaped);
             }
         }
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
     }
     
     function get($classroom_id = null) {
@@ -147,7 +147,7 @@ class BookingsController extends AppController {
         $db = $this->Booking->getDataSource();
         $bookings = $this->Booking->query("SELECT DISTINCT Booking.id, Booking.parent_id, Booking.initial_hour, Booking.final_hour, Booking.reason, Booking.user_id, Booking.classroom_id, Classroom.id, Classroom.teachers_can_booking FROM bookings Booking LEFT JOIN classrooms Classroom ON Booking.classroom_id = Classroom.id WHERE Booking.classroom_id = {$db->value($classroom_id)} OR Booking.classroom_id = -1");
 
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('bookings', $bookings);
     }
     
@@ -265,7 +265,7 @@ class BookingsController extends AppController {
             'recursive' => 0
         ));
 
-        $ids = [];
+        $ids = array();
 
         if (!empty($booking['Booking']['id'])) {
             if (!$this->_authorizeDelete($booking)) {
@@ -382,12 +382,6 @@ class BookingsController extends AppController {
         }
 
         return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Administrativo") || ($this->Auth->user('type') === "Conserje");
-    }
-
-    function _getAuthorizeDeleteClosure() {
-        return function ($booking) {
-            return $this->_authorizeDelete($booking);
-        };
     }
 
     function _authorize() {

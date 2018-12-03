@@ -37,7 +37,9 @@ class UsersController extends AppController {
         $this->User->id = $user['User']['id'];
         $this->User->data = $user;
         
-        $calendarName = Configure::read('app.vcalendar.name') ?: 'Academic';
+        $calendarName = Configure::read('app.vcalendar.name')
+            ? Configure::read('app.vcalendar.name')
+            : 'Academic';
 
         #header('Content-type: text/calendar; charset=utf-8');
         #header('Content-Disposition: attachment; filename=calendar.ics');
@@ -120,7 +122,9 @@ class UsersController extends AppController {
                 $this->Email->to = $this->data['User']['username'];
                 $this->Email->subject = "Alta en Academic";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.user_registered') ?: 'user_registered';
+                $this->Email->template = Configure::read('app.email.user_registered')
+                    ? Configure::read('app.email.user_registered')
+                    : 'user_registered';
                 $this->set('user', $this->data);
                 $this->set('password', $password);
                 $this->Email->send();
@@ -278,7 +282,9 @@ class UsersController extends AppController {
                 $this->Email->to = $this->data['User']['username'];
                 $this->Email->subject = "Recordatorio de contraseña";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.user_remember_password') ?: 'user_remember_password';
+                $this->Email->template = Configure::read('app.email.user_remember_password')
+                    ? Configure::read('app.email.user_remember_password')
+                    : 'user_remember_password';
                 $this->set('user', $this->data);
                 $this->set('password', $password);
                 $this->Email->send();
@@ -639,7 +645,9 @@ class UsersController extends AppController {
                 $this->Email->to = $user['User']['username'];
                 $this->Email->subject = "Alta en Academic";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.user_registered') ?: 'user_registered';
+                $this->Email->template = Configure::read('app.email.user_registered')
+                    ? Configure::read('app.email.user_registered')
+                    : 'user_registered';
                 $this->set('user', $user);
                 $this->set('password', $password);
                 $this->Email->send();

@@ -356,7 +356,9 @@ class AttendanceRegistersController extends AppController {
                 }
                 $this->Email->subject = "Evento no registrado";
                 $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.attendance_register_forgotten') ?: 'attendance_register_forgotten';
+                $this->Email->template = Configure::read('app.email.attendance_register_forgotten')
+                    ? Configure::read('app.email.attendance_register_forgotten')
+                    : 'attendance_register_forgotten';
                 $this->set('teacher', $event['Teacher']);
                 $this->set('event', $event);
                 if ($event['Teacher']['notify_all']) {
