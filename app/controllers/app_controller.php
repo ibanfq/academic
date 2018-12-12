@@ -89,7 +89,9 @@ class AppController extends Controller {
       }
 
       if (!$this->_authorize()) {
-        if ($this->Auth->user('id') == null) {
+        if ($this->RequestHandler->isAjax()) {
+          $this->redirect(null, 401, true);
+        } elseif ($this->Auth->user('id') == null) {
           $this->redirect(array('controller' => 'users', 'action' => 'login'));
         } else {
           $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');

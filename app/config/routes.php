@@ -42,54 +42,54 @@
   // Users
   Router::connect(
     '/api/users',
-    array('controller' => 'api_users', 'action' => 'index')
+    array('controller' => 'api_users', 'action' => 'index', '[method]' => 'GET')
   );
   Router::connect(
     '/api/users/login',
-    array('controller' => 'api_users', 'action' => 'login')
+    array('controller' => 'api_users', 'action' => 'login', '[method]' => 'GET')
   );
   Router::connect(
     '/api/users/me',
-    array('controller' => 'api_users', 'action' => 'me')
+    array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET')
   );
   // Events
   Router::connect(
     '/api/events',
-    array('controller' => 'api_events', 'action' => 'index')
+    array('controller' => 'api_events', 'action' => 'index', '[method]' => 'GET')
   );
   Router::connect(
     '/api/events/:id',
-    array('controller' => 'api_events', 'action' => 'view'),
+    array('controller' => 'api_events', 'action' => 'view', '[method]' => 'GET'),
     array('id' => '[0-9]+', 'pass' => array('id'))
   );
   // Attendance registers
   Router::connect(
     '/api/attendance_registers',
-    array('controller' => 'api_attendance_registers', 'action' => 'add')
+    array('controller' => 'api_attendance_registers', 'action' => 'add', '[method]' => 'POST')
   );
   Router::connect(
     '/api/attendance_registers/:id',
-    array('controller' => 'api_attendance_registers', 'action' => 'edit'),
+    array('controller' => 'api_attendance_registers', 'action' => 'edit', '[method]' => 'POST'),
     array('id' => '[0-9]+', 'pass' => array('id'))
   );
   Router::connect(
     '/api/attendance_registers/:id',
-    array('controller' => 'api_attendance_registers', 'action' => 'view'),
+    array('controller' => 'api_attendance_registers', 'action' => 'view', '[method]' => 'GET'),
     array('id' => '[0-9]+', 'pass' => array('id'))
   );
   Router::connect(
     '/api/users_attendance_register',
-    array('controller' => 'api_users_attendance_register', 'action' => 'add')
+    array('controller' => 'api_users_attendance_register', 'action' => 'add', '[method]' => 'POST')
   );
   Router::connect(
     '/api/users/:user_id/attendance_registers/:attendance_id',
-    array('controller' => 'api_users_attendance_register', 'action' => 'delete'),
+    array('controller' => 'api_users_attendance_register', 'action' => 'delete', '[method]' => 'DELETE'),
     array('user_id' => '[0-9]+', 'attendance_id' => '[0-9]+', 'pass' => array('user_id', 'attendance_id'))
   );
   // Competence goals
   Router::connect(
     '/api/competence_goals/by_teacher/:teacher_id',
-    array('controller' => 'api_competence_goals', 'action' => 'by_teacher'),
+    array('controller' => 'api_competence_goals', 'action' => 'by_teacher', '[method]' => 'GET'),
     array('teacher_id' => '[0-9]+', 'pass' => array('teacher_id'))
   );
 /**

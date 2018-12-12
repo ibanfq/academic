@@ -112,10 +112,10 @@ class CompetenceCriteriaController extends AppController {
         array_multisort(
             $teachers_first_names,
             SORT_ASC,
-            SORT_LOCALE_STRING,
+            version_compare(phpversion(), '5.3.0', '>=') ? SORT_LOCALE_STRING : SORT_STRING,
             $teachers_last_names,
             SORT_ASC,
-            SORT_LOCALE_STRING,
+            version_compare(phpversion(), '5.3.0', '>=') ? SORT_LOCALE_STRING : SORT_STRING,
             $competence_criterion['CompetenceCriterionTeacher']
         );
 
@@ -228,10 +228,10 @@ class CompetenceCriteriaController extends AppController {
         array_multisort(
             $teachers_first_names,
             SORT_ASC,
-            SORT_LOCALE_STRING,
+            version_compare(phpversion(), '5.3.0', '>=') ? SORT_LOCALE_STRING : SORT_STRING,
             $teachers_last_names,
             SORT_ASC,
-            SORT_LOCALE_STRING,
+            version_compare(phpversion(), '5.3.0', '>=') ? SORT_LOCALE_STRING : SORT_STRING,
             $competence_criterion['CompetenceCriterionTeacher']
         );
 
@@ -438,13 +438,13 @@ class CompetenceCriteriaController extends AppController {
                 $student_id = $student['Student']['id'];
 
                 if (isset($data_user_rubrics[$student_id])) {
-                    $rubric_id = $data_user_rubrics[$student_id];
+                    $rubric_id = trim($data_user_rubrics[$student_id]);
 
                     if (isset($competence_criterion_rubrics_values[$rubric_id])) {
                         $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                         $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $id;
                         $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
-                    } elseif (empty(trim($rubric_id))) {
+                    } elseif (empty($rubric_id)) {
                         // Remove
                         unset($filteredData[$i]);
                         if (isset($student['CompetenceCriterionGrade']['id'])) {

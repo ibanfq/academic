@@ -10,7 +10,7 @@
 
 <?php require('_view_resume.ctp') ?>
 
-<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->here));?>
+<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->Html->url(null, true)));?>
 
 <fieldset>
 <legend>Criterios de evaluación</legend>

@@ -96,7 +96,7 @@
         $("input#teacher")
             .autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem})
             .result(function(event, item) {
-                var url = <?php echo $this->Javascript->object($this->Html->url(array('controller' => 'api_competence_goals', 'action' => 'by_teacher', 'teacher_id' => '00000000'))); ?>;
+                var url = <?php echo $this->Javascript->object($this->Html->url(array('controller' => 'api_competence_goals', '[method]' => 'GET', 'action' => 'by_teacher', 'teacher_id' => '00000000'))); ?>;
                 var teacher_id = item[1];
                 $("input#CompetenceGoalRequestTeacherId").val(teacher_id);
                 var goalIdSelect =  $("#CompetenceGoalRequestGoalId").prop('disabled', true);

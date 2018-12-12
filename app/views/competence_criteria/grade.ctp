@@ -7,7 +7,7 @@
 
 <h1>Evaluar criterio</h1>
 <?php require('_view_resume.ctp') ?>
-<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->here));?>
+<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->Html->url(null, true)));?>
 	<?php require('_form_students.ctp') ?>
 <?php echo $form->end('Modificar'); ?>
 

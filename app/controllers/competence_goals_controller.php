@@ -399,13 +399,13 @@ class CompetenceGoalsController extends AppController {
                 $criterion_id = $criterion['id'];
 
                 if (isset($data_criterion_rubrics[$criterion_id])) {
-                    $rubric_id = $data_criterion_rubrics[$criterion_id];
+                    $rubric_id = trim($data_criterion_rubrics[$criterion_id]);
                     
                     if (in_array($rubric_id, $competence_criterion_rubric_ids[$criterion_id])) {
                         $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                         $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
                         $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
-                    } elseif (empty(trim($rubric_id))) {
+                    } elseif (empty($rubric_id)) {
                         // Remove
                         unset($filteredData[$i]);
                         if (isset($criterion['CompetenceCriterionGrade']['id'])) {

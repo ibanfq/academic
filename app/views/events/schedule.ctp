@@ -441,6 +441,16 @@
                             $('#notice').addClass('success');
                             $('#notice').html("El evento se ha actualizado correctamente.");
                         }
+                    },
+                    error: function(xhr) {
+                        revertFunc();
+                        $('#notice').removeClass('success');
+                        $('#notice').addClass('error');
+                        if (xhr.status === 401) {
+                            $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+                        } else {
+                            $('#notice').html("No ha sido posible actualizar el evento.");
+                        }
                     }
                 });
             },
@@ -525,6 +535,16 @@
                             $('#notice').removeClass('error');
                             $('#notice').addClass('success');
                             $('#notice').html("El evento se ha actualizado correctamente.");
+                        }
+                    },
+                    error: function(xhr) {
+                        revertFunc();
+                        $('#notice').removeClass('success');
+                        $('#notice').addClass('error');
+                        if (xhr.status === 401) {
+                            $('#notice').html("Usted no tiene permisos para modificar este evento. Solo su dueño, los coordinadores de la asignatura o un administrador pueden hacerlo.");
+                        } else {
+                            $('#notice').html("No ha sido posible actualizar el evento.");
                         }
                     }
                 });
