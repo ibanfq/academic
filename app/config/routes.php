@@ -90,7 +90,37 @@
   Router::connect(
     '/api/competence_goals/by_teacher/:teacher_id',
     array('controller' => 'api_competence_goals', 'action' => 'by_teacher', '[method]' => 'GET'),
-    array('teacher_id' => '[0-9]+', 'pass' => array('teacher_id'))
+    array('teacher_id' => 'me|[0-9]+', 'pass' => array('teacher_id'))
+  );
+  Router::connect(
+    '/api/competence_goals/by_student/:student_id/:id',
+    array('controller' => 'api_competence_goals', 'action' => 'by_student', '[method]' => 'GET'),
+    array('student_id' => '[0-9]+', 'id' => '[0-9]+', 'pass' => array('student_id', 'id'))
+  );
+  // Grade competence goals
+  Router::connect(
+    '/api/competence_goals/grade_by_student/:student_id/:id',
+    array('controller' => 'api_competence_goals', 'action' => 'grade_by_student', '[method]' => 'POST'),
+    array('student_id' => '[0-9]+', 'id' => '[0-9]+', 'pass' => array('student_id', 'id'))
+  );
+  // Competence goal requests
+  Router::connect(
+    '/api/competence_goal_requests',
+    array('controller' => 'api_competence_goal_requests', 'action' => 'index', '[method]' => 'GET')
+  );
+  Router::connect(
+    '/api/competence_goal_requests/by_course/:course_id',
+    array('controller' => 'api_competence_goal_requests', 'action' => 'by_course', '[method]' => 'GET'),
+    array('course_id' => '[0-9]+', 'pass' => array('course_id'))
+  );
+  Router::connect(
+    '/api/competence_goal_requests',
+    array('controller' => 'api_competence_goal_requests', 'action' => 'add', '[method]' => 'POST')
+  );
+  Router::connect(
+    '/api/competence_goal_requests/:competence_goal_request_id',
+    array('controller' => 'api_competence_goal_requests', 'action' => 'delete', '[method]' => 'DELETE'),
+    array('competence_goal_request_id' => '[0-9]+', 'pass' => array('competence_goal_request_id'))
   );
 /**
  * ...and connect the rest of 'Pages' controller's urls.

@@ -6,8 +6,8 @@
 <?php $html->addCrumb('Evaluar criterio', "/competence_criteria/grade/{$competence_criterion['CompetenceCriterion']['id']}"); ?>
 
 <h1>Evaluar criterio</h1>
-<?php require('_view_resume.ctp') ?>
 <?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->Html->url(null, true)));?>
+	<?php require('_view_resume.ctp') ?>
 	<?php require('_form_students.ctp') ?>
 <?php echo $form->end('Modificar'); ?>
 

@@ -222,7 +222,7 @@ class ApiComponent extends Object {
   }
   
   function _sanitizeData(&$controller, $data) {
-    if (empty($data)) {
+    if (empty($data) || !is_array($data)) {
       return $data;
     }
     if (is_int(key($data))) {
@@ -231,18 +231,20 @@ class ApiComponent extends Object {
       }
     } else {
       foreach ($data as $model => $values) {
-        if (array_key_exists('password', $values)) {
-          unset($data[$model]['password']);
-        }
-        if (array_key_exists('dni', $values) || array_key_exists('phone', $values)) {
-          if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id'])) {
-            unset($data[$model]['dni']);
-            unset($data[$model]['phone']);
+        if (is_array($values)) {
+          if (array_key_exists('password', $values)) {
+            unset($data[$model]['password']);
           }
-        }
-        foreach ($values as $field => $value) {
-          if (is_array($value)) {
-            $data[$model][$field] = $this->_sanitizeData($controller, $value);
+          if (array_key_exists('dni', $values) || array_key_exists('phone', $values)) {
+            if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id'])) {
+              unset($data[$model]['dni']);
+              unset($data[$model]['phone']);
+            }
+          }
+          foreach ($values as $field => $value) {
+            if (is_array($value)) {
+              $data[$model][$field] = $this->_sanitizeData($controller, $value);
+            }
           }
         }
       }

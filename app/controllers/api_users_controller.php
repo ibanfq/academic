@@ -79,16 +79,25 @@ class ApiUsersController extends AppController {
         $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
         $offset = $this->Api->getParameter('offset', array('integer', '>=0'), 0);
         $q = $this->Api->getParameter('filter.q');
-        $type = $this->Api->getParameter('filter.type');
+        $types = $this->Api->getParameter('filter.type');
         
         if (!empty($q)) {
             $q = Sanitize::escape($q);
-            $where []= "(CONCAT(User.last_name, ' ', User.first_name) LIKE '%$q%' OR User.dni LIKE '%$q%')";
+            $where []= "(CONCAT(User.last_name, ' ', User.first_name) LIKE '%$q%' OR CONCAT(User.first_name, ' ', User.last_name) LIKE '%$q%' OR User.dni LIKE '%$q%')";
         }
         
-        if (!empty($type)) {
-            $q = Sanitize::escape($type);
-            $where []= "User.type = '$type'";
+        if (!empty($types)) {
+            $whereTypes = array();
+            foreach (explode(',', $types) as $type) {
+                $type = trim($type);
+                if (!empty($type)) {
+                    $type = Sanitize::escape($type);
+                    $whereTypes []= "User.type = '$type'";
+                }
+            }
+            if (!empty($whereTypes)) {
+                $where []= '(' . implode(' OR ', $whereTypes) . ')';
+            }
         }
         
         if ($this->Api->getStatus() === 'success') {

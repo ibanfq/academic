@@ -283,8 +283,14 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
-        $this->loadModel('User');
+        $response = $this->Api->call('GET', '/api/competence_goals/by_student/' . urlencode($student_id) . '/' . urlencode($id));
+        if ($response['status'] === 'error') {
+            $this->Session->setFlash($response['message']);
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+        $competence_goal = $response['data'];
 
+        $this->loadModel('User');
         $student = $this->User->find('first', array(
             'recursive' => -1,
             'conditions' => array(
@@ -292,17 +298,17 @@ class CompetenceGoalsController extends AppController {
                 'User.type' => 'Estudiante'
             )
         ));
-
         if (!$student) {
             $this->redirect(array('controller' => 'users', 'action' => 'index'));
         }
-
-        $competence_goal = $this->_getCompetenceGoalByStudent($student_id, $id, $this->Auth->user());
 
         $competence = $this->CompetenceGoal->Competence->find('first', array(
             'recursive' => -1,
             'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
         ));
+        if (!$competence) {
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
@@ -325,32 +331,17 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
-        $this->loadModel('User');
-
-        $student = $this->User->find('first', array(
-            'recursive' => -1,
-            'conditions' => array(
-                'User.id' => $student_id,
-                'User.type' => 'Estudiante'
-            )
-        ));
-
-
-        if (!$student) {
-            $this->redirect(array('controller' => 'users', 'action' => 'index'));
-        }
-
-        $competence_goal = $this->_getCompetenceGoalByStudent($student_id, $id, $this->Auth->user());
-
-        if (!$competence_goal) {
+        $response = $this->Api->call('GET', '/api/competence_goals/by_student/' . urlencode($student_id) . '/' . urlencode($id));
+        if ($response['status'] === 'error') {
+            $this->Session->setFlash($response['message']);
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
+        $competence_goal = $response['data'];
 
         $competence = $this->CompetenceGoal->Competence->find('first', array(
             'recursive' => -1,
             'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
         ));
-
         if (!$competence) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
@@ -373,6 +364,10 @@ class CompetenceGoalsController extends AppController {
                     $competence['Competence']['course_id']
                 ));
             }
+            
+            if (!empty($this->data)) {
+                $this->data['competence_goal_request_id'] = $this->params['named']['request_id'];
+            }
         }
 
         $competence_grades = array(
@@ -382,78 +377,46 @@ class CompetenceGoalsController extends AppController {
         if (empty($this->data)) {
             $this->data = $competence_grades;
         } else {
-            $data_criterion_rubrics = Set::combine(
-                isset($this->data['CompetenceCriterionGrade']) ? $this->data['CompetenceCriterionGrade'] : array(),
-                '{n}.criterion_id',
-                '{n}.rubric_id'
+            $response = $this->Api->call(
+                'POST',
+                '/api/competence_goals/grade_by_student/' . urlencode($student_id) . '/' . urlencode($id),
+                $this->data
             );
-            $competence_criterion_rubric_ids = set::combine(
-                $competence_goal['CompetenceCriterion'],
-                '{n}.id',
-                '{n}.CompetenceCriterionRubric.{n}.id'
-            );
-            $filteredData = Set::extract('/CompetenceCriterionGrade', $competence_grades);
-            $deletedGrades = array();
+            switch ($response['status']) {
+                case 'fail':
+                    $this->Session->setFlash('No se pudo guardar la evaluación. Por favor, revisa que has introducido todos los datos correctamente.');
+                    break;
+                case 'error':
+                    $this->Session->setFlash($response['message']);
+                    break;
+                case 'success':
+                    $this->Session->setFlash('La evaluación se ha modificado correctamente.');
 
-            foreach ($competence_goal['CompetenceCriterion'] as $i => $criterion) {
-                $criterion_id = $criterion['id'];
-
-                if (isset($data_criterion_rubrics[$criterion_id])) {
-                    $rubric_id = trim($data_criterion_rubrics[$criterion_id]);
-                    
-                    if (in_array($rubric_id, $competence_criterion_rubric_ids[$criterion_id])) {
-                        $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
-                        $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
-                        $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
-                    } elseif (empty($rubric_id)) {
-                        // Remove
-                        unset($filteredData[$i]);
-                        if (isset($criterion['CompetenceCriterionGrade']['id'])) {
-                            $deletedGrades[] = $criterion['CompetenceCriterionGrade']['id'];
-                        }
+                    if ($competence_goal_request) {
+                        $this->redirect(array(
+                            'controller' => 'competence_goal_requests',
+                            'action' => 'by_course',
+                            $competence['Competence']['course_id']
+                        ));
                     }
-                }
-            }
 
-            if (empty($filteredData) || $this->CompetenceGoal->CompetenceCriterion->CompetenceCriterionGrade->saveAll($filteredData)) {
-                if (!empty($deletedGrades)) {
-                    $this->CompetenceGoal->CompetenceCriterion->CompetenceCriterionGrade->deleteAll(
-                        array('CompetenceCriterionGrade.id' => $deletedGrades)
-                    );
-                }
-                $this->Session->setFlash('La evaluación se ha modificado correctamente.');
+                    if (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence') {
+                        $competence_id = $competence_goal['CompetenceGoal']['competence_id'];
+                        $this->redirect(array('controller' => 'competence', 'action' => 'view_by_student', $student_id, $competence_id));
+                    }
 
-                if ($competence_goal_request) {
-                    $competence_goal_request['CompetenceGoalRequest']['completed'] = date('Y-m-d H:i:s');
-                    $this->CompetenceGoal->CompetenceGoalRequest->save($competence_goal_request);
-                    $this->Email->reset();
-                    $this->Email->from = 'Academic <noreply@ulpgc.es>';
-                    $this->Email->to = $student['User']['username'];
-                    $this->Email->subject = "Objetivo evaluado por el profesor solicitado";
-                    $this->Email->sendAs = 'both';
-                    $this->Email->template = Configure::read('app.email.competence_goal_request_completed')
-                        ? Configure::read('app.email.competence_goal_request_completed')
-                        : 'competence_goal_request_completed';
-                    $this->set('competence', $competence);
-                    $this->set('competence_goal', $competence_goal);
-                    $this->set('teacher', $this->Auth->user());
-                    $this->Email->send();
-
-                    $this->redirect(array(
-                        'controller' => 'competence_goal_requests',
-                        'action' => 'by_course',
-                        $competence['Competence']['course_id']
-                    ));
-                }
-
-                if (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence') {
-                    $competence_id = $competence_goal['CompetenceGoal']['competence_id'];
-                    $this->redirect(array('controller' => 'competence', 'action' => 'view_by_student', $student_id, $competence_id));
-                }
-
-                $this->redirect(array('action' => 'view_by_student', $student_id, $id));
+                    $this->redirect(array('action' => 'view_by_student', $student_id, $id));
             }
         }
+
+        $this->loadModel('User');
+        $student = $this->User->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'User.id' => $student_id,
+                'User.type' => 'Estudiante'
+            )
+        ));
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
@@ -523,116 +486,6 @@ class CompetenceGoalsController extends AppController {
         $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_goal['CompetenceGoal']['competence_id']));
     }
 
-    function _getCompetenceGoalByStudent($student_id, $goal_id, $auth_user = null)
-    {
-        $competence_goal_joins = array(
-            array(
-                'table' => 'competence_criteria',
-                'alias' => 'CompetenceCriterion',
-                'type'  => 'INNER',
-                'conditions' => array(
-                    'CompetenceCriterion.goal_id = CompetenceGoal.id'
-                )
-            ),
-            array(
-                'table' => 'competence_criterion_subjects',
-                'alias' => 'CompetenceCriterionSubject',
-                'type'  => 'INNER',
-                'conditions' => array(
-                    'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
-                )
-            ),
-            array(
-                'table' => 'subjects_users',
-                'alias' => 'SubjectUser',
-                'type'  => 'INNER',
-                'conditions' => array(
-                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
-                    'SubjectUser.user_id' => $student_id
-                )
-            ),
-            array(
-                'table' => 'competence_criterion_grades',
-                'alias' => 'CompetenceCriterionGrade',
-                'type'  => 'LEFT',
-                'conditions' => array(
-                    'CompetenceCriterionGrade.criterion_id = CompetenceCriterion.id',
-                    'CompetenceCriterionGrade.student_id' => $student_id
-                )
-            )
-        );
-
-        $competence_goal_conditions = array(
-            'AND' => array(
-                'CompetenceGoal.id' => $goal_id
-            )
-        );
-
-        if ($auth_user && $auth_user['User']['type'] === "Profesor") {
-            $user_id = $auth_user['User']['id'];
-
-            $competence_goal_joins[] = array(
-                'table' => 'subjects',
-                'alias' => 'Subject',
-                'type'  => 'LEFT',
-                'conditions' => array(
-                    'Subject.id = CompetenceCriterionSubject.subject_id'
-                )
-            );
-
-            $competence_goal_joins[] = array(
-                'table' => 'competence_criterion_teachers',
-                'alias' => 'CompetenceCriterionTeacher',
-                'type'  => 'LEFT',
-                'conditions' => array(
-                    'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id'
-                )
-            );
-
-            $competence_goal_conditions['AND'][] = array(
-                'OR' => array(
-                    array('Subject.coordinator_id' => $user_id),
-                    array('Subject.practice_responsible_id' => $user_id),
-                    array('CompetenceCriterionTeacher.teacher_id' => $user_id)
-                )
-            );
-        }
-
-        $competence_goal_result = $this->CompetenceGoal->find('all', array(
-            'recursive' => -1,
-            'fields' => array('distinct CompetenceGoal.*, CompetenceCriterion.*, CompetenceCriterionGrade.*'),
-            'joins' => $competence_goal_joins,
-            'conditions' => $competence_goal_conditions,
-            'order' => array('CompetenceCriterion.code asc')
-        ));
-
-        if (!$competence_goal_result) {
-            return false;
-        }
-
-        $competence_goal = array(
-            'CompetenceGoal' => Set::extract($competence_goal_result, '0.CompetenceGoal'),
-            'CompetenceCriterion' => Set::filter(Set::merge(
-                Set::extract($competence_goal_result, '{n}.CompetenceCriterion'),
-                Set::extract($competence_goal_result, '/CompetenceCriterionGrade')
-            )
-        ));
-
-        foreach ($competence_goal['CompetenceCriterion'] as $i => $competence_criterion) {
-            $rubrics = $this->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->find('all', array(
-                'recursive' => -1,
-                'conditions' => array('CompetenceCriterionRubric.criterion_id' => $competence_criterion['id'])
-            ));
-            $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionRubric'] = Set::combine(
-                $rubrics,
-                '{n}.CompetenceCriterionRubric.id',
-                '{n}.CompetenceCriterionRubric'
-            );
-        }
-
-        return $competence_goal;
-    }
-  
     function _authorize()
     {
         parent::_authorize();

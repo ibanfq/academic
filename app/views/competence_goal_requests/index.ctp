@@ -29,7 +29,7 @@
 <?php endif; ?>
 
 <?php if ($auth->user('type') == "Estudiante") : ?>
-    <h2>Mis solicitudes de evaluación</h2>
+    <h2>Mis solicitudes pendientes de evaluación</h2>
 <?php endif; ?>
 
 <div>
@@ -96,7 +96,13 @@
         $("input#teacher")
             .autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem})
             .result(function(event, item) {
-                var url = <?php echo $this->Javascript->object($this->Html->url(array('controller' => 'api_competence_goals', '[method]' => 'GET', 'action' => 'by_teacher', 'teacher_id' => '00000000'))); ?>;
+                var url = <?php echo $this->Javascript->object(Router::url(array(
+                    'controller' => 'api_competence_goals',
+                    '[method]' => 'GET',
+                    'action' => 'by_teacher',
+                    'teacher_id' => '00000000',
+                    '?' => array('group_path' => 'CompetenceGoal.competence_id')
+                ))); ?>;
                 var teacher_id = item[1];
                 $("input#CompetenceGoalRequestTeacherId").val(teacher_id);
                 var goalIdSelect =  $("#CompetenceGoalRequestGoalId").prop('disabled', true);
@@ -109,10 +115,10 @@
                     success: function(response) {
                         var data = response.data;
                         goalIdSelect.find(':not(:first)').remove();
-                        $.each(data, function (competence_id, goals) {
-                            var competence = goals[Object.keys(goals)[0]].Competence;
+                        $.each(data, function () {
+                            var competence = this[0].Competence;
                             var group = $('<optgroup>').attr('label', competence.code + " - " + competence.definition);
-                            $.each(goals, function() {
+                            $.each(this, function() {
                                 var goal = this.CompetenceGoal;
                                 var option = $('<option />').val(goal.id).html(goal.code + " - " + goal.definition);
                                 if (this[0].has_requests && this[0].has_requests !== '0') {

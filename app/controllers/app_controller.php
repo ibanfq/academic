@@ -32,7 +32,7 @@ class AppController extends Controller {
     $this->Security->validatePost = false;
     
     if ($this->isApi) {
-      if (empty($_COOKIE[Configure::read('Session.cookie')])) {
+      if (session_id() === '' && empty($_COOKIE[Configure::read('Session.cookie')])) {
         // Disable sessions (Faking php session write)
         session_set_save_handler(
           array(__CLASS__, '__fakeSessionWrite'),

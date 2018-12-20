@@ -8,9 +8,9 @@
 
 <h1>Evaluar criterios por estudiante: <?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?></h1>
 
-<?php require('_view_resume.ctp') ?>
-
 <?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->Html->url(null, true)));?>
+
+<?php require('_view_resume.ctp') ?>
 
 <fieldset>
 <legend>Criterios de evaluación</legend>
