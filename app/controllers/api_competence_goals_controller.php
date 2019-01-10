@@ -451,7 +451,8 @@ class ApiCompetenceGoalsController extends AppController {
         
         // Process the input data
         // Initialize with current values
-        $filteredData = Set::extract('/CompetenceCriterionGrade', $competence_grades); // 
+
+        $filteredData = Set::extract('/CompetenceCriterionGrade', $competence_grades);
         $deletedGrades = array();
         // Loop over each criterion to fill $filteredData with the input data
         foreach ($competence_goal['CompetenceCriterion'] as $i => $criterion) {
@@ -460,7 +461,7 @@ class ApiCompetenceGoalsController extends AppController {
             if (isset($data_criterion_rubrics[$criterion_id])) {
                 $rubric_id = trim($data_criterion_rubrics[$criterion_id]);
                 
-                if (empty($rubric_id)) {
+                if ($rubric_id === '') {
                     // Remove if not rubric_id 
                     unset($filteredData[$i]);
                     if (isset($criterion['CompetenceCriterionGrade']['id'])) {
@@ -472,6 +473,9 @@ class ApiCompetenceGoalsController extends AppController {
                     $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
                 }
+            } elseif (!isset($filteredData[$i]['CompetenceCriterionGrade']['criterion_id'])) {
+                // If no in form and not persisted yet in database remove from filteredData
+                unset($filteredData[$i]);
             }
         }
 
