@@ -78,23 +78,37 @@ class CompetenceCriteriaController extends AppController {
             ),
             'conditions' => array('CompetenceCriterion.id' => $id),
         ));
-        
+
         if (!$competence_criterion) {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $user_id = $this->Auth->user('id');
         $coordinator_ids = array_merge(
             Set::extract('/CompetenceCriterionSubject/Subject/coordinator_id', $competence_criterion),
             Set::extract('/CompetenceCriterionSubject/Subject/practice_responsible_id', $competence_criterion)
         );
-        $teacher_ids = array_merge(
-            Set::extract('/CompetenceCriterionTeacher/teacher_id', $competence_criterion)
-        );
-        $auth_is_admin = $this->Auth->user('type') === 'Administrador';
-        $auth_is_coordinator = in_array($this->Auth->user('id'), $coordinator_ids);
-        $auth_is_teacher = in_array($this->Auth->user('id'), $teacher_ids);
+        $teacher_ids = Set::extract('/CompetenceCriterionTeacher/teacher_id', $competence_criterion);
+        $subject_ids = Set::extract('/CompetenceCriterionSubject/subject_id', $competence_criterion);
 
-        if (!$auth_is_admin && !$auth_is_coordinator && !$auth_is_teacher) {
+        $auth_is_admin = $this->Auth->user('type') === 'Administrador';
+        $auth_is_coordinator = in_array($user_id, $coordinator_ids);
+        $auth_is_teacher = in_array($user_id, $teacher_ids);
+        $auth_is_student = false;
+        
+        if ($this->Auth->user('type') === 'Estudiante' && ! empty($subject_ids)) {
+            $db = $this->CompetenceCriterion->getDataSource();
+            $subject_db_id_values = implode(', ', array_map(array($db, 'value'), $subject_ids));
+
+            $query = "SELECT subject_id FROM subjects_users SubjectUser"
+                . " WHERE SubjectUser.user_id = {$db->value($user_id)} "
+                . " AND SubjectUser.subject_id in ($subject_db_id_values)"
+            ;
+
+            $auth_is_student = (bool) $this->CompetenceCriterion->query($query . ' LIMIT 1');
+        }
+
+        if (!$auth_is_admin && !$auth_is_coordinator && !$auth_is_teacher && !$auth_is_student) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
@@ -791,11 +805,17 @@ class CompetenceCriteriaController extends AppController {
             'grade', 'grade_by_subject',
             'edit', 'edit_by_subject'
         );
+        $student_actions = array(
+            'view', 'view_by_subject'
+        );
 
         $this->set('section', 'competence');
 
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') !== "Administrador")) {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {
+                return true;
+            }
+            if (array_search($this->params['action'], $student_actions) !== false && ($this->Auth->user('type') === "Estudiante")) {
                 return true;
             }
             return false;

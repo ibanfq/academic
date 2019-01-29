@@ -1,6 +1,6 @@
 Hola
 
-Desde Academic te informarmos que la solicitud de evaluación del siguiente objetivo ha sido cancelada por el alumno.
+Desde Academic te informamos que la solicitud de evaluación del siguiente objetivo ha sido cancelada por el alumno.
 
 Competencia: <?php echo "{$competence_goal_request['CompetenceGoal']['Competence']['code']} - {$competence_goal_request['CompetenceGoal']['Competence']['definition']}\n" ?>
 Objetivo: <?php echo "{$competence_goal_request['CompetenceGoal']['code']} - {$competence_goal_request['CompetenceGoal']['definition']}\n" ?>

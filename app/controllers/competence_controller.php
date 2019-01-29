@@ -33,10 +33,9 @@ class CompetenceController extends AppController {
             )
         );
 
-        if ($this->Auth->user('type') === "Profesor")
-        {
-            $user_id = $this->Auth->user('id');
+        $user_id = $this->Auth->user('id');
 
+        if ($this->Auth->user('type') === "Profesor" || $this->Auth->user('type') === "Estudiante") {
             $competence_joins[] = array(
                 'table' => 'competence_goals',
                 'alias' => 'CompetenceGoal',
@@ -63,7 +62,9 @@ class CompetenceController extends AppController {
                     'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
                 )
             );
+        }
 
+        if ($this->Auth->user('type') === "Profesor") {
             $competence_joins[] = array(
                 'table' => 'subjects',
                 'alias' => 'Subject',
@@ -87,6 +88,16 @@ class CompetenceController extends AppController {
                     array('Subject.coordinator_id' => $user_id),
                     array('Subject.practice_responsible_id' => $user_id),
                     array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                )
+            );
+        } else if ($this->Auth->user('type') === "Estudiante") {
+            $competence_joins[] = array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $user_id
                 )
             );
         }
@@ -163,9 +174,10 @@ class CompetenceController extends AppController {
 
         $competence_conditions = array();
 
+        $user_id = $this->Auth->user('id');
+
         if ($this->Auth->user('type') === "Profesor")
         {
-            $user_id = $this->Auth->user('id');
             if ($user_id !== $subject['Subject']['coordinator_id']
                 && $user_id !== $subject['Subject']['practice_responsible_id']
             ) {
@@ -179,6 +191,16 @@ class CompetenceController extends AppController {
                     )
                 );
             }
+        } else if ($this->Auth->user('type') === "Estudiante") {
+            $competence_joins[] = array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $user_id
+                )
+            );
         }
 
         $competence = $this->Competence->find('all', array(
@@ -362,10 +384,9 @@ class CompetenceController extends AppController {
             )
         );
 
-        if ($this->Auth->user('type') === "Profesor")
-        {
-            $user_id = $this->Auth->user('id');
+        $user_id = $this->Auth->user('id');
 
+        if ($this->Auth->user('type') === "Profesor" || $this->Auth->user('type') === "Estudiante") {
             $competence_joins[] = array(
                 'table' => 'competence_criteria',
                 'alias' => 'CompetenceCriterion',
@@ -383,7 +404,9 @@ class CompetenceController extends AppController {
                     'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
                 )
             );
+        }
 
+        if ($this->Auth->user('type') === "Profesor") {
             $competence_joins[] = array(
                 'table' => 'subjects',
                 'alias' => 'Subject',
@@ -407,6 +430,16 @@ class CompetenceController extends AppController {
                     array('Subject.coordinator_id' => $user_id),
                     array('Subject.practice_responsible_id' => $user_id),
                     array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                )
+            );
+        } else if ($this->Auth->user('type') === "Estudiante") {
+            $competence_joins[] = array(
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $user_id
                 )
             );
         }
@@ -495,33 +528,31 @@ class CompetenceController extends AppController {
             )
         );
 
+        $user_id = $this->Auth->user('id');
+
         if ($this->Auth->user('type') === "Profesor")
         {
-            $user_id = $this->Auth->user('id');
-
+            if ($user_id !== $subject['Subject']['coordinator_id']
+                && $user_id !== $subject['Subject']['practice_responsible_id']
+            ) {
+                $competence_joins[] = array(
+                    'table' => 'competence_criterion_teachers',
+                    'alias' => 'CompetenceCriterionTeacher',
+                    'type'  => 'INNER',
+                    'conditions' => array(
+                        'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id',
+                        'CompetenceCriterionTeacher.teacher_id' => $user_id
+                    )
+                );
+            }
+        } else if ($this->Auth->user('type') === "Estudiante") {
             $competence_joins[] = array(
-                'table' => 'subjects',
-                'alias' => 'Subject',
-                'type'  => 'LEFT',
+                'table' => 'subjects_users',
+                'alias' => 'SubjectUser',
+                'type'  => 'INNER',
                 'conditions' => array(
-                    'Subject.id = CompetenceCriterionSubject.subject_id'
-                )
-            );
-
-            $competence_joins[] = array(
-                'table' => 'competence_criterion_teachers',
-                'alias' => 'CompetenceCriterionTeacher',
-                'type'  => 'LEFT',
-                'conditions' => array(
-                    'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id'
-                )
-            );
-
-            $competence_conditions['AND'][] = array(
-                'OR' => array(
-                    array('Subject.coordinator_id' => $user_id),
-                    array('Subject.practice_responsible_id' => $user_id),
-                    array('CompetenceCriterionTeacher.teacher_id' => $user_id)
+                    'SubjectUser.subject_id = CompetenceCriterionSubject.subject_id',
+                    'SubjectUser.user_id' => $user_id
                 )
             );
         }
@@ -743,6 +774,9 @@ class CompetenceController extends AppController {
             'by_course', 'by_subject', 'by_student',
             'view', 'view_by_subject', 'view_by_student'
         );
+        $student_actions = array(
+            'by_course', 'by_subject', 'view', 'view_by_subject'
+        );
 
         $this->set('section', 'competence');
 
@@ -750,10 +784,13 @@ class CompetenceController extends AppController {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {
                 return true;
             }
+            if (array_search($this->params['action'], $student_actions) !== false && ($this->Auth->user('type') === "Estudiante")) {
+                return true;
+            }
             return false;
         }
 
-        if ($this->Auth->user('type') == "Estudiante") {
+        if ($this->Auth->user('type') === "Estudiante" && array_search($this->params['action'], $student_actions) === false) {
             return false;
         }
 

@@ -109,6 +109,11 @@
     array('controller' => 'api_competence_goal_requests', 'action' => 'index', '[method]' => 'GET')
   );
   Router::connect(
+    '/api/competence_goal_requests/by_goal/:goal_id',
+    array('controller' => 'api_competence_goal_requests', 'action' => 'by_goal', '[method]' => 'GET'),
+    array('goal_id' => '[0-9]+', 'pass' => array('goal_id'))
+  );
+  Router::connect(
     '/api/competence_goal_requests/by_course/:course_id',
     array('controller' => 'api_competence_goal_requests', 'action' => 'by_course', '[method]' => 'GET'),
     array('course_id' => '[0-9]+', 'pass' => array('course_id'))

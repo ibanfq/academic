@@ -14,38 +14,40 @@
 
 <fieldset>
 <legend>Criterios de evaluación</legend>
-    <table>
-        <thead>
-            <tr>
-	            <th style="width:6em">Código</th>
-	            <th style="width:50%">Definición</th>
-	            <th style="width:6em">Valoración nota final</th>
-	            <th style="width:50%">Rúbrica</th>
-        	</tr>
-      	</thead>
-      	<tbody id="competence_criterion_grades">
-            <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
-        	<?php $criterion_id = $criterion['id'] ?>
-        	<?php $competence_criterion_rubrics_values = set::combine($criterion, 'CompetenceCriterionRubric.{n}.id', 'CompetenceCriterionRubric.{n}.title'); ?>
-        	<?php $competence_criterion_rubrics_definitions = set::combine($criterion, 'CompetenceCriterionRubric.{n}.id', 'CompetenceCriterionRubric.{n}.definition'); ?>
-	          	<tr>
-	              	<td>
-		                <?php echo h($criterion['code']) ?>
-	              	</td>
-	              	<td>
-		                <?php echo h($criterion['definition']) ?>
-	              	</td>
-	              	<td>
-		                <?php echo $form->hidden("CompetenceCriterionGrade.{$criterion_id}.criterion_id", array('value' => $criterion_id)); ?>
-		                <?php echo $form->select("CompetenceCriterionGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
-	              	</td>
-	              	<td>
-		                <span class="competence_rubric_definition"><?php echo $this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id'] ? h($competence_criterion_rubrics_definitions[$this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']]) : '' ?></span>
-	              	</td>
-		        </tr>
-	        <?php endforeach; ?>
-      </tbody>
-  </table>
+	<div class="horizontal-scrollable-content">
+		<table>
+			<thead>
+				<tr>
+					<th style="width:6em">Código</th>
+					<th style="width:50%">Definición</th>
+					<th style="width:6em">Valoración nota final</th>
+					<th style="width:50%">Rúbrica</th>
+				</tr>
+			</thead>
+			<tbody id="competence_criterion_grades">
+				<?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
+				<?php $criterion_id = $criterion['id'] ?>
+				<?php $competence_criterion_rubrics_values = set::combine($criterion, 'CompetenceCriterionRubric.{n}.id', 'CompetenceCriterionRubric.{n}.title'); ?>
+				<?php $competence_criterion_rubrics_definitions = set::combine($criterion, 'CompetenceCriterionRubric.{n}.id', 'CompetenceCriterionRubric.{n}.definition'); ?>
+					<tr>
+						<td>
+							<?php echo h($criterion['code']) ?>
+						</td>
+						<td>
+							<?php echo h($criterion['definition']) ?>
+						</td>
+						<td>
+							<?php echo $form->hidden("CompetenceCriterionGrade.{$criterion_id}.criterion_id", array('value' => $criterion_id)); ?>
+							<?php echo $form->select("CompetenceCriterionGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
+						</td>
+						<td>
+							<span class="competence_rubric_definition"><?php echo $this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id'] ? h($competence_criterion_rubrics_definitions[$this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']]) : '' ?></span>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	</div>
 </fieldset>
 	
 <?php echo $form->end(isset($competence_goal_request)? 'Compeletar solicitud de evaluación' : 'Modificar'); ?>

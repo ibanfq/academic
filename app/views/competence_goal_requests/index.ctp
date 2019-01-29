@@ -1,3 +1,4 @@
+<?php $index_by_course = isset($index_by_course) ? $index_by_course : false ?>
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
@@ -12,7 +13,7 @@
 <?php if ($auth->user('type') == "Estudiante") : ?>
     <fieldset>
     <legend>Nueva solicitud evaluación</legend>
-        <?php echo $this->Form->create('CompetenceGoalRequest', array('action' => 'add')) ?>
+        <?php echo $this->Form->create('CompetenceGoalRequest', array('action' => $index_by_course ? "add_by_course/{$course['Course']['id']}" : 'add')) ?>
 
         <div class="input">
             <dl>
@@ -36,50 +37,66 @@
     <?php if (empty($competence_goal_requests)): ?>
         No tienes solicitudes de evaluación pendiente
     <?php else: ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>
+        <div class="horizontal-scrollable-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <?php if ($auth->user('type') == "Estudiante") : ?>
+                                Profesor
+                            <?php else: ?>
+                                Estudiante
+                            <?php endif; ?>
+                        </th>
+                        <th>Competencia</th>
+                        <th>Objetivo</th>
                         <?php if ($auth->user('type') == "Estudiante") : ?>
-                            Profesor
+                            <th></th>
                         <?php else: ?>
-                            Estudiante
+                            <th></th>
+                            <th></th>
                         <?php endif; ?>
-                    </th>
-                    <th>Competencia</th>
-                    <th>Objetivo</th>
-                    <?php if ($auth->user('type') == "Estudiante") : ?>
-                        <th></th>
-                    <?php else: ?>
-                        <th></th>
-                        <th></th>
-                    <?php endif; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($competence_goal_requests as $row): ?>
-                <tr>
-                    <td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($competence_goal_requests as $row): ?>
+                    <tr>
+                        <td>
+                            <?php if ($auth->user('type') == "Estudiante") : ?>
+                                <?php echo "{$row['Teacher']['last_name']}, {$row['Teacher']['first_name']}" ?>
+                            <?php else: ?>
+                                <?php echo $html->link("{$row['Student']['last_name']}, {$row['Student']['first_name']}", array('controller' => 'users', 'action' => 'view', $row['Student']['id'])) ?>
+                            <?php endif; ?>
+                            
+                        </td>
+                        <td><?php echo $html->link("{$row['Competence']['code']} - {$row['Competence']['definition']}", array('controller' => 'competence', 'action' => 'view', $row['Competence']['id'])) ?></td>
+                        <td><?php echo $html->link("{$row['CompetenceGoal']['code']} - {$row['CompetenceGoal']['definition']}", array('controller' => 'competence_goals', 'action' => 'view', $row['CompetenceGoal']['id'])) ?></td>
                         <?php if ($auth->user('type') == "Estudiante") : ?>
-                            <?php echo $html->link("{$row['Teacher']['last_name']}, {$row['Teacher']['first_name']}", array('controller' => 'users', 'action' => 'view', $row['Teacher']['id'])) ?>
+                            <td><?php echo $html->link(
+                                'Cancelar',
+                                $index_by_course
+                                    ? array('action' => 'reject_by_course', $course['Course']['id'], $row['CompetenceGoalRequest']['id'])
+                                    : array('action' => 'reject', $row['CompetenceGoalRequest']['id']),
+                                null,
+                                'Va a proceder a cancelar la solicitud de evaluación. ¿Está seguro que deseas continuar?')
+                            ?></td>
                         <?php else: ?>
-                            <?php echo $html->link("{$row['Student']['last_name']}, {$row['Student']['first_name']}", array('controller' => 'users', 'action' => 'view', $row['Student']['id'])) ?>
+                            <td><?php echo $html->link('Evaluar', array('controller' => 'competence_goals', 'action' => 'grade_by_student', $row['Student']['id'], $row['CompetenceGoal']['id'], 'request_id' => $row['CompetenceGoalRequest']['id'])) ?></td>
+                            <td><?php echo $html->link(
+                                'Rechazar',
+                                $index_by_course
+                                    ? array('action' => 'reject_by_course', $course['Course']['id'], $row['CompetenceGoalRequest']['id'])
+                                    : array('action' => 'reject', $row['CompetenceGoalRequest']['id']),
+                                null,
+                                'Va a proceder a rechazar la solicitud de evaluación. ¿Está seguro que deseas continuar?')
+                            ?></td>
                         <?php endif; ?>
-                        
-                    </td>
-                    <td><?php echo "{$row['Competence']['code']} - {$row['Competence']['definition']}" ?></td>
-                    <td><?php echo "{$row['CompetenceGoal']['code']} - {$row['CompetenceGoal']['definition']}" ?></td>
-                    <?php if ($auth->user('type') == "Estudiante") : ?>
-                        <td><?php echo $html->link('Cancelar', array('action' => 'reject', $row['CompetenceGoalRequest']['id'], ), null, 'Va a proceder a cancelar la solicitud de evaluación. ¿Está seguro que deseas continuar?') ?></td>
-                    <?php else: ?>
-                        <td><?php echo $html->link('Evaluar', array('controller' => 'competence_goals', 'action' => 'grade_by_student', $row['Student']['id'], $row['CompetenceGoal']['id'], 'request_id' => $row['CompetenceGoalRequest']['id'])) ?></td>
-                        <td><?php echo $html->link('Rechazar', array('action' => 'reject_by_course', $course['Course']['id'], $row['CompetenceGoalRequest']['id']), null, 'Va a proceder a rechazar la solicitud de evaluación. ¿Está seguro que deseas continuar?') ?></td>
-                    <?php endif; ?>
-                </tr>
-                <?php endforeach; ?>
-                
-            </tbody>
-        </table>
+                    </tr>
+                    <?php endforeach; ?>
+                    
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
 </div>
 

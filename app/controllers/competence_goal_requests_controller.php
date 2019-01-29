@@ -62,8 +62,35 @@ class CompetenceGoalRequestsController extends AppController {
 
     function add()
     {
+        $redirect = array('action' => 'index');
+
         if (!isset($this->data['CompetenceGoalRequest']['goal_id'], $this->data['CompetenceGoalRequest']['teacher_id'])) {
-            $this->redirect(array('action' => 'index'));
+            $this->redirect($redirect);
+        }
+
+        if (!empty($this->params['url']['referer'])) {
+            $referer_parts = explode(':', $this->params['url']['referer']);
+            $referer_view = implode(':', array_slice($referer_parts, 0, 2));
+            switch ($referer_view) {
+                case 'competence_goals:view':
+                    $redirect = array(
+                        'controller' => 'competence_goals',
+                        'action' => 'view',
+                        $this->data['CompetenceGoalRequest']['goal_id']
+                    );
+                    break;
+                case 'competence_goals:view_by_subject':
+                    $subject_id = isset($referer_parts[2]) ? intval($referer_parts[2]) : $referer_parts[2];
+                    if ($subject_id) {
+                        $redirect = array(
+                            'controller' => 'competence_goals',
+                            'action' => 'view_by_subject',
+                            $subject_id,
+                            $this->data['CompetenceGoalRequest']['goal_id']
+                        );
+                    }
+                    break;
+            }
         }
 
         $response = $this->Api->call('POST', '/api/competence_goal_requests', $this->data);
@@ -71,27 +98,102 @@ class CompetenceGoalRequestsController extends AppController {
         switch ($response['status']) {
             case 'fail':
                 $this->Session->setFlash('No se ha podido crear la solicitud de evaluación');
-                $this->redirect(array('action' => 'index'));
                 break;
             case 'error':
                 if ($response['code'] !== 404) {
                     $this->Session->setFlash($response['message']);
                 }
-                $this->redirect(array('action' => 'index'));
                 break;
             case 'success':
                 $this->Session->setFlash('La solicitud se ha realizado correctamente');
         }
 
-        $this->index();
+        $this->redirect($redirect);
+    }
+
+    function add_by_course($course_id = null)
+    {
+        $course_id = $course_id === null ? null : intval($course_id);
+        
+        if (!isset($course_id)) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $redirect = array('action' => 'by_course', $course_id);
+        
+        if (!isset($this->data['CompetenceGoalRequest']['goal_id'], $this->data['CompetenceGoalRequest']['teacher_id'])) {
+            $this->redirect($redirect);
+        }
+
+        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Course.id' => $course_id)
+        ));
+
+        if (!$course) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $response = $this->Api->call('POST', '/api/competence_goal_requests', $this->data);
+
+        switch ($response['status']) {
+            case 'fail':
+                $this->Session->setFlash('No se ha podido crear la solicitud de evaluación');
+                break;
+            case 'error':
+                if ($response['code'] !== 404) {
+                    $this->Session->setFlash($response['message']);
+                }
+                break;
+            case 'success':
+                $this->Session->setFlash('La solicitud se ha realizado correctamente');
+        }
+
+        $this->redirect($redirect);
     }
 
     function reject($id = null)
     {
+        $redirect = array('action' => 'index');
+
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('action' => 'index'));
+            $this->redirect($redirect);
+        }
+
+        $goal_request = $this->CompetenceGoalRequest->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('CompetenceGoalRequest.id' => $id)
+        ));
+
+        if (!$goal_request) {
+            $this->redirect($redirect);
+        }
+
+        if (!empty($this->params['url']['referer'])) {
+            $referer_parts = explode(':', $this->params['url']['referer']);
+            $referer_view = implode(':', array_slice($referer_parts, 0, 2));
+            switch ($referer_view) {
+                case 'competence_goals:view':
+                    $redirect = array(
+                        'controller' => 'competence_goals',
+                        'action' => 'view',
+                        $goal_request['CompetenceGoalRequest']['goal_id']
+                    );
+                    break;
+                case 'competence_goals:view_by_subject':
+                    $subject_id = isset($referer_parts[2]) ? intval($referer_parts[2]) : $referer_parts[2];
+                    if ($subject_id) {
+                        $redirect = array(
+                            'controller' => 'competence_goals',
+                            'action' => 'view_by_subject',
+                            $subject_id,
+                            $goal_request['CompetenceGoalRequest']['goal_id']
+                        );
+                    }
+                    break;
+            }
         }
 
         $response = $this->Api->call('DELETE', '/api/competence_goal_requests/'.urlencode($id));
@@ -110,7 +212,7 @@ class CompetenceGoalRequestsController extends AppController {
                 }
         }
 
-        $this->redirect(array('action' => 'index'));
+        $this->redirect($redirect);
     }
 
     function reject_by_course($course_id = null, $id = null)
@@ -160,16 +262,19 @@ class CompetenceGoalRequestsController extends AppController {
             'by_course'
         );
         $student_actions = array(
-            'index', 'reject', 'add'
+            'index', 'by_course', 'reject', 'reject_by_course', 'add', 'add_by_course'
         );
         $only_student_actions = array(
-            'add'
+            'add', 'add_by_course'
         );
 
         $this->set('section', 'competence');
 
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') !== "Administrador")) {
             if ((array_search($this->params['action'], $teacher_actions) !== false) && ($this->Auth->user('type') === "Profesor")) {
+                return true;
+            }
+            if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') === "Estudiante")) {
                 return true;
             }
             return false;

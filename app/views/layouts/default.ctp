@@ -55,9 +55,8 @@
                     <?php endif; ?>
 
                 <?php elseif ($auth->user('type') == "Estudiante"): ?>
-                    <li class="<?php echo ($section == 'courses' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
+                    <li class="<?php echo ($section == 'courses' || $section == 'competence' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/courses">Cursos</a></li>
                     <li class="<?php echo ($section == 'my_subjects' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users/my_subjects">Mis asignaturas</a></li>
-                    <li class="<?php echo ($section == 'competence' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/competence_goal_requests">Competencias</a></li>
                     <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="<?php echo PATH?>/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
                 <?php endif; ?>
                 

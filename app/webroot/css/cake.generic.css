@@ -197,6 +197,32 @@ div.actions h3 {
 	padding-top:0;
 	color:#777;
 }
+.mod_touchevents fieldset {
+	max-width: 100%;
+	min-width: 0;
+}
+.mod_touchevents div.horizontal-scrollable-content {
+	max-width: 100%;
+	overflow-y: auto;
+}
+.mod_touchevents div.horizontal-scrollable-content::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+.mod_touchevents div.horizontal-scrollable-content::-webkit-scrollbar:vertical {
+    width: 12px;
+}
+.mod_touchevents div.horizontal-scrollable-content::-webkit-scrollbar:horizontal {
+    height: 12px;
+}
+.mod_touchevents div.horizontal-scrollable-content::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 10px;
+    border: 2px solid #ffffff;
+}
+.mod_touchevents div.horizontal-scrollable-content::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background-color: #ffffff;
+}
 
 
 /** Tables **/

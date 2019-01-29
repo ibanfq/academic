@@ -14,7 +14,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
         $teacher_actions = array(
         );
         $student_actions = array(
-            'index', 'by_course', 'delete', 'add'
+            'index', 'by_course', 'by_goal', 'delete', 'add'
         );
         $only_student_actions = array(
             'add'
@@ -48,7 +48,28 @@ class ApiCompetenceGoalRequestsController extends AppController {
             return;
         }
 
-        $competence_goal_requests = $this->_get_from_course_id($course['id']);
+        $competence_goal_requests = $this->_get_from($course['id']);
+
+        $this->Api->setData($competence_goal_requests);
+        $this->Api->respond($this);
+    }
+
+    function by_goal($goal_id)
+    {
+        $goal_id = intval($goal_id);
+
+        $goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('CompetenceGoal.id' => $goal_id)
+        ));
+
+        if (!$goal) {
+            $this->Api->setError('No se ha encontrado el objetivo.', 404);
+            $this->Api->respond($this);
+            return;
+        }
+
+        $competence_goal_requests = $this->_get_from(null, $goal['CompetenceGoal']['id']);
 
         $this->Api->setData($competence_goal_requests);
         $this->Api->respond($this);
@@ -69,7 +90,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
             return;
         }
 
-        $competence_goal_requests = $this->_get_from_course_id($course['Course']['id']);
+        $competence_goal_requests = $this->_get_from($course['Course']['id']);
 
         $this->Api->setData($competence_goal_requests);
         $this->Api->respond($this);
@@ -250,7 +271,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
         $this->Api->respond($this);
     }
 
-    function _get_from_course_id($course_id)
+    function _get_from($course_id = null, $goal_id = null)
     {
         $user_id = $this->Auth->user('id');
 
@@ -283,10 +304,14 @@ class ApiCompetenceGoalRequestsController extends AppController {
                 'table' => 'competence',
                 'alias' => 'Competence',
                 'type'  => 'INNER',
-                'conditions' => array(
-                    'Competence.id = CompetenceGoal.competence_id',
-                    'Competence.course_id' => $course_id
-                )
+                'conditions' => isset($course_id)
+                    ? array(
+                        'Competence.id = CompetenceGoal.competence_id',
+                        'Competence.course_id' => $course_id
+                    )
+                    : array(
+                        'Competence.id = CompetenceGoal.competence_id',
+                    )
             ),
             array(
                 'table' => 'competence_criteria',
@@ -322,6 +347,10 @@ class ApiCompetenceGoalRequestsController extends AppController {
                 'CompetenceGoalRequest.rejected is null',
             )
         );
+
+        if (isset($goal_id)) {
+            $competence_goal_request_conditions['AND']['CompetenceGoalRequest.goal_id'] = $goal_id;
+        }
 
         if ($this->Auth->user('type') === "Estudiante") {
             $competence_goal_request_conditions['AND']['CompetenceGoalRequest.student_id'] = $user_id;

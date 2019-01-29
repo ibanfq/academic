@@ -32,25 +32,27 @@
 
     <fieldset>
     <legend>Objetivos de aprendizaje</legend>
-        <table>
-          <thead>
-              <tr>
-                  <th>Código</th>
-                  <th>Definición</th>
-                  <th></th>
-                  <th></th>
-              </tr>
-          </thead>
-          <tbody>
-              <?php foreach ($competence['CompetenceGoal'] as $goal): ?>
-              <tr>
-                    <td><?php echo $html->link($goal['code'], array('controller' => 'competence_goals', 'action' => 'view_by_student', $student['User']['id'], $goal['id'])) ?></td>
-                    <td><?php echo h($goal['definition']) ?></td>
-                    <td><?php echo $html->link('Criterios', array('controller' => 'competence_goals', 'action' => 'view_by_student', $student['User']['id'], $goal['id'])) ?></td>
-                    <td><?php echo $html->link('Evaluar', array('controller' => 'competence_goals', 'action' => 'grade_by_student', $student['User']['id'], $goal['id'], 'ref' => 'competence')) ?></td>
-              </tr>
-              <?php endforeach; ?>
-          </tbody>
-      </table>
+        <div class="horizontal-scrollable-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Definición</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($competence['CompetenceGoal'] as $goal): ?>
+                    <tr>
+                        <td><?php echo $html->link($goal['code'], array('controller' => 'competence_goals', 'action' => 'view_by_student', $student['User']['id'], $goal['id'])) ?></td>
+                        <td><?php echo h($goal['definition']) ?></td>
+                        <td><?php echo $html->link('Criterios', array('controller' => 'competence_goals', 'action' => 'view_by_student', $student['User']['id'], $goal['id'])) ?></td>
+                        <td><?php echo $html->link('Evaluar', array('controller' => 'competence_goals', 'action' => 'grade_by_student', $student['User']['id'], $goal['id'], 'ref' => 'competence')) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </fieldset>
 </div>

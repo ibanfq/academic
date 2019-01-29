@@ -3,7 +3,7 @@
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb("Competencia {$competence['Competence']['code']}", "/competence/view/{$competence['Competence']['id']}"); ?>
 
-<?php if ($auth->user('type') == "Profesor"): ?>
+<?php if ($auth->user('type') == "Profesor" || $auth->user('type') == "Estudiante"): ?>
     <h1>Mis objetivos de aprendizaje</h1>
 <?php else: ?>
     <h1>Objetivos de aprendizaje</h1>
@@ -35,23 +35,25 @@
 
     <fieldset>
     <legend>Objetivos de aprendizaje</legend>
-        <table>
-          <thead>
-              <tr>
-                  <th>Código</th>
-                  <th>Definición</th>
-                  <th></th>
-              </tr>
-          </thead>
-          <tbody>
-              <?php foreach ($competence['CompetenceGoal'] as $goal): ?>
-              <tr>
-                  <td><?php echo $html->link($goal['code'], array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
-                  <td><?php echo h($goal['definition']) ?></td>
-                  <td><?php echo $html->link('Criterios', array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
-              </tr>
-              <?php endforeach; ?>
-          </tbody>
-      </table>
+        <div class="horizontal-scrollable-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Definición</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($competence['CompetenceGoal'] as $goal): ?>
+                    <tr>
+                        <td><?php echo $html->link($goal['code'], array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
+                        <td><?php echo h($goal['definition']) ?></td>
+                        <td><?php echo $html->link('Criterios', array('controller' => 'competence_goals', 'action' => 'view', $goal['id'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </fieldset>
 </div>

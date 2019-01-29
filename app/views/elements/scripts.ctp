@@ -1,5 +1,6 @@
 <?php 
-	echo $scripts_for_layout;
+  echo $scripts_for_layout;
+  echo $javascript->link('modernizr'); 
 	echo $javascript->link('jquery'); 
 	echo $javascript->link('jquery-ui');
 	echo $javascript->link('jquery.autocomplete');

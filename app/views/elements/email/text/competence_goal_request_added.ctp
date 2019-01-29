@@ -1,6 +1,6 @@
 Hola
 
-Desde Academic te informarmos que has recibido una solicitud de evaluación del siguiente objetivo:
+Desde Academic te informamos que has recibido una solicitud de evaluación del siguiente objetivo:
 
 Competencia: <?php echo "{$competence['Competence']['code']} - {$competence['Competence']['definition']}\n" ?>
 Objetivo: <?php echo "{$competence_goal['CompetenceGoal']['code']} - {$competence_goal['CompetenceGoal']['definition']}\n" ?>

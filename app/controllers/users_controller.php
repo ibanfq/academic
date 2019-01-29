@@ -217,6 +217,88 @@ class UsersController extends AppController {
         ));
         $this->set('users', $users);
     }
+
+    function find_teachers_by_competence_goal_and_name($goal_id) {
+        $goal_id = $goal_id === null ? null : intval($goal_id);
+        App::import('Sanitize');
+
+        $name_conditions = array();
+        foreach (explode(' ', $this->params['url']['q']) as $q) {
+            $q = '%'.Sanitize::escape($q).'%';
+            $name_conditions[] = array(
+                'OR' => array(
+                    'User.first_name like' => $q,
+                    'User.last_name like' => $q
+                )
+            );
+        }
+
+        $student_id = null;
+        if ($this->Auth->user('type') === 'Estudiante') {
+            $student_id = $this->Auth->user('id');
+        }
+        
+        $users = $this->User->find('all', array(
+            'fields' => array('distinct User.id', 'User.first_name', 'User.last_name'),
+            'joins' => array(
+                array(
+                    'table' => 'competence_criteria',
+                    'alias' => 'CompetenceCriterion',
+                    'type'  => 'LEFT',
+                    'conditions' => array(
+                        'CompetenceCriterion.goal_id', $goal_id
+                    )
+                ),
+                array(
+                    'table' => 'competence_criterion_subjects',
+                    'alias' => 'CompetenceCriterionSubject',
+                    'type'  => 'LEFT',
+                    'conditions' => array(
+                        'CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id'
+                    )
+                ),
+                array(
+                    'table' => 'subjects',
+                    'alias' => 'Subject',
+                    'type'  => 'LEFT',
+                    'conditions' => array(
+                        'Subject.id = CompetenceCriterionSubject.subject_id',
+                        'OR' => array(
+                            'Subject.coordinator_id = User.id',
+                            'Subject.practice_responsible_id = User.id'
+                        )
+                    )
+                ),
+                array(
+                    'table' => 'competence_criterion_teachers',
+                    'alias' => 'CompetenceCriterionTeacher',
+                    'type'  => 'LEFT',
+                    'conditions' => array(
+                        'CompetenceCriterionTeacher.criterion_id = CompetenceCriterion.id',
+                        'CompetenceCriterionTeacher.teacher_id = User.id'
+                    )
+                ),
+            ),
+            'recursive' => 0,
+            'conditions' => array(
+                'OR' => array(
+                    array('User.type' => 'Profesor'),
+                    array('User.type' => 'Administrador')
+                ),
+                'AND' => $name_conditions,
+                'OR' => array(
+                    array('User.type' => 'Profesor'),
+                    array('User.type' => 'Administrador')
+                ),
+                'OR' => array(
+                    'Subject.id IS NOT NULL',
+                    'CompetenceCriterionTeacher.id IS NOT NULL'
+                )
+            ),
+            'order' => array('User.first_name', 'User.last_name')
+        ));
+        $this->set('users', $users);
+    }
     
     /**
      * Find students by name

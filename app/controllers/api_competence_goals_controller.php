@@ -464,6 +464,7 @@ class ApiCompetenceGoalsController extends AppController {
                 if ($rubric_id === '') {
                     // Remove if not rubric_id 
                     unset($filteredData[$i]);
+                    $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = null;
                     if (isset($criterion['CompetenceCriterionGrade']['id'])) {
                         $deletedGrades[] = $criterion['CompetenceCriterionGrade']['id'];
                     }
@@ -472,10 +473,12 @@ class ApiCompetenceGoalsController extends AppController {
                     $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
+                    $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = $filteredData[$i]['CompetenceCriterionGrade'];
                 }
             } elseif (!isset($filteredData[$i]['CompetenceCriterionGrade']['criterion_id'])) {
                 // If no in form and not persisted yet in database remove from filteredData
                 unset($filteredData[$i]);
+                $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = null;
             }
         }
 

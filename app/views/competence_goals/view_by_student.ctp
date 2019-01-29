@@ -25,31 +25,33 @@
 
     <fieldset>
     <legend>Criterios de evaluación</legend>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:6em">Código</th>
-                    <th style="width:50%">Definición</th>
-                    <th style="width:6em">Valoración nota final</th>
-                    <th style="width:50%">Rúbrica</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
-                <?php $rubric_id = $criterion['CompetenceCriterionGrade']['rubric_id'] ?>
+        <div class="horizontal-scrollable-content">
+            <table>
+                <thead>
                     <tr>
-                        <td><?php echo h($criterion['code']) ?></td>
-                        <td><?php echo h($criterion['definition']) ?></td>
-                        <?php if (isset($rubric_id)): ?>
-                            <td><?php echo h($criterion['CompetenceCriterionRubric'][$rubric_id]['value']) ?></td>
-                            <td><?php echo h($criterion['CompetenceCriterionRubric'][$rubric_id]['definition']) ?></td>
-                        <?php else: ?>
-                            <td></td>
-                            <td></td>
-                        <?php endif; ?>
+                        <th style="width:6em">Código</th>
+                        <th style="width:50%">Definición</th>
+                        <th style="width:6em">Valoración nota final</th>
+                        <th style="width:50%">Rúbrica</th>
                     </tr>
-                <?php endforeach; ?>
-          </tbody>
-      </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($competence_goal['CompetenceCriterion'] as $criterion): ?>
+                    <?php $rubric_id = $criterion['CompetenceCriterionGrade']['rubric_id'] ?>
+                        <tr>
+                            <td><?php echo h($criterion['code']) ?></td>
+                            <td><?php echo h($criterion['definition']) ?></td>
+                            <?php if (isset($rubric_id)): ?>
+                                <td><?php echo h($criterion['CompetenceCriterionRubric'][$rubric_id]['value']) ?></td>
+                                <td><?php echo h($criterion['CompetenceCriterionRubric'][$rubric_id]['definition']) ?></td>
+                            <?php else: ?>
+                                <td></td>
+                                <td></td>
+                            <?php endif; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </fieldset>
 </div>

@@ -33,7 +33,7 @@
 			<li><?php echo $html->link('Editar estudiantes', array('action' => 'students_edit', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Alertar estudiantes', array('action' => 'send_alert_students_without_group', $subject['Subject']['id']), null, 'Esta acción enviará un correo electrónico a todos los estudiantes que no hayan elegido grupo para alguna de las actividades de la asignatura. Debido a que es un cálculo complejo, puede tardar algún tiempo. ¿Está seguro de que desea continuar? Una vez decida continuar, no podrá parar la acción.') ?></li>
 		<?php endif; ?>
-		<?php if (Configure::read('app.competence.enable') && ($auth->user('type') == "Administrador" || $auth->user('type') == "Profesor")): ?>
+		<?php if (Configure::read('app.competence.enable') && in_array($auth->user('type'), array("Administrador", "Profesor", "Estudiante"))): ?>
 	      	<li><?php echo $html->link('E-portfolio', array('controller' => 'competence', 'action' => 'by_subject', $subject['Subject']['id'])) ?>
 	  	<?php endif; ?>
 	</ul>
