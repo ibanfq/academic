@@ -47,8 +47,8 @@ class UsersController extends AppController {
         echo "PRODID:-//ULPGC//Academic\r\n";
         echo "NAME:{$calendarName}\r\n";
         echo "X-WR-CALNAME:{$calendarName}\r\n";
-        echo "TIMEZONE-ID:Atlantic/Canary\r\n";
-        echo "X-WR-TIMEZONE:Atlantic/Canary\r\n";
+        echo "TIMEZONE-ID:".date_default_timezone_get()."\r\n";
+        echo "X-WR-TIMEZONE:".date_default_timezone_get()."\r\n";
         echo "REFRESH-INTERVAL;VALUE=DURATION:PT12H\r\n";
         echo "X-PUBLISHED-TTL:PT12H\r\n";
         echo "CALSCALE:GREGORIAN\r\n";
