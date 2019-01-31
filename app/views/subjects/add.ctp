@@ -13,7 +13,7 @@
 		<?php echo $form->input('name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php echo $form->input('acronym', array('label' => 'Acrónimo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php
-			if (!Configure::read('app.degrees') !== null) {
+			if (Configure::read('app.degrees')) {
 				echo $form->input('degree', array('label' => 'Titulación', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.degrees')));
 			}
 		?>

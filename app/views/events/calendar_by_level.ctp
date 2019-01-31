@@ -69,7 +69,7 @@ $(document).ready(function() {
 <p>Seleccione un curso para ver su calendario.</p>
 <br/>
 
-<?php if (!Configure::read('app.degrees') !== null): ?>
+<?php if (Configure::read('app.degrees')): ?>
 	<dl>
 		<dt>Titulación</dt>
 		<dd>
