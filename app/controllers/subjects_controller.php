@@ -349,6 +349,34 @@ class SubjectsController extends AppController {
         $course_id = $subject['Subject']['course_id'];
         $this->Subject->query("DELETE FROM `competence_criterion_subjects` WHERE subject_id = {$id}");
         $this->Subject->delete($id);
+
+        // force relations integrity
+        $currentSubjectsQuery = "SELECT DISTINCT `Subject`.id FROM subjects `Subject`";
+        $this->Subject->query("DELETE FROM `groups` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+        $this->Subject->query("DELETE FROM `activities` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+        $this->Subject->query("DELETE FROM `subjects_users` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+
+        $currentActivitiesQuery = "SELECT DISTINCT `Activity`.id FROM activities `Activity`";
+        $this->Subject->query("DELETE FROM `attendance_registers` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `events` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `registrations` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `group_requests` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+
+        $this->Subject->query("DELETE FROM `users_attendance_register` WHERE attendance_register_id NOT IN (SELECT DISTINCT `AttendanceRegister`.id FROM attendance_registers `AttendanceRegister`)");
+
+        $this->Subject->query("DELETE FROM `competence` WHERE course_id NOT IN (SELECT DISTINCT `Course`.id FROM courses `Course`)");
+        $this->Subject->query("DELETE FROM `competence_goals` WHERE competence_id NOT IN (SELECT DISTINCT `Competence`.id FROM competence `Competence`)");
+        
+        $currentCompetenceGoalsQuery = "SELECT DISTINCT `CompetenceGoal`.id FROM competence_goals `CompetenceGoal`";
+        $this->Subject->query("DELETE FROM `competence_criteria` WHERE goal_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Subject->query("DELETE FROM `competence_goal_requests` WHERE goal_id NOT IN ($currentCompetenceGoalsQuery)");
+
+        $currentCompetenceCriteriaQuery = "SELECT DISTINCT `CompetenceCriterion`.id FROM competence_criteria `CompetenceCriterion`";
+        $this->Subject->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
+        $this->Subject->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
+        $this->Subject->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
+        $this->Subject->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+
         $this->Session->setFlash('La asignatura ha sido eliminada correctamente');
         $this->redirect(array('controller' => 'courses', 'action' => 'index', $course_id));
     }
