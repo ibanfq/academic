@@ -348,6 +348,21 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->read();
         $course_id = $subject['Subject']['course_id'];
         $this->Subject->delete($id);
+
+        // force relations integrity
+        $currentSubjectsQuery = "SELECT DISTINCT `Subject`.id FROM subjects `Subject`";
+        $this->Subject->query("DELETE FROM `groups` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+        $this->Subject->query("DELETE FROM `activities` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+        $this->Subject->query("DELETE FROM `subjects_users` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+
+        $currentActivitiesQuery = "SELECT DISTINCT `Activity`.id FROM activities `Activity`";
+        $this->Subject->query("DELETE FROM `attendance_registers` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `events` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `registrations` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+        $this->Subject->query("DELETE FROM `group_requests` WHERE activity_id NOT IN ($currentActivitiesQuery)");
+
+        $this->Subject->query("DELETE FROM `users_attendance_register` WHERE attendance_register_id NOT IN (SELECT DISTINCT `AttendanceRegister`.id FROM attendance_registers `AttendanceRegister`)");
+
         $this->Session->setFlash('La asignatura ha sido eliminada correctamente');
         $this->redirect(array('controller' => 'courses', 'action' => 'index', $course_id));
     }
