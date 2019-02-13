@@ -32,12 +32,24 @@ class User extends AppModel {
             'isUnique' => array(
                 'rule' => 'isUnique',
                 'message' => 'Ya existe un usuario con el mismo correo electrónico.'
+            ),
+            'notEmpty' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'El correo electrónico no puede estar vacío'
             )
         ),
-        'vat_number' => array(
-            'rule' => 'isUnique',
-            'message' => 'Ya existe un usuario con el mismo DNI.'
-        ), 
+        'dni' => array(
+            'isUnique' => array(
+                'rule' => 'isUnique',
+                'message' => 'Ya existe un usuario con el mismo DNI.'
+            ),
+            'notEmpty' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'El DNI no puede estar vacío'
+            )
+        ),
         'password' => array(
             'rule' => array('minLength', '6'),
             'message' => 'Debe tener entre 5 y 10 caracteres'
