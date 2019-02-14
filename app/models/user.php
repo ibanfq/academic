@@ -42,12 +42,8 @@ class User extends AppModel {
         'dni' => array(
             'isUnique' => array(
                 'rule' => 'isUnique',
+                'allowEmpty' => true,
                 'message' => 'Ya existe un usuario con el mismo DNI.'
-            ),
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
-                'message' => 'El DNI no puede estar vacío'
             )
         ),
         'password' => array(
