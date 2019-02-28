@@ -119,12 +119,24 @@ class ApiUsersAttendanceRegisterController extends AppController {
             
             if ($student && ($is_anonymous || $is_student)) {
                 $student_id = intval($student['Student']['id']);
-                $subject_user_id = $this->UserAttendanceRegister->query(
+                $student_in_subject = (bool) $this->UserAttendanceRegister->query(
                     "SELECT id FROM subjects_users WHERE subject_id = {$attendanceRegister['Activity']['subject_id']} AND user_id = {$student_id}"
                 );
-                if (!$subject_user_id) {
+                if (!$student_in_subject) {
                     $this->Api->setError('No puedes registrarte sin estar matriculado en la asignatura.');
                     $student = false;
+                }
+                $closed_attendance_groups = (bool) $this->UserAttendanceRegister->query(
+                    "SELECT closed_attendance_groups FROM subjects WHERE id = {$attendanceRegister['Activity']['subject_id']} and closed_attendance_groups"
+                );
+                if ($closed_attendance_groups) {
+                    $student_in_group = (bool) $this->UserAttendanceRegister->query(
+                        "SELECT id FROM registrations WHERE group_id = {$attendanceRegister['AttendanceRegister']['group_id']} AND activity_id = {$attendanceRegister['AttendanceRegister']['activity_id']} AND student_id = {$student_id}"
+                    );
+                    if (!$student_in_group) {
+                        $this->Api->setError('No puedes registrarte sin estar matriculado en el grupo.');
+                        $student = false;
+                    }
                 }
             }
 
