@@ -153,6 +153,43 @@ class UsersController extends AppController {
         $this->Session->setFlash('El usuario ha sido eliminado correctamente');
         $this->redirect(array('contoller' => 'users', 'action' => 'index'));
     }
+
+    function acl_edit() {
+        $roleOptions = $this->User->getTypeOptions();
+        $resourcesOptions = array(
+            'events.calendar_by_teacher' => 'Ver calendario por profesor'
+        );
+        if (empty($this->data)) {
+            $acl = Configure::read('app.acl');
+        } else {
+            $acl = array();
+            if (!isset($this->data['acl'])) {
+                $this->data['acl'] = array();
+            }
+            foreach ($this->data['acl'] as $data_role => $data_resources) {
+                foreach ($data_resources as $data_resource => $data_value) {
+                    if (!empty($data_value) && ($data_role === 'all' || array_key_exists($data_role, $roleOptions)) && array_key_exists($data_resource, $resourcesOptions)) {
+                        $acl[$data_role][$data_resource] = true;
+                    }
+                }
+            }
+            $config_file = ROOT . DS . APP_DIR . DS . 'config' . DS . 'app.options.php';
+            $app_options = include($config_file);
+            if (!is_array($app_options)) {
+                $app_options = array();
+            }
+            $app_options['acl'] = $acl;
+            if (file_put_contents($config_file, '<?php return ' . var_export($app_options, true) . ';')) {
+                $this->Session->setFlash('Sus datos han sido actualizados correctamente.');
+                $this->redirect(array('controller' => 'users', 'action' => 'index'));
+            } else {
+                $this->Session->setFlash('En un error de escritura no ha permitido guardar los cambios.');
+            }
+        }
+        $this->set('roleOptions', $roleOptions);
+        $this->set('resourcesOptions', $resourcesOptions);
+        $this->set('acl', is_array($acl) ? $acl : array());
+    }
     
     /**
      * Find by name
@@ -666,11 +703,17 @@ class UsersController extends AppController {
             
         $this->set('section', 'users');
         
-        $administrator_actions = array('delete', 'import');
+        $administrator_actions = array('delete', 'import', 'acl_edit');
         $administrative_actions = array('edit_registration', 'delete_subject', 'edit', 'add');
         $stats_actions = array('index', 'teacher_stats', 'student_stats', 'teacher_stats_details', 'student_stats_details', 'get_student_subjects', 'view');
         $student_actions = array('my_subjects');
-        
+        $public_actions = array();
+
+        $acl = Configure::read('app.acl');
+        $auth_type = $this->Auth->user('type');
+        if ($auth_type && !empty($acl[$auth_type]['events.calendar_by_teacher']) || !empty($acl['all']['events.calendar_by_teacher'])) {
+            array_push($public_actions, 'find_teachers_by_name');
+        }
         
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
             return false;
@@ -686,6 +729,10 @@ class UsersController extends AppController {
         
         if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
             return false;
+        }
+
+        if ((array_search($this->params['action'], $public_actions) !== false)) {
+            $this->Auth->allow($this->params['action']);
         }
     
         return true;

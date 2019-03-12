@@ -86,7 +86,13 @@ class AppController extends Controller {
         $this->Auth->allow('view');
       }
 
-      if (!$this->_authorize()) {
+      $auth_type = $this->Auth->user('type');
+      $acl = Configure::read('app.acl');
+      if ($auth_type && !empty($acl[$auth_type]["{$this->params['controller']}.{$this->params['action']}"])) {
+        $this->Auth->allow($this->params['action']);
+      } elseif (!empty($acl['all']["{$this->params['controller']}.{$this->params['action']}"])) {
+        $this->Auth->allow($this->params['action']);
+      } elseif (!$this->_authorize()) {
         if ($this->Auth->user('id') == null) {
           $this->redirect(array('controller' => 'users', 'action' => 'login'));
         } else {

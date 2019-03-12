@@ -39,6 +39,13 @@ $(document).ready(function() {
                         $('#calendar').fullCalendar('render'); // Fix problem with columns width
                     }
                 },
+		<?php if (isset($auth)) { ?>
+		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
+		    eventClick: function(event, jsEvent, view) {
+			    if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
+				  window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+		    },
+		<?php }} ?>
 		eventMouseover: function(event, jsEvent, view) {
 			$.ajax({
 				type: "GET", 

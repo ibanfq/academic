@@ -7,6 +7,9 @@
 			<li><?php echo $html->link('Crear usuario', array('action' => 'add')) ?></li>
 			<li><?php echo $html->link('Importar usuarios', array('action' => 'import')) ?></li>
 		<?php } ?>
+		<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")) {?>
+			<li><?php echo $html->link('Modificar permisos', array('action' => 'acl_edit')) ?></li>
+		<?php } ?>
 	</ul>
 </div>
 
