@@ -1,5 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} !^[^/]+.local$ [NC]
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=permanent,L]
+
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
