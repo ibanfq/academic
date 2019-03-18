@@ -1,5 +1,7 @@
 <?php
 
+$config['app'] = require('app.options.php');
+
 $config['app']['issuer'] = 'academic-fv';
 $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_ulpgc.jpg';

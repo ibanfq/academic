@@ -174,16 +174,20 @@ class UsersController extends AppController {
                 }
             }
             $config_file = ROOT . DS . APP_DIR . DS . 'config' . DS . 'app.options.php';
-            $app_options = include($config_file);
+            $app_options = include $config_file;
             if (!is_array($app_options)) {
                 $app_options = array();
             }
             $app_options['acl'] = $acl;
-            if (file_put_contents($config_file, '<?php return ' . var_export($app_options, true) . ';')) {
+            $fp = fopen($config_file,'w');
+            if ($fp !== FALSE && fwrite($fp, '<?php return ' . var_export($app_options, true) . ';')) {
                 $this->Session->setFlash('Sus datos han sido actualizados correctamente.');
                 $this->redirect(array('controller' => 'users', 'action' => 'index'));
             } else {
                 $this->Session->setFlash('En un error de escritura no ha permitido guardar los cambios.');
+            }
+            if ($fp !== FALSE) {
+                fclose($fp);
             }
         }
         $this->set('roleOptions', $roleOptions);
