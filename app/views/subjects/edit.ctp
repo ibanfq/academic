@@ -1,4 +1,8 @@
 <!-- File: /app/views/subjects/add.ctp -->
+
+<?php $degrees = Configure::read('app.degrees') ?>
+<?php $degreeEnabled = !empty($degrees); ?>
+
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
@@ -14,8 +18,8 @@
 		<?php echo $form->input('name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php echo $form->input('acronym', array('label' => 'Acrónimo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php
-			if (!empty(Configure::read('app.degrees'))) {
-				echo $form->input('degree', array('label' => 'Titulación', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.degrees')));
+			if ($degreeEnabled) {
+				echo $form->input('degree', array('label' => 'Titulación', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => $degrees));
 			}
 		?>
 		<?php echo $form->input('level', array('label' => 'Curso', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.levels'))); ?>

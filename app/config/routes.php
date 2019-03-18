@@ -40,6 +40,10 @@
  * connect api controller's urls.
  */
   Router::connect(
+    '/api/fake_data/:fake_controller/*',
+    array('controller' => 'api_fake_data', 'action' => 'fake_request')
+  );
+  Router::connect(
     '/api/users',
     array('controller' => 'api_users', 'action' => 'index', '[method]' => 'GET')
   );
