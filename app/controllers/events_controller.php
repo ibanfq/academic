@@ -655,26 +655,32 @@ class EventsController extends AppController {
     function _authorize() {
         parent::_authorize();
 
+        $action = $this->params['action'];
+        $auth_type = $this->Auth->user('type');
+        $acl = Configure::read('app.acl');
+        $acl_actions = array('calendar_by_teacher');
+
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
         $student_actions = array('register_student');
         $public_actions = array();
 
-        $acl = Configure::read('app.acl');
-        $auth_type = $this->Auth->user('type');
-        if ($auth_type && !empty($acl[$auth_type]['events.calendar_by_teacher']) || !empty($acl['all']['events.calendar_by_teacher'])) {
-            array_push($public_actions, 'get_by_teacher');
-        }
 
-        if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
+        if ((array_search($action, $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
             return false;
         }
 
-        if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
+        if ((array_search($action, $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
             return false;
         }
 
-        if ((array_search($this->params['action'], $public_actions) !== false)) {
-            $this->Auth->allow($this->params['action']);
+        if ((array_search($action, $public_actions) !== false)) {
+            $this->Auth->allow($action);
+        }
+
+        if ((array_search($action, $acl_actions) !== false)) {
+            if ($auth_type && empty($acl[$auth_type]["events.{$action}"]) || empty($acl['all']["events.{$action}"])) {
+                return false;
+            }
         }
 
         return true;
