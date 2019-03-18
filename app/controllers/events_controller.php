@@ -59,7 +59,7 @@ class EventsController extends AppController {
     function get_by_teacher($teacher_id = null) {
         $this->loadModel('User');
         $this->User->id = $teacher_id;
-        $events = [];
+        $events = array();
         if ($this->User->read()) {
             $events = $this->User->getEvents();
         }
@@ -189,7 +189,7 @@ class EventsController extends AppController {
             }
             $duration = $this->_getDuration($event_initial_hour, new DateTime($event['Event']['final_hour']));
             $final_hour = $this->_addDuration($initial_hour, $duration);
-            $this->data = [
+            $this->data = array(
                 'id'           => null,
                 'group_id'     => $event['Event']['group_id'],
                 'activity_id'  => $event['Event']['activity_id'],
@@ -201,7 +201,7 @@ class EventsController extends AppController {
                 'owner_id'     => $this->Auth->user('id'),
                 'teacher_2_id' => $event['Event']['teacher_2_id'],
                 'show_tv'      => $event['Event']['show_tv']
-            ];
+            );
             if ($this->Event->save($this->data)) {
                 array_push($events, $this->Event->read());
                 $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
@@ -286,7 +286,7 @@ class EventsController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->Event->id = $id;
         $event = $this->Event->read();
-        $ids = [];
+        $ids = array();
         if ($this->_authorizeDelete($event)) {
             $ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
             $this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");

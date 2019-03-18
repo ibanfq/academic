@@ -111,7 +111,7 @@ class BookingsController extends AppController {
             }
             $duration = $this->_getDuration($booking_initial_hour, new DateTime($booking['Booking']['final_hour']));
             $final_hour = $this->_addDuration($initial_hour, $duration);
-            $this->data = [
+            $this->data = array(
                 'id'           => null,
                 'user_id'      => $this->Auth->user('id'),
                 'user_type'    => $booking['Booking']['user_type'],
@@ -121,7 +121,7 @@ class BookingsController extends AppController {
                 'reason'    => $booking['Booking']['reason'],
                 'required_equipment'    => $booking['Booking']['required_equipment'],
                 'show_tv'      => $booking['Booking']['show_tv']
-            ];
+            );
             if ($this->Booking->save($this->data)){
                 array_push($bookings, $this->Booking->read());
                 $this->set('success', true);
@@ -265,7 +265,7 @@ class BookingsController extends AppController {
             'recursive' => 0
         ));
 
-        $ids = [];
+        $ids = array();
 
         if (!empty($booking['Booking']['id'])) {
             if (!$this->_authorizeDelete($booking)) {
