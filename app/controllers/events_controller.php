@@ -59,7 +59,7 @@ class EventsController extends AppController {
     function get_by_teacher($teacher_id = null) {
         $this->loadModel('User');
         $this->User->id = $teacher_id;
-        $events = [];
+        $events = array();
         if ($this->User->read()) {
             $events = $this->User->getEvents();
         }
