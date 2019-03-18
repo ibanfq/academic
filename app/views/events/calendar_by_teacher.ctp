@@ -5,6 +5,13 @@ function isMobile() {
     return $('#mobile-query').css('display') !== 'none';
 }
 
+var events;
+
+function update_content() {
+  $('#teacher_name').val("");
+  $('#calendar').fullCalendar('removeEvents');
+}
+
 $(document).ready(function() {
 	$('#calendar').fullCalendar({
 		header: {
@@ -39,7 +46,7 @@ $(document).ready(function() {
                         $('#calendar').fullCalendar('render'); // Fix problem with columns width
                     }
                 },
-    <?php if (isset($auth)) { ?>
+		<?php if (isset($auth)) { ?>
 		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
 		    eventClick: function(event, jsEvent, view) {
 			    if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
@@ -47,46 +54,61 @@ $(document).ready(function() {
 		    },
 		<?php }} ?>
 		eventMouseover: function(event, jsEvent, view) {
-      var id = event.id.match(/\d+/);
-      var url;
-      if (event.className == 'booking')
-        url = "<?php echo PATH ?>/bookings/view/";
-      else
-        url = "<?php echo PATH ?>/events/view/";
-
-      $.ajax({
-        cache: false,
-        type: "GET",
-        url: url + id,
-        asynchronous: false,
-        success: function(data) {
-          $('#tooltip').html(data).find('a, .actions').remove();
-          $('#BookingDetails').html(data).find('a, .actions').remove();
-        }
-      });
-
-      $(this).tooltip({
-        delay: 500,
-        bodyHandler: function() {
-          return $('#EventDetails').html();
-        },
-        showURL: false
-      });
-
-    },
+			$.ajax({
+				type: "GET", 
+				url: "<?php echo PATH ?>/events/view/" + event.id,
+				asynchronous: false,
+				success: function(data) {
+					$('#tooltip').html(data);
+					$('#EventDetails').html(data);
+				}
+			});
+			
+			$(this).tooltip({
+				delay: 500,
+				bodyHandler: function() {
+					return $('#EventDetails').html();
+				},
+				showURL: false
+			});
+			
+		},
 		
 		})
 	});
 </script>
 
-<h1>Calendario de actividades por aula</h1>
+<h1>Calendario de actividades por profesor</h1>
 
-<p>Seleccione un aula del desplegable para visualizar las actividades en dicha aula.</p>
+<p>Escriba el nombre del profesor que desea consultar.</p>
 <br/>
 
 <dl>
-	<dt>Aulas</dt>
-	<dd><?php echo $form->select('classrooms', $classrooms); ?></dd>
+	<dt>Profesor</dt>
+	<dd><input type="text" id="subject_name" name="SubjectName" onchange="$('#subject_name').flushCache()"/></dd>
+	<script type='text/javascript'>
+		$('#subject_name').autocomplete('<?php echo PATH ?>/users/find_teachers_by_name/',
+		 {
+			formatItem: function (row)
+				{
+					if (row[1] != null) 
+						return row[0];
+					else {
+					  return 'No existe ningún profesor con este nombre.';
+				  }
+				}
+		}).result(
+			function(event, item){ 
+			  current_teacher = item[1];
+			  
+				$.ajax({
+					type: "GET",
+					url: "<?php echo PATH ?>/events/get_by_teacher/" + item[1],
+					dataType: "script"
+				})
+			}
+		);
+	</script>
 </dl>
 
 <div id="calendar_container">
@@ -112,22 +134,3 @@ $(document).ready(function() {
         </ul>
     </div>
 </div>
-
-<script type="text/javascript">
-	$('#classrooms').change(function() {
-		$('#calendar').fullCalendar('removeEvents');
-		$.ajax({
-			cache: false,
-			type: "GET",
-			url: "<?php echo PATH ?>/events/get/" + $('#classrooms').val(),
-			dataType: "script"
-		});
-		
-		$.ajax({
-			cache: false,
-			type: "GET",
-			url: "<?php echo PATH ?>/bookings/get/" + $('#classrooms').val(),
-			dataType: "script"
-		});
-	});
-</script>

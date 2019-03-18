@@ -55,7 +55,18 @@ class EventsController extends AppController {
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
-    
+
+    function get_by_teacher($teacher_id = null) {
+        $this->loadModel('User');
+        $this->User->id = $teacher_id;
+        $events = [];
+        if ($this->User->read()) {
+            $events = $this->User->getEvents();
+        }
+        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('events', $events);
+    }
+
     function _getScheduled($activity_id, $group_id) {
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $group_id = $group_id === null ? null : intval($group_id);
@@ -500,6 +511,10 @@ class EventsController extends AppController {
     function calendar_by_level() {
         $this->layout = 'public';
     }
+
+    function calendar_by_teacher() {
+        $this->layout = 'public';
+    }
     
     function board() {
         $this->layout = 'board';
@@ -634,15 +649,32 @@ class EventsController extends AppController {
     function _authorize() {
         parent::_authorize();
 
+        $action = $this->params['action'];
+        $auth_type = $this->Auth->user('type');
+        $acl = Configure::read('app.acl');
+        $acl_actions = array('calendar_by_teacher');
+
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
         $student_actions = array('register_student');
+        $public_actions = array();
 
-        if ((array_search($this->params['action'], $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
+
+        if ((array_search($action, $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
             return false;
         }
 
-        if ((array_search($this->params['action'], $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
+        if ((array_search($action, $student_actions) !== false) && ($this->Auth->user('type') != "Estudiante")) {
             return false;
+        }
+
+        if ((array_search($action, $public_actions) !== false)) {
+            $this->Auth->allow($action);
+        }
+
+        if ((array_search($action, $acl_actions) !== false)) {
+            if ($auth_type && empty($acl[$auth_type]["events.{$action}"]) || empty($acl['all']["events.{$action}"])) {
+                return false;
+            }
         }
 
         return true;

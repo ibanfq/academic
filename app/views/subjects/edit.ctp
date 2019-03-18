@@ -38,6 +38,7 @@
 			</dl>
 			<?php echo $form->error('practice_responsible_id'); ?>
 		</div>
+		<?php echo $form->input('closed_attendance_groups', array('label' => 'Grupos de asistencias cerrados (los alumnos solo pueden registrar la asistencia en el grupo apuntado)')); ?>
 		
 		<?php echo $form->input('course_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 	</fieldset>

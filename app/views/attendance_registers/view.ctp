@@ -48,6 +48,11 @@
 		<dl>
 			<dt>Actividad</dt>
 			<dd><?php echo $ar['Activity']['name'] ?></dd>
+    </dl>
+    
+    <dl>
+			<dt>Grupo</dt>
+			<dd><?php echo $ar['Group']['name'] ?></dd>
 		</dl>
 		
 		<dl>
