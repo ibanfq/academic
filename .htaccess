@@ -1,10 +1,10 @@
 <IfModule mod_rewrite.c>
-   RewriteEngine on
+    RewriteEngine on
 
-   RewriteCond %{HTTPS} off
-   RewriteCond %{HTTP_HOST} !^[^/]+.local$ [NC]
-   RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=permanent,L]
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} !^(localhost|127.0.0.1|192\.[.0-9]+|.+\.local)$ [NC]
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=permanent,L]
 
-   RewriteRule    ^$ app/webroot/    [L]
-   RewriteRule    (.*) app/webroot/$1 [L]
+    RewriteRule    ^$ app/webroot/    [L]
+    RewriteRule    (.*) app/webroot/$1 [L]
 </IfModule>

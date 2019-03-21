@@ -22,8 +22,16 @@
       }
 
       function write_alert(activity_id, group_id){
-        $('#form').dialog({width:'400px'});
-        $('#message').val("");
+          $('#form').dialog({
+              width:'400px',
+              position:'top', 
+              create: function(event, ui) {
+                  var widget = $(event.target).dialog('widget');
+                  widget.find(widget.draggable("option", "handle")).addTouch();
+                  widget.find('.ui-resizable-handle').addTouch();
+              },
+          });
+          $('#message').val("");
       }
 
       function send_alert(activity_id, group_id){

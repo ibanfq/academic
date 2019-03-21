@@ -104,7 +104,7 @@
             minute = "0" + minute;
         }
         
-        return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":00";
+        return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":00";
     }
     
     function addEvent() {
@@ -153,8 +153,13 @@
                 else{
                     $('#edit_form').html(data);
                     $('#edit_form').dialog({
-                        width:500, 
-                        position:'top', 
+                        width:500,
+                        position:'top',
+                        create: function(event, ui) {
+                            var widget = $(event.target).dialog('widget');
+                            widget.find(widget.draggable("option", "handle")).addTouch();
+                            widget.find('.ui-resizable-handle').addTouch();
+                        },
                         close: function(event, ui) {
                             if (currentEvent != null){
                                 $('#calendar').fullCalendar('removeEventSource', currentEvent);
@@ -230,9 +235,13 @@
         if (isMenusEnabled()) {
             $('.menu').menu({
                 select: function (e, ui) {
-                    var menu = $(this).blur();
                     e.preventDefault();
-                    switch (ui.item.attr('data-action')) {
+                    var action = ui.item.attr('data-action');
+                    if (!action && ui.item.children('ul').length) {
+                        return;
+                    }
+                    var menu = $(this).blur().data('ui-focused', null);
+                    switch (action) {
                         case 'select':
                             var start = menu.data('fc-start');
                             var allDay = menu.data('fc-allDay');
@@ -313,6 +322,9 @@
                     }
                 },
                 focus: function (e, ui) {
+                    if (!ui.item.is(':visible')) {
+                        return;
+                    }
                     var menu = $(this).data('ui-focused', ui);
                     switch (ui.item.attr('data-action')) {
                         case 'select':
@@ -338,10 +350,14 @@
                 },
                 blur: function (e) {
                     var menu = $(this);
+                    var ui = menu.data('ui-focused');
+                    var view = $('#calendar').fullCalendar('getView');
                     if (!menu.is(':visible')) {
+                        view.clearOverlays();
+                    }
+                    if (!ui) {
                         return;
                     }
-                    var ui = menu.data('ui-focused');
                     menu.data('ui-focused', null);
                     switch (ui.item.attr('data-action')) {
                         case 'select':
@@ -349,8 +365,10 @@
                             if (!menu.data('fc-allDay')) {
                                 var view = $('#calendar').fullCalendar('getView');
                                 var start = menu.data('fc-start');
-                                view.clearOverlays();
-                                view.renderSelection(start, new Date(start.getTime() + 30 * 60 * 1000), false);
+                                if (menu.is(':visible')) {
+                                    view.clearOverlays();
+                                    view.renderSelection(start, new Date(start.getTime() + 30 * 60 * 1000), false);
+                                }
                             }
                             break;
                     }
@@ -466,6 +484,7 @@
                 })
             },
             eventRender: function (event, element, view) {
+                $(element).addTouch();
                 if (!event.className || !event.className.length) {
                     element.bind('click', function (jsEvent) {
                         $('.menu:visible').blur();
@@ -627,8 +646,13 @@
                     
                     var show_form = function() {
                         $('#form').dialog({
-                            width:500, 
-                            position:'top', 
+                            width:500,
+                            position:'top',
+                            create: function(event, ui) {
+                                var widget = $(event.target).dialog('widget');
+                                widget.find(widget.draggable("option", "handle")).addTouch();
+                                widget.find('.ui-resizable-handle').addTouch();
+                            },
                             close: function(event, ui) {
                                 $('#calendar').fullCalendar('unselect');
                                 if (currentEvent != null){
