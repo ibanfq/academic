@@ -40,10 +40,6 @@
  * connect api controller's urls.
  */
   Router::connect(
-    '/api/fake_data/:fake_controller/*',
-    array('controller' => 'api_fake_data', 'action' => 'fake_request')
-  );
-  Router::connect(
     '/api/users',
     array('controller' => 'api_users', 'action' => 'index', '[method]' => 'GET')
   );
@@ -86,6 +82,14 @@
     '/api/users/:user_id/attendance_registers/:attendance_id',
     array('controller' => 'api_users_attendance_register', 'action' => 'delete', '[method]' => 'DELETE'),
     array('user_id' => '[0-9]+', 'attendance_id' => '[0-9]+', 'pass' => array('user_id', 'attendance_id'))
+  );
+  Router::connect(
+    '/api/log',
+    array('controller' => 'api_log', 'action' => 'add', '[method]' => 'POST')
+  );
+  Router::connect(
+    '/api/fake_data/:fake_controller/*',
+    array('controller' => 'api_fake_data', 'action' => 'fake_request')
   );
 /**
  * ...and connect the rest of 'Pages' controller's urls.
