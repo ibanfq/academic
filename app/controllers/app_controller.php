@@ -32,30 +32,32 @@ class AppController extends Controller {
     $this->Security->validatePost = false;
     
     if ($this->isApi) {
-      // Fake php sessions
-      session_set_save_handler(
-        array(__CLASS__, '__fakeSessionWrite'),
-        array(__CLASS__, '__fakeSessionWrite'),
-        array(__CLASS__, '__fakeSessionWrite'),
-        array(__CLASS__, '__fakeSessionWrite'),
-        array(__CLASS__, '__fakeSessionWrite'),
-        array(__CLASS__, '__fakeSessionWrite')
-      );
-      ini_set('session.use_cookies', 0);
-      session_start();
+      // Read Authorization header
+      $authorization = env('HTTP_AUTHORIZATION');
+      if (empty($authorization)) {
+        $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
+      }
 
+      if (($authorization || env('PHP_AUTH_USER')) && !$this->Session->started()) {
+        // Fake php sessions
+        session_set_save_handler(
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite')
+        );
+        ini_set('session.use_cookies', 0);
+        session_start();
+      }
+      
       // Set login options
       $this->Security->loginOptions = array(
         'type' => 'basic',
         'realm' => 'academic',
         'login' => '_api_authenticate'
       );
-      
-      // Read Authorization header
-      $authorization = env('HTTP_AUTHORIZATION');
-      if (empty($authorization)) {
-        $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
-      }
       
       // Authorize
       if ($authorization || !$this->_authorize()) {
