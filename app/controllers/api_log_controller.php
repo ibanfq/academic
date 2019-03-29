@@ -36,6 +36,19 @@ class ApiLogController extends AppController {
         if (empty($data['short_description']) && empty($data['text'])) {
             $this->Api->addFail('short_description', 'required');
         } else {
+            if (empty($data['short_description'])) {
+                $data['short_description'] = substr($data['text'], 0, 256);
+            }
+
+            if (strlen($data['short_description']) > 255) {
+                $data['short_description']
+                    = substr($data['short_description'], 0, -3) . '...';
+            }
+
+            if (empty($data['text'])) {
+                $data['text'] = null;
+            }
+            
             App::import('Sanitize');
             $ip = Sanitize::escape($data['ip']);
             $desc = Sanitize::escape($data['short_description']);
@@ -45,26 +58,14 @@ class ApiLogController extends AppController {
                 "SELECT count('') as total FROM log"
                 . " WHERE ip = '$ip' AND short_description = '$desc'"
                 . " AND server_date > '$from1'"
-                . " UNION SELECT count('') as total FROM log"
+                . " UNION ALL SELECT count('') as total FROM log"
                 . " WHERE ip = '$ip' AND short_description = '$desc'"
                 . " AND server_date > '$from2'"
             );
+            
             if (intval($count[0][0]['total']) < 5
                 && intval($count[1][0]['total']) < 10
             ) {
-                if (empty($data['short_description'])) {
-                    $data['short_description'] = substr($data['text'], 0, 256);
-                }
-    
-                if (strlen($data['short_description']) > 255) {
-                    $data['short_description']
-                        = substr($data['short_description'], 0, -3) . '...';
-                }
-    
-                if (empty($data['text'])) {
-                    $data['text'] = null;
-                }
-    
                 if (!$this->Log->save($data)) {
                     $this->Api->setError('No se ha podido crear el registro Log.');
                 }
