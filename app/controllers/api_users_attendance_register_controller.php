@@ -74,7 +74,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                         WHERE attendance_register_id = {$attendanceRegister['AttendanceRegister']['id']} AND user_gone
                     ");
                     if ($students_count && intval($students_count[0][0]['total']) === 0) {
-                        $this->Api->setError('No puedes añadir estudiantes hasta que al menos uno se haya registrado ya usando el código de acceso.');
+                        $this->Api->setError('No puedes añadir estudiantes hasta que al menos uno se haya registrado ya usando el código de acceso.', 403);
                         $attendanceRegister = false;
                     }
                 }
@@ -82,7 +82,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
         } else if (strlen($secret_code)) {
             $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->findBySecretCode($secret_code);
             if (!$attendanceRegister) {
-                $this->Api->setError('No existe ningún evento con ese código.');
+                $this->Api->setError('No existe ningún evento con ese código.', 404);
             }
         }
         
@@ -123,7 +123,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     "SELECT id FROM subjects_users WHERE subject_id = {$attendanceRegister['Activity']['subject_id']} AND user_id = {$student_id}"
                 );
                 if (!$student_in_subject) {
-                    $this->Api->setError('No puedes registrarte sin estar matriculado en la asignatura.');
+                    $this->Api->setError('No puedes registrarte sin estar matriculado en la asignatura.', 403);
                     $student = false;
                 }
                 $closed_attendance_groups = (bool) $this->UserAttendanceRegister->query(
@@ -134,7 +134,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                         "SELECT id FROM registrations WHERE group_id = {$attendanceRegister['AttendanceRegister']['group_id']} AND activity_id = {$attendanceRegister['AttendanceRegister']['activity_id']} AND student_id = {$student_id}"
                     );
                     if (!$student_in_group) {
-                        $this->Api->setError('No puedes registrarte sin estar matriculado en el grupo.');
+                        $this->Api->setError('No puedes registrarte sin estar matriculado en el grupo.', 403);
                         $student = false;
                     }
                 }
@@ -145,7 +145,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                 $student_id = $student['Student']['id'];
                 
                 if (($is_anonymous || $is_student || $is_teacher) && empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
-                    $this->Api->setError('No se ha podido registar al estudiante debido a que la hoja de asistencia ya ha sido finalizada.');
+                    $this->Api->setError('No se ha podido registar al estudiante debido a que la hoja de asistencia ya ha sido finalizada.', 403);
                 } else {
                     $conditions = array(
                         'UserAttendanceRegister.user_id' => $student_id,
@@ -186,14 +186,14 @@ class ApiUsersAttendanceRegisterController extends AppController {
                         }
                         $this->Api->setData($attendanceRegister);
                     } else {
-                        $this->Api->setError('No se ha podido registar al usuario debido a un error con el servidor.');
+                        $this->Api->setError('No se ha podido registar al usuario debido a un error con el servidor.', 500);
                     }
                 }
             } else if ($this->Api->getStatus() === 'success') {
-                $this->Api->setError('No se ha podido encontrar al usuario.');
+                $this->Api->setError('No se ha podido encontrar al usuario.', 404);
             }
         } else if ($this->Api->getStatus() === 'success') {
-            $this->Api->setError('No se ha podido acceder a la hoja de asistencias.');
+            $this->Api->setError('No se ha podido acceder a la hoja de asistencia.', 404);
         }
         
         $this->Api->respond($this);
@@ -216,7 +216,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                 $attendanceRegister = false;
             } else if (empty($attendanceRegister['AttendanceRegister']['secret_code'])) {
                 $attendanceRegister = false;
-                $this->Api->setError('No se ha podido quitar al estudiante debido a que la hoja de asistencia ya ha sido finalizada.');
+                $this->Api->setError('No se ha podido quitar al estudiante debido a que la hoja de asistencia ya ha sido finalizada.', 403);
             }
         }
         
@@ -269,10 +269,10 @@ class ApiUsersAttendanceRegisterController extends AppController {
                 
                 $this->Api->setData($attendanceRegister);
             } else if ($this->Api->getStatus() === 'success') {
-                $this->Api->setError('No se ha encontrado al usuario.');
+                $this->Api->setError('No se ha encontrado al usuario.', 404);
             }
         } else if ($this->Api->getStatus() === 'success') {
-            $this->Api->setError('No se ha podido acceder a la hoja de asistencias.');
+            $this->Api->setError('No se ha podido acceder a la hoja de asistencia.', 404);
         }
         
         $this->Api->respond($this);

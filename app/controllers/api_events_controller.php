@@ -46,7 +46,7 @@ class ApiEventsController extends AppController {
                 if ($type) {
                     $type = $type['Teacher']['type'];
                 } else {
-                    $this->Api->setError('No se ha podido encontrar al usuario');
+                    $this->Api->setError('No se ha podido encontrar al usuario', 404);
                 }
             }
             
@@ -109,7 +109,7 @@ class ApiEventsController extends AppController {
         if ($exists) {
             $this->Api->setData($event);
         } else {
-            $this->Api->setError('No se ha podido acceder al evento.');
+            $this->Api->setError('No se ha podido acceder al evento.', 404);
         }
         $this->Api->respond($this);
     }

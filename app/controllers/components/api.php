@@ -195,6 +195,7 @@ class ApiComponent extends Object {
         break;
       case 'fail':
         $response['data'] =  $this->_fail_data;
+        $response['code'] = 400;
         break;
       case 'error':
         $response['message'] = $this->_error_message;

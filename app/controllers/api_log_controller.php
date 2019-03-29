@@ -21,45 +21,45 @@ class ApiLogController extends AppController {
         $data = array(
             'channel'
                 => trim($this->Api->getParameter('channel', [], 'default')),
-            'short_description'
-                => trim($this->Api->getParameter('short_description')),
+            'description'
+                => trim($this->Api->getParameter('description')),
             'ip'
                 => $this->RequestHandler->getClientIP(),
-            'text'
-                => trim($this->Api->getParameter('text')),
+            'content'
+                => trim($this->Api->getParameter('content')),
             'client_date'
                 => $clientDate,
             'server_date'
                 => date('Y-m-d H:i:s')
         );
         
-        if (empty($data['short_description']) && empty($data['text'])) {
-            $this->Api->addFail('short_description', 'required');
+        if (empty($data['description']) && empty($data['content'])) {
+            $this->Api->addFail('description', 'required');
         } else {
-            if (empty($data['short_description'])) {
-                $data['short_description'] = substr($data['text'], 0, 256);
+            if (empty($data['description'])) {
+                $data['description'] = substr($data['content'], 0, 256);
             }
 
-            if (strlen($data['short_description']) > 255) {
-                $data['short_description']
-                    = substr($data['short_description'], 0, -3) . '...';
+            if (strlen($data['description']) > 255) {
+                $data['description']
+                    = substr($data['description'], 0, -3) . '...';
             }
 
-            if (empty($data['text'])) {
-                $data['text'] = null;
+            if (empty($data['content'])) {
+                $data['content'] = null;
             }
             
             App::import('Sanitize');
             $ip = Sanitize::escape($data['ip']);
-            $desc = Sanitize::escape($data['short_description']);
+            $desc = Sanitize::escape($data['description']);
             $from1 = date('Y-m-d H:i:s', strtotime('- 10 min'));
             $from2 = date('Y-m-d H:i:s', strtotime('- 60 min'));
             $count = $this->Log->query(
                 "SELECT count('') as total FROM log"
-                . " WHERE ip = '$ip' AND short_description = '$desc'"
+                . " WHERE ip = '$ip' AND description = '$desc'"
                 . " AND server_date > '$from1'"
                 . " UNION ALL SELECT count('') as total FROM log"
-                . " WHERE ip = '$ip' AND short_description = '$desc'"
+                . " WHERE ip = '$ip' AND description = '$desc'"
                 . " AND server_date > '$from2'"
             );
             
@@ -67,7 +67,7 @@ class ApiLogController extends AppController {
                 && intval($count[1][0]['total']) < 10
             ) {
                 if (!$this->Log->save($data)) {
-                    $this->Api->setError('No se ha podido crear el registro Log.');
+                    $this->Api->setError('No se ha podido crear el registro Log.', 500);
                 }
             }
         }
