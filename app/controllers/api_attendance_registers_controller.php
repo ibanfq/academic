@@ -82,11 +82,11 @@ class ApiAttendanceRegistersController extends AppController {
                             $students = $this->AttendanceRegister->getStudentsWithUserGone($id);
 
                             if ($students === false) {
-                                $this->Api->setError('No se ha podido finalizar el evento debido a un error con el servidor.');
+                                $this->Api->setError('No se ha podido finalizar el evento debido a un error con el servidor.', 500);
                             } else if (empty($students)) {
-                                $this->Api->setError('No se puede registrar un evento sin alumnos.');
+                                $this->Api->setError('No se puede registrar un evento sin alumnos.', 403);
                             } else if (!$this->AttendanceRegister->close($attendanceRegister, $students)) {
-                                $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.');
+                                $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.', 500);
                             } else {
                                 $this->_view($id);
                                 $attendanceRegister = $this->Api->getStatus() === 'success'? $this->Api->getData() : false;
@@ -94,7 +94,7 @@ class ApiAttendanceRegistersController extends AppController {
                                 if ($attendanceRegister) {
                                     $this->AttendanceRegister->notifyAttendanceRegisterClosed($attendanceRegister, $this);
                                 } else {
-                                    $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.');
+                                    $this->Api->setError('No se ha podido registrar el evento debido a un error con el servidor.', 500);
                                 }
                             }
                         }
@@ -104,7 +104,7 @@ class ApiAttendanceRegistersController extends AppController {
                         $this->Api->addFail('AttendanceRegistar.status', 'Invalid');
                 }
             } else {
-                $this->Api->setError('No se ha podido acceder a la hoja de asistencia.');
+                $this->Api->setError('No se ha podido acceder a la hoja de asistencia.', 404);
             }
         }
 
@@ -135,7 +135,7 @@ class ApiAttendanceRegistersController extends AppController {
             );
             $this->Api->setData($attendance_register);
         } else {
-            $this->Api->setError('No se ha podido acceder a la la hoja de asistencia.');
+            $this->Api->setError('No se ha podido acceder a la la hoja de asistencia.', 404);
         }
     }
     
@@ -163,10 +163,10 @@ class ApiAttendanceRegistersController extends AppController {
                 unset($attendance_register['AttendanceRegister']['Student']);
                 $this->Api->setData($attendance_register);
             } else {
-                $this->Api->setError('Sólo puedes crear las asistencias de los eventos que impartes hoy.');
+                $this->Api->setError('Sólo puedes crear las asistencias de los eventos que impartes hoy.', 403);
             }
         } else {
-            $this->Api->setError('No se ha podido acceder al evento.');
+            $this->Api->setError('No se ha podido acceder al evento.', 404);
         }
     }
 }

@@ -34,6 +34,11 @@
             $('#EventDetails').dialog({
               width:500,
               position: {at: 'top'}
+              create: function(event, ui) {
+                  var widget = $(event.target).dialog('widget');
+                  widget.find(widget.draggable("option", "handle")).addTouch();
+                  widget.find('.ui-resizable-handle').addTouch();
+              },
             });
           }
         }

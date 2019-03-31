@@ -126,6 +126,15 @@
     '/api/competence_goal_requests/:competence_goal_request_id',
     array('controller' => 'api_competence_goal_requests', 'action' => 'delete', '[method]' => 'DELETE'),
     array('competence_goal_request_id' => '[0-9]+', 'pass' => array('competence_goal_request_id'))
+  // Log
+  Router::connect(
+    '/api/log',
+    array('controller' => 'api_log', 'action' => 'add', '[method]' => 'POST')
+  );
+  // Fake api requests
+  Router::connect(
+    '/api/fake_data/:fake_controller/*',
+    array('controller' => 'api_fake_data', 'action' => 'fake_request')
   );
 /**
  * ...and connect the rest of 'Pages' controller's urls.

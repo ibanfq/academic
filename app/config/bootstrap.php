@@ -60,6 +60,9 @@ Inflector::rules('singular', array('irregular' => array('usersbooking'  => 'User
 Inflector::rules('plural',   array('irregular' => array('user_booking'  => 'users_booking')));
 Inflector::rules('plural',   array('irregular' => array('userbooking'   => 'users_booking')));
 
+Inflector::rules('singular', array('irregular' => array('log' => 'log')));
+Inflector::rules('plural', array('irregular' => array('log' => 'log')));
+
 Inflector::rules('singular', array('irregular' => array('competence' => 'competence')));
 Inflector::rules('plural',   array('irregular' => array('competence' => 'competence')));
 

@@ -1,3 +1,6 @@
+<?php $degrees = Configure::read('app.degrees') ?>
+<?php $degreeEnabled = !empty($degrees); ?>
+
 <div id="mobile-query" class="visible-block-phone-portrait"></div>
 
 <script type="text/javascript">
@@ -76,13 +79,13 @@ $(document).ready(function() {
 <p>Seleccione un curso para ver su calendario.</p>
 <br/>
 
-<?php if (Configure::read('app.degrees')): ?>
+<?php if ($degreeEnabled): ?>
 	<dl>
 		<dt>Titulación</dt>
 		<dd>
 			<select id="degree" name="degree">
 				<option value="" selected>Seleccione una titulación</option>
-				<?php foreach (Configure::read('app.degrees') as $degree => $degreeName) : ?>
+				<?php foreach ($degrees as $degree => $degreeName) : ?>
 					<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
 				<?php endforeach; ?>
 			</select>

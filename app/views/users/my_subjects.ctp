@@ -1,6 +1,7 @@
 <!-- File: /app/views/users/view.ctp -->
 
-<?php $degreeEnabled = (bool)Configure::read('app.degrees'); ?>
+<?php $degrees = Configure::read('app.degrees') ?>
+<?php $degreeEnabled = !empty($degrees); ?>
 
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
 

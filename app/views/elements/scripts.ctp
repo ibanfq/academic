@@ -3,9 +3,10 @@
   echo $javascript->link('modernizr'); 
 	echo $javascript->link('jquery'); 
 	echo $javascript->link('jquery-ui');
+  echo $javascript->link('jquery.ui.touch');
 	echo $javascript->link('jquery.autocomplete');
 	echo $javascript->link('jquery.tooltip');
-	echo $javascript->link('fullcalendar');
+  echo $javascript->link('fullcalendar');
 
 	echo $html->css('cake.generic.css');
   echo $html->css("$forms_type.forms.css");

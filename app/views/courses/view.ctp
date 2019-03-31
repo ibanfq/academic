@@ -1,6 +1,7 @@
 <!-- File: /app/views/courses/view.ctp -->
 
-<?php $degreeEnabled = (bool)Configure::read('app.degrees'); ?>
+<?php $degrees = Configure::read('app.degrees') ?>
+<?php $degreeEnabled = !empty($degrees); ?>
 
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb("{$course['Course']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
