@@ -126,6 +126,7 @@
     '/api/competence_goal_requests/:competence_goal_request_id',
     array('controller' => 'api_competence_goal_requests', 'action' => 'delete', '[method]' => 'DELETE'),
     array('competence_goal_request_id' => '[0-9]+', 'pass' => array('competence_goal_request_id'))
+  );
   // Log
   Router::connect(
     '/api/log',
