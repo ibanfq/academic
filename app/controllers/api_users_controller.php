@@ -60,7 +60,7 @@ class ApiUsersController extends AppController {
             )
         );
 
-        $responseData['Auth']['token'] = JWT::encode(
+        $responseData['Auth']['token'] = \Firebase\JWT\JWT::encode(
             $jwtData,   //Data to be encoded in the JWT
             $secretKey, // The signing key
             'HS512'     // Algorithm used to sign the token, see https://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-40#section-3
