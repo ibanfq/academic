@@ -11,14 +11,23 @@ class ApiFakeDataController extends AppController {
 
     function _api_authenticate()
     {
+        $username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : null;
+        if (empty($_SERVER['PHP_AUTH_PWD'])) {
+            try {
+                $secretKey = base64_decode(Configure::read('Security.secret'));
+                $username = \Firebase\JWT\JWT::decode($username, $secretKey, array('HS512'))->data->username;
+            } catch (Exception $e) {
+            }
+        }
+        $isStudent = preg_match('#(?:estudiante|student)#i', $username);
         $this->Auth->sessionKey = 'Api.Auth.User';
         $user = array(
             'id' => '1',
-            'type' => 'Profesor',
+            'type' => $isStudent ? 'Estudiante' : 'Profesor',
             'dni' => '12345678Z',
-            'first_name' => 'Profesor',
+            'first_name' => $isStudent ? 'Estudiante' : 'Profesor',
             'last_name' => '',
-            'username' => 'profesor@millolab.com',
+            'username' => $username ?: 'profesor@millolab.com',
             'phone' => '',
             'notify_all' => '1',
             'created' => '2000-01-01 00:00:00',
@@ -36,9 +45,36 @@ class ApiFakeDataController extends AppController {
         );
     }
 
-    function users($id = null, $relation = null)
+    function users($id_or_action = null, $relation = null)
     {
-        if ($relation === null) {
+        if ($id_or_action === 'login' || $id_or_action === 'me') {
+            $issuer    = Configure::read('app.issuer');
+            $issuedAt  = time();
+            $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
+            $secretKey = base64_decode(Configure::read('Security.secret'));
+
+            $responseData = $this->Auth->user();
+            
+            /*
+            * Create the token as an array
+            */
+            $jwtData = array(
+                'iat'  => $issuedAt, // Issued at: time when the token was generated
+                'jti'  => $tokenId,  // Json Token Id: an unique identifier for the token
+                'iss'  => $issuer,   // Issuer
+                'data' => array(     // Data related to the signed user
+                    'id'       => $responseData['User']['id'],       // id from the auth user
+                    'username' => $responseData['User']['username'], // username from the auth user
+                )
+            );
+
+            $responseData['Auth']['token'] = \Firebase\JWT\JWT::encode(
+                $jwtData,   //Data to be encoded in the JWT
+                $secretKey, // The signing key
+                'HS512'     // Algorithm used to sign the token, see https://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-40#section-3
+            );
+            $this->Api->setData($responseData);
+        } elseif ($relation === null) {
             $student = json_decode(
                 '{"User":{"id":"2","type":"Estudiante","dni":"12345678","first_name":"Estudiante","last_name":"Prueba","username":"estudiante@millolab.com","phone":"","notify_all":"1","created":null,"modified":"2015-09-09 18:44:36"}}',
                 true
