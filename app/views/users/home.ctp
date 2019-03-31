@@ -75,7 +75,7 @@ $(document).ready(function() {
             $('#edit_form').html(data);
             $('#edit_form').dialog({
               width:500,
-              position: {at: 'top'}
+              position: {at: 'top'},
               create: function(event, ui) {
                   var widget = $(event.target).dialog('widget');
                   widget.find(widget.draggable("option", "handle")).addTouch();

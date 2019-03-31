@@ -24,7 +24,7 @@
       function write_alert(activity_id, group_id){
           $('#form').dialog({
               width:'400px',
-              position: {at: 'top'}, 
+              position: {at: 'top'},
               create: function(event, ui) {
                   var widget = $(event.target).dialog('widget');
                   widget.find(widget.draggable("option", "handle")).addTouch();
