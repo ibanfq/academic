@@ -3,7 +3,7 @@ class AppController extends Controller {
 	/**
 	 * Application wide controllers
 	 */
-	var $components = array('Security', 'Session', 'Auth', 'RequestHandler', 'Email', 'Api');
+	var $components = array('Security', 'Session', 'Auth', 'Acl', 'RequestHandler', 'Email', 'Api');
   
 	/**
 	 * Application wide helpers
@@ -138,6 +138,8 @@ class AppController extends Controller {
   }
 
 	function _authorize() {
+    $this->set("acl", $this->Acl);
+    
 		if ($this->Auth->user('id') != null) {
 			$this->set("auth", $this->Auth);
       return true;

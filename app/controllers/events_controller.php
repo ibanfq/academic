@@ -650,14 +650,16 @@ class EventsController extends AppController {
         parent::_authorize();
 
         $action = $this->params['action'];
-        $auth_type = $this->Auth->user('type');
-        $acl = Configure::read('app.acl');
-        $acl_actions = array('calendar_by_teacher');
+
+        $children_actions = array('get_by_teacher' => 'calendar_by_teacher');
 
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
         $student_actions = array('register_student');
-        $public_actions = array();
+        $public_actions = array('view', 'view_info', 'get', 'get_by_degree_and_level', 'get_by_level', 'get_by_subject', 'board', 'calendar_by_classroom', 'calendar_by_level', 'calendar_by_subject');
 
+        if (isset($children_actions[$action])) {
+            $action = $children_actions[$action];
+        }
 
         if ((array_search($action, $private_actions) !== false) && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Profesor")) {
             return false;
@@ -669,15 +671,10 @@ class EventsController extends AppController {
 
         if ((array_search($action, $public_actions) !== false)) {
             $this->Auth->allow($action);
+            return true;
         }
 
-        if ((array_search($action, $acl_actions) !== false)) {
-            if ($auth_type && empty($acl[$auth_type]["events.{$action}"]) || empty($acl['all']["events.{$action}"])) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->Acl->check("events.{$action}");
     }
             
     function _sortBoardEvents($a, $b) {

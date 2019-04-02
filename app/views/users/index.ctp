@@ -10,6 +10,9 @@
 		<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")) {?>
 			<li><?php echo $html->link('Modificar permisos', array('action' => 'acl_edit')) ?></li>
 		<?php } ?>
+		<?php if ($acl->check('events.calendar_by_teacher')) {?>
+			<li><?php echo $html->link('Ver calendario de profesores', array('controller' => 'events', 'action' => 'calendar_by_teacher')) ?></li>
+		<?php } ?>
 	</ul>
 </div>
 
