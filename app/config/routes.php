@@ -36,6 +36,7 @@
 	Router::connect('/calendar_by_classroom', array('controller' => 'events', 'action' => 'calendar_by_classroom'));
 	Router::connect('/calendar_by_subject', array('controller' => 'events', 'action' => 'calendar_by_subject'));
 	Router::connect('/calendar_by_level', array('controller' => 'events', 'action' => 'calendar_by_level'));
+	Router::connect('/calendar_by_teacher', array('controller' => 'events', 'action' => 'calendar_by_teacher'));
 /**
  * connect api controller's urls.
  */
