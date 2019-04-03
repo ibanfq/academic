@@ -63,7 +63,7 @@ class EventsController extends AppController {
         if ($this->User->read()) {
             $events = $this->User->getEvents();
         }
-        $this->set('authorizeDelete', $this->_getAuthorizeDeleteClosure());
+        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
 
