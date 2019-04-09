@@ -34,7 +34,14 @@ class ApiUsersController extends AppController {
     
     function me()
     {
-        $this->Api->setData($this->Auth->user());
+        $responseData = $this->Auth->user();
+        $username = $responseData['User']['username'];
+        $beta_testers = (array) Configure::read('app.beta.testers');
+        if ($username && array_search($username, $beta_testers) !== false) {
+            $responseData['User']['beta'] = true;
+            $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
+        }
+        $this->Api->setData($responseData);
         $this->Api->respond($this);
     }
 
@@ -46,6 +53,12 @@ class ApiUsersController extends AppController {
         $secretKey = base64_decode(Configure::read('Security.secret'));
 
         $responseData = $this->Auth->user();
+        $username = $responseData['User']['username'];
+        $beta_testers = (array) Configure::read('app.beta.testers');
+        if ($username && array_search($username, $beta_testers) !== false) {
+            $responseData['User']['beta'] = true;
+            $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
+        }
         
         /*
         * Create the token as an array

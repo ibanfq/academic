@@ -28,7 +28,9 @@ class AppController extends Controller {
     if (Configure::read('debug') > 0) {
       $this->Email->delivery = 'debug';
     }
-    
+
+    $this->_updateAppBetaOptions();
+
     $this->Security->validatePost = false;
     
     if ($this->isApi) {
@@ -133,6 +135,20 @@ class AppController extends Controller {
          * this is likely because the signature was not able to be verified (tampered token)
          */
         $this->redirect(null, 401, true);
+      }
+    }
+
+    $this->_updateAppBetaOptions();
+  }
+
+  function _updateAppBetaOptions()
+  {
+    $username = $this->Auth->user('username');
+    $beta_testers = (array) Configure::read('app.beta.testers');
+    if ($username && array_search($username, $beta_testers) !== false) {
+      $config_writes = (array) Configure::read('app.beta.config_writes');
+      foreach ($config_writes as $config => $value) {
+        Configure::write($config, $value);
       }
     }
   }
