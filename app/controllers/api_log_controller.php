@@ -56,11 +56,11 @@ class ApiLogController extends AppController {
             $from2 = date('Y-m-d H:i:s', strtotime('- 60 min'));
             $count = $this->Log->query(
                 "SELECT count('') as total FROM log"
-                . " WHERE ip = '$ip' AND description = '$desc'"
-                . " AND server_date > '$from1'"
+                . " WHERE ip = '$ip' AND server_date > '$from1'"
+                . " AND description = '$desc'"
                 . " UNION ALL SELECT count('') as total FROM log"
-                . " WHERE ip = '$ip' AND description = '$desc'"
-                . " AND server_date > '$from2'"
+                . " WHERE ip = '$ip' AND server_date > '$from2'"
+                . " AND description = '$desc'"
             );
             
             if (intval($count[0][0]['total']) < 5
