@@ -74,42 +74,53 @@ $(document).ready(function() {
 			
 		},
 		
-		})
+		});
+		<?php if ($teacher): ?>
+			$.ajax({
+				type: "GET",
+				url: "<?php echo PATH ?>/events/get_by_teacher/" + <?php echo intval($teacher['Teacher']['id']); ?>,
+				dataType: "script"
+			});
+		<?php endif; ?>
 	});
 </script>
 
-<h1>Calendario de actividades por profesor</h1>
+<?php if ($teacher): ?>
+	<h1>Agenda de <?php echo "{$teacher['Teacher']['first_name']} {$teacher['Teacher']['last_name']}"?></h1>
+<?php else: ?>
+	<h1>Agenda del profesorado</h1>
 
-<p>Escriba el nombre del profesor que desea consultar.</p>
-<br/>
+	<p>Escriba el nombre del profesor que desea consultar.</p>
+	<br/>
 
-<dl>
-	<dt>Profesor</dt>
-	<dd><input type="text" id="subject_name" name="SubjectName" onchange="$('#subject_name').flushCache()"/></dd>
-	<script type='text/javascript'>
-		$('#subject_name').autocomplete('<?php echo PATH ?>/users/find_teachers_by_name/',
-		 {
-			formatItem: function (row)
-				{
-					if (row[1] != null) 
-						return row[0];
-					else {
-					  return 'No existe ningún profesor con este nombre.';
-				  }
+	<dl>
+		<dt>Profesor</dt>
+		<dd><input type="text" id="teacher_name" name="TeacherName" onchange="$('#teacher_name').flushCache()"/></dd>
+		<script type='text/javascript'>
+			$('#teacher_name').autocomplete('<?php echo PATH ?>/users/find_teachers_by_name/',
+			{
+				formatItem: function (row)
+					{
+						if (row[1] != null) 
+							return row[0];
+						else {
+						return 'No existe ningún profesor con este nombre.';
+					}
+					}
+			}).result(
+				function(event, item){ 
+				current_teacher = item[1];
+				
+					$.ajax({
+						type: "GET",
+						url: "<?php echo PATH ?>/events/get_by_teacher/" + item[1],
+						dataType: "script"
+					})
 				}
-		}).result(
-			function(event, item){ 
-			  current_teacher = item[1];
-			  
-				$.ajax({
-					type: "GET",
-					url: "<?php echo PATH ?>/events/get_by_teacher/" + item[1],
-					dataType: "script"
-				})
-			}
-		);
-	</script>
-</dl>
+			);
+		</script>
+	</dl>
+<?php endif; ?>
 
 <div id="calendar_container">
 	<div id="calendar" class="fc" style="margin: 3em 0pt; font-size: 13px;"></div>

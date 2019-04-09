@@ -1,7 +1,7 @@
 <!-- File: /app/views/users/teacher_stats.ctp -->
 <?php $html->addCrumb('Usuarios', '/users'); ?>
 <?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
-<?php $html->addCrumb("Estadísticas", "/users/view/teacher_stats/{$user['User']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas de ejecución", "/users/view/teacher_stats/{$user['User']['id']}"); ?>
 
 <script type="text/javascript">
   function update_events() {
@@ -22,7 +22,7 @@
   });
 </script>
 
-<h1>Estadísticas de <?php echo "{$user['User']['first_name']} {$user['User']['last_name']}"?></h1>
+<h1>Estadísticas de ejecución de <?php echo "{$user['User']['first_name']} {$user['User']['last_name']}"?></h1>
 
 <div class="actions">
 </div>

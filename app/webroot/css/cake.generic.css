@@ -367,7 +367,6 @@ div.actions ul {
 div.actions li {
 	margin:0 0 0.5em 0;
 	list-style-type: none;
-	white-space: nowrap;
 	padding: 0;
 }
 div.actions ul li a {

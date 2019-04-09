@@ -21,7 +21,11 @@
         <li><?php echo $html->link('Crear grupo', array('controller' => 'groups', 'action' => 'add', $subject['Subject']['id'])) ?></li>
         <li><?php echo $html->link('Crear actividad', array('controller' => 'activities', 'action' => 'add', $subject['Subject']['id'])) ?></li>
         <li><?php echo $html->link('Ver programación', array('action' => 'getScheduledInfo', $subject['Subject']['id'])) ?></li>
+	  <?php endif; ?>
+      <?php if (($auth->user('type') == "Profesor") || ($auth->user('type') == "Administrador")): ?>
+		<li><?php echo $html->link('Editar asistencia estudiantes', array('action' => 'view_my_registers', 'controller' => 'attendance_registers', $subject['Course']['id'], $subject['Subject']['id'])) ?></li>
       <?php endif; ?>
+
   		<li><?php echo $html->link('Estadísticas estudiante', array('action' => 'students_stats', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Estadísticas asignatura', array('action' => 'statistics', $subject['Subject']['id'])) ?></li>
   		<?php if ($auth->user('type') == "Administrador"): ?>
@@ -31,7 +35,7 @@
 		<?php endif; ?>
 		<?php if (($auth->user('type') == "Administrador") || ($auth->user('id') == $subject['Subject']['coordinator_id']) || ($auth->user('id') == $subject['Subject']['practice_responsible_id'])): ?>
 			<li><?php echo $html->link('Programar curso', array('controller' => 'events', 'action' => 'schedule', $subject['Course']['id'])) ?></li>
-			<li><?php echo $html->link('Editar estudiantes', array('action' => 'students_edit', $subject['Subject']['id'])) ?></li>
+			<li><?php echo $html->link('Gestionar prácticas repetidores', array('action' => 'students_edit', $subject['Subject']['id'])) ?></li>
 			<li><?php echo $html->link('Alertar estudiantes', array('action' => 'send_alert_students_without_group', $subject['Subject']['id']), null, 'Esta acción enviará un correo electrónico a todos los estudiantes que no hayan elegido grupo para alguna de las actividades de la asignatura. Debido a que es un cálculo complejo, puede tardar algún tiempo. ¿Está seguro de que desea continuar? Una vez decida continuar, no podrá parar la acción.') ?></li>
 		<?php endif; ?>
 		<?php if (Configure::read('app.competence.enable') && in_array($auth->user('type'), array("Administrador", "Profesor", "Estudiante"))): ?>

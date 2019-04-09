@@ -1,7 +1,7 @@
 <!-- File: /app/views/users/teacher_stats.ctp -->
 <?php $html->addCrumb('Usuarios', '/users'); ?>
 <?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
-<?php $html->addCrumb("Horario", "/users/view/teacher_schedule/{$user['User']['id']}"); ?>
+<?php $html->addCrumb("Planificación", "/users/view/teacher_schedule/{$user['User']['id']}"); ?>
 
 <script type="text/javascript">
   function update_events() {
@@ -49,7 +49,7 @@
   });
 </script>
 
-<h1>Horario de <?php echo "{$user['User']['first_name']} {$user['User']['last_name']}"?></h1>
+<h1>Planificación de <?php echo "{$user['User']['first_name']} {$user['User']['last_name']}"?></h1>
 
 <div class="actions">
 </div>

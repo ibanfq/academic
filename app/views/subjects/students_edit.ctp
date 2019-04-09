@@ -2,9 +2,9 @@
 <?php $html->addCrumb('Cursos', '/courses'); ?>
 <?php $html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); ?>
 <?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
-<?php $html->addCrumb("Editar estudiantes", "/subjects/students_edit/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb("Gestionar prácticas repetidores", "/subjects/students_edit/{$subject['Subject']['id']}"); ?>
 
-<h1>Gestionar estudiantes</h1>
+<h1>Gestionar prácticas de estudiantes repetidores</h1>
 <?php
 	echo $form->create('Subject', array('action' => 'students_edit'));
 	echo $form->input('id', array('type' => 'hidden'));

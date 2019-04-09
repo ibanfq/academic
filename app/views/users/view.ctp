@@ -11,12 +11,10 @@
 	    <?php endif; ?>
 		
 		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Conserje")): ?>
-		    <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")): ?>
-		    	<li><?php echo $html->link('Ver estadísticas', array('action' => 'teacher_stats', $user['User']['id'])) ?></li>
-      		<?php endif; ?>
-      
-		    <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")): ?>
-				<li><?php echo $html->link('Ver horario', array('action' => 'teacher_schedule', $user['User']['id'])) ?></li>
+        <?php if (($user['User']['type'] == "Profesor") || ($user['User']['type'] == "Administrador") || ($user['User']['type'] == "Administrativo")): ?>
+		    	<li><?php echo $html->link('Ver ejecución', array('action' => 'teacher_stats', $user['User']['id'])) ?></li>
+					<li><?php echo $html->link('Ver planificación', array('action' => 'teacher_schedule', $user['User']['id'])) ?></li>
+					<li><?php echo $html->link('Ver agenda', array('controller' => 'events', 'action' => 'calendar_by_teacher', $user['User']['id'])) ?></li>
 		    <?php endif; ?>
 		
 			<?php if (($user['User']['type'] == "Estudiante")): ?>

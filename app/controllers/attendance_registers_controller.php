@@ -543,11 +543,52 @@ class AttendanceRegistersController extends AppController {
     /**
      * Shows a list of activities given by a teacher
      */
-    function view_my_registers($course_id = null){
+    function view_my_registers($course_id = null, $subject_id = null){
         $course_id = $course_id === null ? null : intval($course_id);
         $user_id = $this->Auth->user('id');
         $date = date("Y-m-d");
 
+        if ($course_id) {
+            $course = $this->AttendanceRegister->Activity->Subject->Course->find(
+                'first',
+                array(
+                    'conditions' => array('Course.id' => $course_id),
+                    'recursive' => -1
+                )
+            );
+            if (!$course) {
+                $this->Session->setFlash('El curso no existe.');
+                $this->redirect($this->referer());
+            }
+        } else {
+            $course = $this->AttendanceRegister->Activity->Subject->Course->current();
+            if (!$course) {
+                $this->Session->setFlash('El curso no existe.');
+                $this->redirect($this->referer());    
+            }
+        }
+        $course_id = $course['Course']['id'];
+        $this->set('course', $course);
+
+        $andWhereSubjectId = '';
+        if (!empty($subject_id)) {
+            $subject = $this->AttendanceRegister->Activity->Subject->find(
+                'first',
+                array(
+                    'conditions' => array('Subject.id' => $subject_id),
+                    'recursive' => -1
+                )
+            );
+            if (!$subject) {
+                $this->Session->setFlash('El curso no existe.');
+                $this->redirect($this->referer());    
+            }
+
+            $this->set('subject', $subject);
+            $andWhereSubjectId = "AND (Subject.id = $subject_id)";
+        } else {
+            $this->set('subject', false);
+        }
 
         $attendance_registers = $this->AttendanceRegister->query("
             SELECT DISTINCT Activity.*, Subject.*, Event.*, AttendanceRegister.*, IFNULL(uar.num_students, 0) AS num_students
@@ -557,7 +598,7 @@ class AttendanceRegistersController extends AppController {
             LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.event_id = Event.id
             LEFT JOIN (SELECT attendance_register_id, count(*) AS num_students FROM users_attendance_register WHERE user_gone
             GROUP BY attendance_register_id) uar ON uar.attendance_register_id = AttendanceRegister.id
-            WHERE (Subject.course_id = {$course_id})
+            WHERE (Subject.course_id = {$course_id}) $andWhereSubjectId
             AND (Event.teacher_id = {$user_id} OR Event.teacher_2_id = {$user_id} OR Subject.coordinator_id = {$user_id} OR Subject.practice_responsible_id = {$user_id})
             AND DATE_FORMAT(Event.initial_hour, '%Y-%m-%d') <= '{$date}'
             ORDER BY Event.initial_hour
