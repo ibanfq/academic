@@ -72,3 +72,9 @@ $config['app']['color_legend'] = array(
         'otra_presencial' => 'Otra presencial'
     )
 );
+$config['app']['beta'] = array(
+    'config_writes' => array(
+    ),
+    'testers' => array(
+    )
+);

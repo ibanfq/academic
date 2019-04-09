@@ -19,7 +19,7 @@ $config['app']['event']['show_tv'] = false;
 $config['app']['booking']['show_tv'] = false;
 $config['app']['classroom']['show_tv'] = true;
 $config['app']['classroom']['teachers_can_booking'] = false;
-$config['app']['competence']['enable'] = true;
+$config['app']['competence']['enable'] = false;
 $config['app']['degrees'] = false;
 $config['app']['subject']['levels'] = array(
     "Primero"   => "Primero",
@@ -65,5 +65,12 @@ $config['app']['color_legend'] = array(
         'tutoria'         => 'Tutoría',
         'evaluacion'      => 'Evaluación',
         'otra_presencial' => 'Otra presencial'
+    )
+);
+$config['app']['beta'] = array(
+    'config_writes' => array(
+        'app.competence.enable' => true
+    ),
+    'testers' => array(
     )
 );
