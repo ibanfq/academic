@@ -139,14 +139,42 @@ class UsersController extends AppController {
         $this->User->id = $id;
         if (empty($this->data)) {
             $this->data = $this->User->read();
+            $betaTesters = (array) Configure::read('app.beta.testers');
             $this->set('user', $this->data);
+            $this->set('isBetaTester', !empty($betaTesters[$this->data['User']['username']]));
         } else {
             if ($this->User->save($this->data)) {
-                $this->Session->setFlash('El usuario se ha actualizado correctamente.');
-                $this->redirect(array('action' => 'view', $id));
-            } else {
-                $this->set('user', $this->data);
+                $ok = true;
+
+                if ($this->Auth->user('type') === 'Administrador' && isset($this->data['User']['is_beta_tester'])) {
+                    $config_file = ROOT . DS . APP_DIR . DS . 'config' . DS . 'app.options.php';
+                    $app_options = include $config_file;
+                    if (!is_array($app_options)) {
+                        $app_options = array();
+                    }
+
+                    $username = $this->data['User']['username'];
+                    if (empty($this->data['User']['is_beta_tester'])) {
+                        unset($app_options['beta']['testers'][$username]);
+                    } else {
+                        $app_options['beta']['testers'][$username] = true;
+                    }
+
+                    $fp = fopen($config_file, 'w');
+                    if ($fp === false || !fwrite($fp, '<?php return ' . var_export($app_options, true) . ';')) {
+                        $error = false;
+                        $this->Session->setFlash('En un error de escritura no ha permitido guardar todos los cambios.');
+                    }
+                    if ($fp !== false) {
+                        fclose($fp);
+                    }
+                }
+                if ($ok) {
+                    $this->Session->setFlash('El usuario se ha actualizado correctamente.');
+                    $this->redirect(array('action' => 'view', $id));
+                }
             }
+            $this->set('user', $this->data);
         }
     }
     
@@ -186,15 +214,18 @@ class UsersController extends AppController {
                 $app_options = array();
             }
             $app_options['acl'] = $acl;
-            $fp = fopen($config_file,'w');
-            if ($fp !== FALSE && fwrite($fp, '<?php return ' . var_export($app_options, true) . ';')) {
-                $this->Session->setFlash('Sus datos han sido actualizados correctamente.');
-                $this->redirect(array('controller' => 'users', 'action' => 'index'));
-            } else {
+            $fp = fopen($config_file, 'w');
+            $ok = true;
+            if ($fp === false || !fwrite($fp, '<?php return ' . var_export($app_options, true) . ';')) {
+                $ok = false;
                 $this->Session->setFlash('En un error de escritura no ha permitido guardar los cambios.');
             }
-            if ($fp !== FALSE) {
+            if ($fp !== false) {
                 fclose($fp);
+            }
+            if ($ok) {
+                $this->Session->setFlash('Sus datos han sido actualizados correctamente.');
+                $this->redirect(array('controller' => 'users', 'action' => 'index'));
             }
         }
         $this->set('roleOptions', $roleOptions);
@@ -379,7 +410,17 @@ class UsersController extends AppController {
                     if (in_array($this->Auth->user('type'), array('Estudiante', 'Profesor'))) {
                         $this->data['User'] = array_intersect_key(
                             $this->data['User'],
-                            array_flip(array('old_password', 'new_password', 'password_confirmation', 'notify_all'))
+                            array_flip(array(
+                                'old_password', 'new_password', 'password_confirmation', 'notify_all'
+                            ))
+                        );
+                    } else {
+                        $this->data['User'] = array_intersect_key(
+                            $this->data['User'],
+                            array_flip(array(
+                                'first_name', 'last_name', 'dni', 'phone',
+                                'old_password', 'new_password', 'password_confirmation', 'notify_all'
+                            ))
                         );
                     }
             if (($this->_changePasswordValidation()) && ($this->User->save($this->data))) {

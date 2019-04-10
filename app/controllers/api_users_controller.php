@@ -37,7 +37,7 @@ class ApiUsersController extends AppController {
         $responseData = $this->Auth->user();
         $username = $responseData['User']['username'];
         $beta_testers = (array) Configure::read('app.beta.testers');
-        if ($username && array_search($username, $beta_testers) !== false) {
+        if ($username && !empty($beta_testers[$username])) {
             $responseData['User']['beta'] = true;
             $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
         }
@@ -55,7 +55,7 @@ class ApiUsersController extends AppController {
         $responseData = $this->Auth->user();
         $username = $responseData['User']['username'];
         $beta_testers = (array) Configure::read('app.beta.testers');
-        if ($username && array_search($username, $beta_testers) !== false) {
+        if ($username && !empty($beta_testers[$username])) {
             $responseData['User']['beta'] = true;
             $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
         }

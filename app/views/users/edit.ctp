@@ -16,7 +16,10 @@
 			echo $form->input('username', array('label' => 'Correo electrónico', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 			echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 			echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'onchange' => 'userTypeChanged()', 'options' => array("Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario")));
-      echo $form->input('notify_all', array('label' => 'Activar el envío de correos automáticos si olvida pasar la asistencia', 'div' => array('id' => 'UserNotifyAllWrap')));
+			echo $form->input('notify_all', array('label' => 'Activar el envío de correos automáticos si olvida pasar la asistencia', 'div' => array('id' => 'UserNotifyAllWrap')));
+			if ($auth->user('type') === 'Administrador') {
+				echo $form->input('is_beta_tester', array('label' => 'Activar opciones beta', 'type' => 'select', 'value' => $isBetaTester, 'options' => array('No', 'Si'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			}
 		?>
 	</fieldset>
 	<?php echo $form->input('id', array('type' => 'hidden')); ?>
