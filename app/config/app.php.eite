@@ -2,6 +2,9 @@
 
 $config['app'] = require('app.options.php');
 
+$config['app']['beta']['config_writes'] = array(
+);
+
 $config['app']['issuer'] = 'academic-eite';
 $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_eite.jpg';
@@ -70,11 +73,5 @@ $config['app']['color_legend'] = array(
         'tutoria'         => 'Tutoría',
         'evaluacion'      => 'Evaluación',
         'otra_presencial' => 'Otra presencial'
-    )
-);
-$config['app']['beta'] = array(
-    'config_writes' => array(
-    ),
-    'testers' => array(
     )
 );
