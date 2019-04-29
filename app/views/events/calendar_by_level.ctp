@@ -88,6 +88,7 @@ $(document).ready(function() {
 				<?php foreach ($degrees as $degree => $degreeName) : ?>
 					<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
 				<?php endforeach; ?>
+				<option value="all" selected>Todas las titulaciones</option>
 			</select>
 		</dd>
 	</dl>
@@ -100,6 +101,7 @@ $(document).ready(function() {
 			<?php foreach (Configure::read('app.subject.levels') as $level => $levelName) : ?>
 				<option value="<?php echo h($level) ?>"><?php echo h($levelName) ?></option>
 			<?php endforeach; ?>
+			<option value="all" selected>Todos los cursos</option>
 		</select>
 	</dd>
 </dl>
@@ -130,40 +132,50 @@ $(document).ready(function() {
 
 <script type="text/javascript">
 	var degreeLevels = <?php echo json_encode(Configure::read('app.subject.degree_levels')) ?>;
-	$('#degree').change(function() {
-		$('#calendar').fullCalendar('removeEvents');
-		var degree = $(this).val();
-		var level = $('#level').val('').attr('disabled', 'disabled');
-		var options = level.find('option').attr('disabled', 'disabled');
-		if (degree in degreeLevels) {
-			for (var i in degreeLevels[degree]) {
-				options.filter(function () {
-					return this.value === degreeLevels[degree][i];
-				}).removeAttr('disabled');
-			}
-			level.removeAttr('disabled');
-		}
-	}).change();
-	$('#level').change(function() {
-		$('#calendar').fullCalendar('removeEvents');
-		var degree = $('#degree');
-		var level = $('#level');
-		var url = degree.length
-			? "<?php echo PATH ?>/events/get_by_degree_and_level/" + encodeURIComponent(degree.val()) + "/" + encodeURIComponent(level.val())
-			: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val())
-		;
-		$.ajax({
-			cache: false,
-			type: "GET",
-			url: url,
-			dataType: "script"
-		});
-	});
-	
+
 	$(document).ready(function() {
 
 		$('#degree').val("");
 		$('#level').val("");
 
+		$('#degree').change(function() {
+			$('#calendar').fullCalendar('removeEvents');
+			var degree = $(this).val();
+			var level = $('#level').attr('disabled', 'disabled');
+			var levelSelectedIndex = level.prop('selectedIndex');
+			var levelOptions = level.find('option').attr('disabled', 'disabled');
+			if (degree in degreeLevels) {
+				for (var i in degreeLevels[degree]) {
+					levelOptions.filter(function (index) {
+						return this.value === 'all' || this.value === degreeLevels[degree][i];
+					}).removeAttr('disabled');
+				}
+				level.removeAttr('disabled');
+			} else if (degree === 'all') {
+				levelOptions.removeAttr('disabled');
+				level.removeAttr('disabled');
+			}
+			if ($(levelOptions[levelSelectedIndex]).prop('disabled')) {
+				level.val('');
+			} else {
+				level.change();
+			}
+		}).change();
+
+		$('#level').change(function() {
+			$('#calendar').fullCalendar('removeEvents');
+			var degree = $('#degree');
+			var level = $('#level');
+			var url = degree.length
+				? "<?php echo PATH ?>/events/get_by_degree_and_level/" + encodeURIComponent(degree.val()) + "/" + encodeURIComponent(level.val())
+				: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val())
+			;
+			$.ajax({
+				cache: false,
+				type: "GET",
+				url: url,
+				dataType: "script"
+			});
+		});
 	});
 </script>
