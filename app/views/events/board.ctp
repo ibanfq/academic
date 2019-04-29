@@ -42,6 +42,7 @@
 function refresh() {
     $.get(window.location.href, function(data) {
         $('#events-body').replaceWith($(data).find('#events-body'));
+        events_updated = true;
         $(window).resize();
     });
 }
@@ -62,10 +63,10 @@ function tick() {
     document.getElementById('time').innerHTML = time;
 
     if (last_minutes != i) {
-        last_minutes = i;
-        if (time === '04:00') {
+        if (last_minutes && now.getMinutes() % 15 === 0) {
             events_updated = false;
         }
+        last_minutes = i;
 
         if (!scrolling) {
             if (events_updated) {
@@ -135,38 +136,39 @@ function scroll() {
 }
 
 $(window).load(function() {
-    var now = new Date();
-    var date = now.getFullYear()
-        + '-' + ('0'+(1+now.getMonth())).slice(-2)
-        + '-' + ('0'+now.getDate()).slice(-2)
-        + ' ' + ('0'+now.getHours()).slice(-2)
-        + ':' + ('0'+now.getMinutes()).slice(-2)
-        + ':' + ('0'+now.getSeconds()).slice(-2)
-    ;
-    $('#events-body tr').each(function() {
-        if (this.getAttribute('data-end-at') <= date) {
-            $(this).remove();
-        } else {
-            $(this).show();
-        }
-    });
     $(window).resize(function () {
+        var now = new Date();
+        var date = now.getFullYear()
+            + '-' + ('0'+(1+now.getMonth())).slice(-2)
+            + '-' + ('0'+now.getDate()).slice(-2)
+            + ' ' + ('0'+now.getHours()).slice(-2)
+            + ':' + ('0'+now.getMinutes()).slice(-2)
+            + ':' + ('0'+now.getSeconds()).slice(-2)
+        ;
         var content = $('#content').css('padding-top', 0);
         var thead = $('#events-head').css('position', 'static');
-        var th = thead.find('th');
-        var td = $('#events-body tr:last td').css('width', 'auto');
-        th.each(function(i) {
-            var th_i = $(this);
-            if (th_i.data('original-width')) {
-                th_i.css('width', th_i.data('original-width'));
+        var headCells = thead.find('th');
+        var rows = $('#events-body tr').each(function() {
+            if (this.getAttribute('data-end-at') <= date) {
+                $(this).remove();
             } else {
-                th_i.data('original-width', (th_i.attr('style')||'').match(/(?:^|\s)width\s*:/)? th_i.css('width'): 'auto');
+                $(this).show();
             }
         });
-        if (td.length) { 
-            td.each(function(i) {
-                $(th[i]).css('width', $(td[i]).width());
-                $(td[i]).css('width', $(td[i]).width());
+        var lastRowCells = rows.last().find('td:visible').css('width', 'auto');
+
+        headCells.each(function(i) {
+            var th = $(this);
+            if (th.data('original-width')) {
+                th.css('width', th.data('original-width'));
+            } else {
+                th.data('original-width', (th.attr('style')||'').match(/(?:^|\s)width\s*:/)? th.css('width'): 'auto');
+            }
+        });
+        if (lastRowCells.length) { 
+            lastRowCells.each(function(i) {
+                $(headCells[i]).css('width', $(lastRowCells[i]).width());
+                $(lastRowCells[i]).css('width', $(lastRowCells[i]).width());
             });
             thead.css('position', 'fixed').css('top', thead.offset().top).css('z-index', 9000);
             content.css('padding-top', thead.height());
