@@ -6,8 +6,22 @@
 /app/config/db.sql
 /app/webroot/img/barcode
 /app/webroot/files/*/*
-!/app/webroot/files/*/empty
-.DS_Store
+
+# ignore IDE/hidden/OS cache files
+.*
+*~
+nbproject
+nb-configuration.xml
 tags
-.tags_swap
+Session.vim
+*.tmproj
+*.tmproject
+tmtags
+Thumbs.db
+Desktop.ini
+
+# ignore Composer downloads
 /vendors/plugins
+
+# keep some hiddens
+!empty
