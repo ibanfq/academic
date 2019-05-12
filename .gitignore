@@ -5,8 +5,9 @@
 /app/config/app.options.php
 /app/config/db.sql
 /app/webroot/img/barcode
+/app/webroot/files/*/*
+!/app/webroot/files/*/empty
 .DS_Store
 tags
 .tags_swap
-
 /vendors/plugins

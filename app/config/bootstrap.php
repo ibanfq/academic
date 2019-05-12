@@ -63,6 +63,11 @@ Inflector::rules('plural',   array('irregular' => array('userbooking'   => 'user
 Inflector::rules('singular', array('irregular' => array('log' => 'log')));
 Inflector::rules('plural', array('irregular' => array('log' => 'log')));
 
+Inflector::rules('singular', array('irregular' => array('monitors_media' => 'monitor_media')));
+Inflector::rules('singular', array('irregular' => array('monitorsmedia'  => 'MonitorMedia')));
+Inflector::rules('plural',   array('irregular' => array('monitor_media'  => 'monitors_media')));
+Inflector::rules('plural',   array('irregular' => array('monitormedia'   => 'monitors_media')));
+
 Inflector::rules('singular', array('irregular' => array('competence' => 'competence')));
 Inflector::rules('plural',   array('irregular' => array('competence' => 'competence')));
 

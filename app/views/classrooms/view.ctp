@@ -7,7 +7,7 @@
     <ul>
         <?php if ($auth->user('type') == "Administrador") {?>    
             <li><?php echo $html->link('Modificar aula', array('action' => 'edit', $classroom['Classroom']['id'])) ?></li>
-            <li><?php echo $html->link('Eliminar aula', array('action' => 'delete', $classroom['Classroom']['id']), null, 'Cuando elimina un aula, toda sa programación. ¿Está seguro que desea borrarla?') ?></li>
+            <li><?php echo $html->link('Eliminar aula', array('action' => 'delete', $classroom['Classroom']['id']), null, 'Cuando elimina un aula, elimina también toda su programación. ¿Está seguro que desea borrarla?') ?></li>
         <?php } ?>
     </ul>
 </div>

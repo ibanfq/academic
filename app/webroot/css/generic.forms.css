@@ -4,6 +4,9 @@ dl {
 	margin: 0em 0em;
 	width: 70%;
 }
+.input.file dl {
+	width: 100%;
+}
 dl .altrow {
 	background: #f4f4f4;
 }

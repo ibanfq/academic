@@ -421,6 +421,71 @@ div.related {
 	display: block;
 }
 
+/** Embed video container **/
+.embed-video-container {
+	position: relative;
+  	padding-bottom: 56.25%;
+  	overflow: hidden;
+}
+.embed-video-container iframe,
+.embed-video-container object,
+.embed-video-container embed {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+.embed-video-container.video-loading iframe,
+.embed-video-container.video-loading object,
+.embed-video-container.video-loading embed {
+  	opacity: 0;
+}
+.embed-video-container.video-loading:before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #000;
+}
+@-webkit-keyframes videospinner {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+@keyframes videospinner {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+.embed-video-container.video-loading:after {
+	content: '';
+	box-sizing: border-box;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 50px;
+	height: 50px;
+	margin-top: -25px;
+	margin-left: -25px;
+	border-radius: 50%;
+	border: 4px solid #ccc;
+	border-top-color: #000;
+	animation: videospinner 1s cubic-bezier(0, 0.15, 1, 0.85) infinite;
+}
+
 /** Jquery UI */
 body .ui-dialog .ui-dialog-titlebar {
 	padding: .1em 1em;

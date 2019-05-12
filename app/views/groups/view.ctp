@@ -10,7 +10,7 @@
   <div class="actions">
     <ul>
       <li><?php echo $html->link('Modificar grupo', array('action' => 'edit', $group['Group']['id'])) ?></li>
-      <li><?php echo $html->link('Eliminar grupo', array('action' => 'delete', $group['Group']['id']), null, 'Cuando elimina un grupo toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
+      <li><?php echo $html->link('Eliminar grupo', array('action' => 'delete', $group['Group']['id']), null, 'Cuando elimina un grupo, elimina también toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
     </ul>
   </div>
 <?php endif; ?>

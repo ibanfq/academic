@@ -681,7 +681,7 @@ class EventsController extends AppController {
 
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
         $student_actions = array('register_student');
-        $public_actions = array('view', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'board', 'get', 'get_by_level', 'get_by_degree_and_level', 'get_by_subject');
+        $public_actions = array('view', 'view_info', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'board', 'get', 'get_by_level', 'get_by_degree_and_level', 'get_by_subject');
 
         if (isset($children_actions[$action])) {
             $action = $children_actions[$action];

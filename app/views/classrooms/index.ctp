@@ -8,11 +8,11 @@
 			<li><?php echo $html->link('Crear aula', array('action' => 'add')) ?></li>
 		<?php } ?>
 		
-		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")) {?>
+		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")): ?>
 			<li><?php echo $html->link('Imprimir hoja de firmas', array('action' => 'get_sign_file')) ?></li>
 			<li><?php echo $html->link('Imprimir agenda diaria', array('action' => 'get_bookings')) ?></li>
-                        <li><?php echo $html->link('Presentar eventos en TV', array('controller' => 'events', 'action' => 'board')) ?></li>
-		<?php } ?>
+			<li><?php echo $html->link('Monitores TV', array('controller' => 'monitors', 'action' => 'index')) ?></li>
+		<?php endif; ?>
 	</ul>
 </div>
 

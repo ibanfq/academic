@@ -47,6 +47,26 @@ class ClassroomsController extends AppController {
                 $this->set('classroom', $this->data);
         }
     }
+
+    function find_by_name() {
+        App::import('Sanitize');
+
+        $name_conditions = array();
+        foreach (explode(' ', $this->params['url']['q']) as $q) {
+            $q = '%'.Sanitize::escape($q).'%';
+            $name_conditions[] = array('Classroom.name like' => $q);
+        }
+
+        $classrooms = $this->Classroom->find('all', array(
+            'fields' => array('Classroom.id', 'Classroom.name'),
+            'recursive' => 0,
+            'conditions' => array(
+                "AND" => $name_conditions
+            ),
+            'order' => array('Classroom.name')
+        ));
+        $this->set('classrooms', $classrooms);
+    }
     
     function get_sign_file() {
         $classrooms = $this->Classroom->find('all', array('order' => "name ASC", 'recursive' => 0));

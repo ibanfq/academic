@@ -1,6 +1,7 @@
 <!-- File: /app/views/classrooms/new.ctp -->
 <?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb($classroom['Classroom']['name'], "/classrooms/edit/{$classroom['Classroom']['id']}"); ?>
+<?php $html->addCrumb($classroom['Classroom']['name'], "/classrooms/view/{$classroom['Classroom']['id']}"); ?>
+<?php $html->addCrumb('Modificar aula', "/classrooms/edit/{$classroom['Classroom']['id']}"); ?>
 
 <h1>Modificar aula</h1>
 <?php

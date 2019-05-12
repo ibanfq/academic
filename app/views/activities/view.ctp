@@ -14,7 +14,7 @@
     <ul>
       <li><?php echo $html->link('Estadísticas estudiante', array('action' => 'students_stats', $activity['Activity']['id'])) ?></li>
       <li><?php echo $html->link('Modificar actividad', array('action' => 'edit', $activity['Activity']['id'])) ?></li>
-      <li><?php echo $html->link('Eliminar actividad', array('action' => 'delete', $activity['Activity']['id']), null, 'Cuando elimina una actividad toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
+      <li><?php echo $html->link('Eliminar actividad', array('action' => 'delete', $activity['Activity']['id']), null, 'Cuando elimina una actividad, elimina también toda su programación asociada. ¿Está seguro que desea borrarlo?') ?></li>
     </ul>
   </div>
 <?php endif; ?>
