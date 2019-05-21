@@ -33,11 +33,6 @@
     </tbody>
 </table>
 
-<aside id="clock">
-    <h2>Hora local</h2>
-    <p id="time"></p>
-</aside>
-
 <script type="text/javascript">
 function refresh() {
     $.get(window.location.href, function(data) {
@@ -60,7 +55,7 @@ function tick() {
     var i = ('0'+now.getMinutes()).slice(-2);
     var s = ('0'+now.getSeconds()).slice(-2);
     var time = h+':'+i;
-    document.getElementById('time').innerHTML = time;
+    //document.getElementById('time').innerHTML = time;
 
     if (last_minutes != i) {
         if (last_minutes && now.getMinutes() % 15 === 0) {
