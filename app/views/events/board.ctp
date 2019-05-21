@@ -141,6 +141,7 @@ $(window).load(function() {
             + ':' + ('0'+now.getSeconds()).slice(-2)
         ;
         var headerPaddingBottom = $('#header-padding-bottom').css('padding-top', 0);
+        var table = $('#events');
         var thead = $('#events-head').css('position', 'static');
         var headCells = thead.find('th');
         var rows = $('#events-body tr').each(function() {
@@ -151,6 +152,13 @@ $(window).load(function() {
             }
         });
         var lastRowCells = rows.last().find('td:visible').css('width', 'auto');
+
+        headerPaddingBottom.css('height', thead.height());
+        thead
+            .css('position', 'fixed')
+            .css('top', headerPaddingBottom.offset().top)
+            .css('width', table.width())
+            .css('z-index', 9000);
 
         headCells.each(function(i) {
             var th = $(this);
@@ -165,8 +173,6 @@ $(window).load(function() {
                 $(headCells[i]).css('width', $(lastRowCells[i]).width());
                 $(lastRowCells[i]).css('width', $(lastRowCells[i]).width());
             });
-            thead.css('position', 'fixed').css('top', headerPaddingBottom.offset().top).css('z-index', 9000);
-            headerPaddingBottom.css('height', thead.height());
         }
         checkOverflow();
     }).resize();
