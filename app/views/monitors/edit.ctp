@@ -62,7 +62,7 @@
         <table>
                 <thead>
                     <tr>
-                        <th></th>
+                        <th>Orden</th>
                         <th>Tipo</th>
                         <th>Contenido</th>
                         <th>Duración (sg)</th>
@@ -75,7 +75,7 @@
                     <?php foreach ($form->data['MonitorMedia'] as $row): ?>
                     <?php $i++; ?>
                     <tr>
-                        <td width="10px" class="sortable-handle" style="vertical-align">
+                        <td width="10px" class="sortable-handle" style="text-align:center">
                             <span class="ui-icon ui-icon-arrowthick-2-n-s" style="margin-top: 0"></span>
                             <input type="hidden" name="data[MonitorMedia][<?php echo h($row['id']) ?>][id]" value="<?php echo h($row['id']) ?>" />
                             <input type="hidden" class="media_order" name="data[MonitorMedia][<?php echo h($row['id']) ?>][order]" value="<?php echo h($i) ?>" />

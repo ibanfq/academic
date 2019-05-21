@@ -2,6 +2,7 @@
 class MonitorsController extends AppController {
     var $name = 'Monitors';
     var $paginate = array('limit' => 10, 'order' => array('Monitor.name' => 'asc'), 'recursive' => 0);
+    var $helpers = array('activityHelper', 'Text');
     
     function index(){
         App::import('Sanitize');
@@ -82,6 +83,29 @@ class MonitorsController extends AppController {
         $this->_removeDir('files/monitors/'.$monitor['Monitor']['id']);
 
         $this->redirect(array('action' => 'index'));
+    }
+
+    function board() {
+        $this->layout = 'board';
+        $this->set('events', $this->_getBoardEvents());
+    }
+
+    function show($monitor_id) {
+        $ajaxSection = isset($this->params['named']['ajax_section']) ? $this->params['named']['ajax_section'] : null;
+
+        $monitor = !$ajaxSection || $ajaxSection === 'content-media'
+            ? $this->_findMonitorOrFail($monitor_id, array('recursive' => 1))
+            : $this->_findMonitorOrFail($monitor_id);
+
+        $this->layout = 'board';
+        $this->set('monitor', $monitor);
+
+        if ((!$ajaxSection || $ajaxSection === 'content-board') && !empty($monitor['Monitor']['show_events'])) {
+            $events = $this->_getBoardEvents(Set::extract("Classroom.{n}.id", $monitor));
+            $this->set('events', $events);
+        }
+
+        $this->set('ajax_section', $ajaxSection);
     }
 
     function add_media($monitor_id){
@@ -295,16 +319,18 @@ class MonitorsController extends AppController {
     }
 
     function _removeDir($dir){
-        $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach($files as $file) {
-            if ($file->isDir()){
-                rmdir($file->getRealPath());
-            } else {
-                unlink($file->getRealPath());
+        if (file_exists($dir)) {
+            $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
+            $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+            foreach($files as $file) {
+                if ($file->isDir()){
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
             }
+            rmdir($dir);
         }
-        rmdir($dir);
     }
 
     function _findMonitorOrFail($id, $options = null){
@@ -344,23 +370,199 @@ class MonitorsController extends AppController {
 
         return $monitor;
     }
+
+    function _getBoardEvents($classrooms_ids = null) {
+        if (!isset($this->Event)) {
+            $this->loadModel('Event');
+        }
+        if (!isset($this->Booking)) {
+            $this->loadModel('Booking');
+        }
+
+        $classroom_show_tv = Configure::read('app.classroom.show_tv');
+        $event_show_tv = !$classroom_show_tv || Configure::read('app.event.show_tv');
+        $booking_show_tv = !$classroom_show_tv || Configure::read('app.booking.show_tv');
+
+        $events_filters = [];
+        $bookings_filters = [];
+
+        if ($event_show_tv) {
+            $events_filter[]= 'Event.show_tv';
+        }
+        if ($booking_show_tv) {
+            $bookings_filter[]= 'Booking.show_tv';
+        }
+
+        if (empty($classrooms_ids)) {
+            if ($classroom_show_tv) {
+                $events_filters []= 'Classroom.show_tv';
+                $bookings_filters []= 'Booking.classroom_id = -1 OR Classroom.show_tv';
+            }
+        } else {
+            $db = $this->Event->getDataSource();
+            $classrooms_db_id_values = implode(', ', array_map(array($db, 'value'), $classrooms_ids));
+            $events_filters[]= "Classroom.id IN ($classrooms_db_id_values)";
+            $bookings_filters[]= "Classroom.id IN ($classrooms_db_id_values) OR Booking.classroom_id = -1";
+        }
+
+        $events_filters = '(' . implode(') AND (', $events_filters) . ')';
+        $bookings_filters = '(' . implode(') AND (', $bookings_filters) . ')';
+
+        $dbo = $this->Event->getDataSource();
+        $sql1 = $dbo->buildStatement(
+            array(
+                'table' => $dbo->fullTableName($this->Event),
+                'alias' => 'Event',
+                'fields' => array(
+                    'Event.initial_hour',
+                    'Event.final_hour',
+                    'Activity.name',
+                    'Activity.type',
+                    'Subject.acronym as subject_acronym',
+                    'Subject.degree as subject_degree',
+                    'Subject.level as subject_level',
+                    'Group.name as group_name',
+                    'Teacher.first_name as teacher_first_name',
+                    'Teacher.last_name as teacher_last_name',
+                    'Event.classroom_id',
+                    'Classroom.name as classroom_name'
+                ),
+                'conditions' => "Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND ($events_filters)",
+                'joins' => array(
+                    array(
+                        'table' => 'classrooms',
+                        'alias' => 'Classroom',
+                        'type' => 'left',
+                        'conditions' => 'Event.classroom_id = Classroom.id'
+                    ),
+                    array(
+                        'table' => 'activities',
+                        'alias' => 'Activity',
+                        'type' => 'left',
+                        'conditions' => 'Event.activity_id = Activity.id'
+                    ),
+                    array(
+                        'table' => 'subjects',
+                        'alias' => 'Subject',
+                        'type' => 'left',
+                        'conditions' => 'Activity.subject_id = Subject.id'
+                    ),
+                    array(
+                        'table' => 'groups',
+                        'alias' => 'Group',
+                        'type' => 'left',
+                        'conditions' => 'Event.group_id = Group.id'
+                    ),
+                    array(
+                        'table' => 'users',
+                        'alias' => 'Teacher',
+                        'type' => 'left',
+                        'conditions' => 'Event.teacher_id = Teacher.id AND (Teacher.type = "Profesor" OR Teacher.type = "Administrador")'
+                    )
+                ),
+                'order' => null,
+                'recursive' => 0,
+                'limit' => null,
+                'group' => null
+            ),
+            $this->Event
+        );
+                    
+        $sql2 = $dbo->buildStatement(
+            array(
+                'table' => $dbo->fullTableName($this->Booking),
+                'alias' => 'Booking',
+                'fields' => array(
+                    'Booking.initial_hour',
+                    'Booking.final_hour',
+                    'Booking.reason as name',
+                    '"booking" as type',
+                    'null as subject_acronym',
+                    'null as subject_degree',
+                    'null as subject_level',
+                    'null as group_name',
+                    'null as teacher_first_name',
+                    'null as teacher_last_name',
+                    'Booking.classroom_id',
+                    'Classroom.name as classroom_name'
+                ),
+                'conditions' => "Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND ($bookings_filters)",
+                'joins' => array(
+                    array(
+                        'table' => 'classrooms',
+                        'alias' => 'Classroom',
+                        'type' => 'left',
+                        'conditions' => 'Booking.classroom_id = Classroom.id'
+                    )
+                ),
+                'order' => null,
+                'recursive' => 0,
+                'limit' => null,
+                'group' => null
+            ),
+            $this->Booking
+        );
+                    
+        $events = $dbo->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
+
+        foreach($events as $i => &$event) {
+            $event = $event[0];
+            $event['sql_order'] = $i;
+        }
+        usort($events, array($this, '_sortBoardEvents'));
+
+        return $events;
+        
+    }
+
+    function _sortBoardEvents($a, $b) {
+        if ($a['initial_hour'] === $b['initial_hour']) {
+            if ($a['subject_degree'] !== null && $b['subject_degree'] !== null) {
+                $a_degree = $this->Event->Activity->Subject->degreeToInt($a['subject_degree']);
+                $b_degree = $this->Event->Activity->Subject->degreeToInt($b['subject_degree']);
+                if ($a_degree !== $b_degree) {
+                    return $a_degree - $b_degree;
+                }
+            }
+            if ($a['subject_level'] === null || $b['subject_level'] === null) {
+                if ($a['subject_level'] === $b['subject_level']) {
+                    return strcasecmp($a['name'], $b['name']);
+                }
+            } else {
+                $a_level = $this->Event->Activity->Subject->levelToInt($a['subject_level']);
+                $b_level = $this->Event->Activity->Subject->levelToInt($b['subject_level']);
+                if ($a_level !== $b_level) {
+                    return $a_level - $b_level;
+                }
+            }
+        }
+        return $a['sql_order'] - $b['sql_order'];
+    }
     
     function _authorize() {
         parent::_authorize();
+
+        $action = $this->params['action'];
         
-        $administrator_actions = array('add', 'edit', 'delete');
-        $tv_actions = array('index', 'view');
+        $administrator_actions = array('add', 'edit', 'delete', 'add_media');
+        $read_actions = array('index', 'view');
+        $public_actions = array('board', 'show');
         
         $this->set('section', 'classrooms');
         
-        if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
-            return false;
+        if ((array_search($action, $administrator_actions) !== false)) {
+            return ($this->Auth->user('type') == "Administrador");
         }
     
-        if ((array_search($this->params['action'], $tv_actions) === false) && ($this->Auth->user('type') == "Estudiante" || $this->Auth->user('type') == "Profesor")) {
-            return false;
+        if ((array_search($action, $read_actions) !== false)) {
+            return ($this->Auth->user('type') != "Estudiante" && $this->Auth->user('type') != "Profesor");
+        }
+
+        if ((array_search($action, $public_actions) !== false)) {
+            $this->Auth->allow($action);
+            return true;
         }
     
-        return true;
+        return $this->Acl->check("monitors.{$action}");
     }
 }

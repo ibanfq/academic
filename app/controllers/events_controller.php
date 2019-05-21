@@ -542,6 +542,7 @@ class EventsController extends AppController {
         $this->layout = 'public';
     }
     
+    /* @todo: remove board and board.ctp */
     function board() {
         $this->layout = 'board';
 
@@ -681,6 +682,7 @@ class EventsController extends AppController {
 
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
         $student_actions = array('register_student');
+        /* @todo: remove board action */
         $public_actions = array('view', 'view_info', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'board', 'get', 'get_by_level', 'get_by_degree_and_level', 'get_by_subject');
 
         if (isset($children_actions[$action])) {
@@ -702,7 +704,8 @@ class EventsController extends AppController {
 
         return $this->Acl->check("events.{$action}");
     }
-            
+
+    /* @todo remove _sortBoardEvents */
     function _sortBoardEvents($a, $b) {
         if ($a['initial_hour'] === $b['initial_hour']) {
             if ($a['subject_degree'] !== null && $b['subject_degree'] !== null) {

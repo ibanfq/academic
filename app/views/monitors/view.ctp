@@ -67,7 +67,7 @@
                         <td><?php echo $row['type'] ?></td>
                         <td><?php
                             if ($row['type'] === 'Imagen') {
-                                echo '<img src="'. htmlspecialchars(PATH.'/'.$row['src']). '" width="120"></img>';
+                                echo '<img src="'. htmlspecialchars(PATH.'/'.$row['src']). '" width="120" />';
                             } elseif ($row['type'] === 'Video') {
                                 echo '<a href="#" onclick="openVideo(\'' . htmlspecialchars(PATH.'/'.$row['src']) .'\', \'' . htmlspecialchars($row['mime_type']) .'\'); return false;">Ver video</a>';
                             } elseif ($row['type'] === 'Youtube') {

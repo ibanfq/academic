@@ -10,7 +10,7 @@
 		<?php endif; ?>
 		
 		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")): ?>
-			<li><?php echo $html->link('Presentar todas los eventos en TV', array('controller' => 'events', 'action' => 'board')) ?></li>
+			<li><?php echo $html->link('Presentar todas los eventos en TV', array('controller' => 'monitors', 'action' => 'board')) ?></li>
 		<?php endif; ?>
 	</ul>
 </div>
