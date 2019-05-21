@@ -140,7 +140,7 @@ $(window).load(function() {
             + ':' + ('0'+now.getMinutes()).slice(-2)
             + ':' + ('0'+now.getSeconds()).slice(-2)
         ;
-        var content = $('#content').css('padding-top', 0);
+        var headerPaddingBottom = $('#header-padding-bottom').css('padding-top', 0);
         var thead = $('#events-head').css('position', 'static');
         var headCells = thead.find('th');
         var rows = $('#events-body tr').each(function() {
@@ -165,8 +165,8 @@ $(window).load(function() {
                 $(headCells[i]).css('width', $(lastRowCells[i]).width());
                 $(lastRowCells[i]).css('width', $(lastRowCells[i]).width());
             });
-            thead.css('position', 'fixed').css('top', thead.offset().top).css('z-index', 9000);
-            content.css('padding-top', thead.height());
+            thead.css('position', 'fixed').css('top', headerPaddingBottom.offset().top).css('z-index', 9000);
+            headerPaddingBottom.css('height', thead.height());
         }
         checkOverflow();
     }).resize();
