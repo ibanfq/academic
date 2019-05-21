@@ -131,7 +131,10 @@ class MonitorsController extends AppController {
                 }
 
                 if (!$error && $_FILES['data']['error']['MonitorMedia']['src'] !== UPLOAD_ERR_OK) {
-                    $this->Session->setFlash('No se ha recibido correctamente el archivo');
+                    $this->Session->setFlash(sprintf(
+                        'No se ha recibido correctamente el archivo. (Código de error: %d)',
+                        $_FILES['data']['error']['MonitorMedia']['src']
+                    ));
                     $error = true;
                 }
 
