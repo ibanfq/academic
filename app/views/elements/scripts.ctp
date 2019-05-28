@@ -4,6 +4,7 @@
 	echo $javascript->link('jquery'); 
 	echo $javascript->link('jquery-ui');
   echo $javascript->link('jquery.ui.touch');
+	echo $javascript->link('jquery.hoverIntent');
 	echo $javascript->link('jquery.autocomplete');
 	echo $javascript->link('jquery.tooltip');
   echo $javascript->link('fullcalendar');

@@ -45,21 +45,52 @@ $(document).ready(function() {
 		<?php if (isset($auth)) { ?>
 		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
 		    eventClick: function(event, jsEvent, view) {
-			    if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
-				  window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+				if (event.className != 'booking') {
+					if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?')) {
+						window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+					}
+				}
 		    },
 		<?php }} ?>
-		eventMouseover: function(event, jsEvent, view) {
-			$.ajax({
-				type: "GET", 
-				url: "<?php echo PATH ?>/events/view/" + event.id,
-				asynchronous: false,
-				success: function(data) {
-					$('#tooltip').html(data);
-					$('#EventDetails').html(data);
+		eventRender: function(event, element) {
+			element.hoverIntent({
+				sensitivity: 1,
+				interval: 100,
+				over: function () {
+					var id = event.id.match(/\d+/);
+					var url;
+					if (event.className == 'booking')
+						url = "<?php echo PATH ?>/bookings/view/";
+					else
+						url = "<?php echo PATH ?>/events/view/";
+					
+					var eventDetails = $('#EventDetails');
+					if (eventDetails.data('eventId') !== event.id) {
+						var currentXhr = eventDetails.data('xhr');
+						if (currentXhr) {
+							currentXhr.abort();
+						}
+						eventDetails.empty().data('eventId', event.id);
+						$('#tooltip').empty();
+						var xhr = $.ajax({
+							cache: false,
+							type: "GET",
+							url: url + id,
+							asynchronous: false,
+							success: function(data) {
+								$('#tooltip').html(data).find('a, .actions').remove();
+								eventDetails.html(data).find('a, .actions').remove();
+							},
+							complete: function() {
+								eventDetails.data('xhr', null);
+							}
+						});
+						eventDetails.data('xhr', xhr);
+					}
 				}
 			});
-			
+		},
+		eventMouseover: function(event, jsEvent, view) {
 			$(this).tooltip({
 				delay: 500,
 				bodyHandler: function() {
@@ -67,7 +98,6 @@ $(document).ready(function() {
 				},
 				showURL: false
 			});
-			
 		},
 		
 		})
@@ -105,6 +135,15 @@ $(document).ready(function() {
 		</select>
 	</dd>
 </dl>
+<dl>
+	<dt>Reservas de aulas</dt>
+	<dd>
+		<select id="booking" name="booking">
+			<option value="0" selected>Ocultar</option>
+			<option value="1">Mostrar</option>
+		</select>
+	</dd>
+</dl>
 
 <div id="calendar_container">
 	<div id="calendar" class="fc" style="margin: 3em 0pt; font-size: 13px;"></div>
@@ -135,8 +174,13 @@ $(document).ready(function() {
 
 	$(document).ready(function() {
 
+		$('#booking').val(0);
 		$('#degree').val("");
 		$('#level').val("");
+
+		$('#booking').change(function() {
+			$('#degree').change();
+		});
 
 		$('#degree').change(function() {
 			$('#calendar').fullCalendar('removeEvents');
@@ -164,18 +208,21 @@ $(document).ready(function() {
 
 		$('#level').change(function() {
 			$('#calendar').fullCalendar('removeEvents');
+			var booking = $('#booking');
 			var degree = $('#degree');
 			var level = $('#level');
-			var url = degree.length
-				? "<?php echo PATH ?>/events/get_by_degree_and_level/" + encodeURIComponent(degree.val()) + "/" + encodeURIComponent(level.val())
-				: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val())
-			;
-			$.ajax({
-				cache: false,
-				type: "GET",
-				url: url,
-				dataType: "script"
-			});
+			if (level.val()) {
+				var url = degree.length
+					? "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
+					: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/booking:" + encodeURIComponent(booking.val())
+				;
+				$.ajax({
+					cache: false,
+					type: "GET",
+					url: url,
+					dataType: "script"
+				});
+			}
 		});
 	});
 </script>

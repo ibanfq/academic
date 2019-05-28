@@ -44,29 +44,11 @@ class EventsController extends AppController {
         $db = $this->Event->getDataSource();
         $conditions = [];
 
-        if ($level !== 'all') {
-            $conditions[] = "Subject.level = {$db->value($level)}";
-        }
-
-        if (empty($conditions)) {
-            $course = $this->Event->Activity->Subject->Course->current();
-            $where = "Subject.course_id = {$db->value($course['id'])}";
-        } else {
-            $where = implode(' AND ', $conditions);
-        }
-
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE $where");
-        
-        $this->set('authorizeDelete', array($this, '_authorizeDelete'));
-        $this->set('events', $events);
-    }
-
-    function get_by_degree_and_level($degree = null, $level = null) {
-        $db = $this->Event->getDataSource();
-        $conditions = [];
-
-        if ($degree !== 'all') {
-            $conditions[] = "Subject.degree = {$db->value($degree)}";
+        if (!empty($this->params['named']['degree'])) {
+            $degree = $this->params['named']['degree'];
+            if ($degree !== 'all') {
+                $conditions[] = "Subject.degree = {$db->value($degree)}";
+            }
         }
 
         if ($level !== 'all') {
@@ -81,9 +63,16 @@ class EventsController extends AppController {
         }
 
         $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE $where");
+
+        if (empty($this->params['named']['booking'])) {
+            $bookings = array();
+        } else {
+            $bookings = $this->Event->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking");
+        }
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
+        $this->set('bookings', $bookings);
     }
 
     function get_by_teacher($teacher_id = null) {

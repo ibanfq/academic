@@ -493,35 +493,6 @@
                     item.toggle(visible);
                 })
             },
-            eventRender: function (event, element, view) {
-                $(element).addTouch();
-                if (!event.className || !event.className.length) {
-                    element.bind('click', function (jsEvent) {
-                        $('.menu:visible').blur();
-                    });
-                    return;
-                }
-                if (isMenusEnabled()) {
-                    element.bind('click', function (jsEvent) {
-                        var menu = $('#menu-event')
-                            .data('fc-event', event)
-                            .show()
-                            .position({my: "left top", of: jsEvent})
-                            .focus();
-                        menu.find('[data-action="delete"]')
-                            .closest('li')[event.deletable ? 'removeClass' : 'addClass']('ui-state-disabled');
-                        menu.find('[data-action="copy"]')
-                            .closest('li')[event.className.indexOf('booking') === -1 ? 'removeClass' : 'addClass']('ui-state-disabled');
-                    });
-                    element.bind('dblclick', function (jsEvent) {
-                        openEvent(event);
-                    });
-                } else {
-                    element.bind('click', function (jsEvent) {
-                        openEvent(event);
-                    });
-                }
-            },
             eventDrop: function( event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view ) {
                 if (!event.className || !event.className.length) {
                     return;
@@ -568,29 +539,76 @@
                     }
                 });
             },
-            eventMouseover: function(event, jsEvent, view) {
+            eventRender: function (event, element, view) {
+                $(element).addTouch();
                 if (!event.className || !event.className.length) {
+                    element.bind('click', function (jsEvent) {
+                        $('.menu:visible').blur();
+                    });
                     return;
                 }
-                var id = event.id.match(/\d+/);
-                var url;
-                if (event.className.indexOf('booking') !== -1) {
-                    url = "<?php echo PATH ?>/bookings/view/";
+                if (isMenusEnabled()) {
+                    element.bind('click', function (jsEvent) {
+                        var menu = $('#menu-event')
+                            .data('fc-event', event)
+                            .show()
+                            .position({my: "left top", of: jsEvent})
+                            .focus();
+                        menu.find('[data-action="delete"]')
+                            .closest('li')[event.deletable ? 'removeClass' : 'addClass']('ui-state-disabled');
+                        menu.find('[data-action="copy"]')
+                            .closest('li')[event.className.indexOf('booking') === -1 ? 'removeClass' : 'addClass']('ui-state-disabled');
+                    });
+                    element.bind('dblclick', function (jsEvent) {
+                        openEvent(event);
+                    });
                 } else {
-                    url = "<?php echo PATH ?>/events/view/";
+                    element.bind('click', function (jsEvent) {
+                        openEvent(event);
+                    });
                 }
-                
-                $.ajax({
-                    cache: false,
-                    type: "GET", 
-                    url: url + id,
-                    asynchronous: false,
-                    success: function(data) {
-                        $('#tooltip').html(data).find('a, .actions').remove();
-                        $('#EventDetails').html(data).find('a, .actions').remove();
+                element.hoverIntent({
+                    sensitivity: 1,
+                    interval: 100,
+                    over: function () {
+                        if (!event.className || !event.className.length) {
+                            return;
+                        }
+                        var id = event.id.match(/\d+/);
+                        var url;
+                        if (event.className.indexOf('booking') !== -1) {
+                            url = "<?php echo PATH ?>/bookings/view/";
+                        } else {
+                            url = "<?php echo PATH ?>/events/view/";
+                        }
+                        
+                        var eventDetails = $('#EventDetails');
+                        if (eventDetails.data('eventId') !== event.id) {
+                            var currentXhr = eventDetails.data('xhr');
+                            if (currentXhr) {
+                                currentXhr.abort();
+                            }
+                            eventDetails.empty().data('eventId', event.id);
+                            $('#tooltip').empty();
+                            var xhr = $.ajax({
+                                cache: false,
+                                type: "GET",
+                                url: url + id,
+                                asynchronous: false,
+                                success: function(data) {
+                                    $('#tooltip').html(data).find('a, .actions').remove();
+                                    eventDetails.html(data).find('a, .actions').remove();
+                                },
+                                complete: function() {
+                                    eventDetails.data('xhr', null);
+                                }
+                            });
+                            eventDetails.data('xhr', xhr);
+                        }
                     }
                 });
-                
+            },
+            eventMouseover: function(event, jsEvent, view) {
                 $(this).tooltip({
                     delay: 500,
                     bodyHandler: function() {
@@ -598,7 +616,6 @@
                     },
                     showURL: false
                 });
-                
             },
             dayClick: function(date, allDay, jsEvent, view){
                 if ($('#classrooms').val() == "") {

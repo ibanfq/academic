@@ -94,16 +94,18 @@
 			if (current_group_label_xhr) {
 				current_group_label_xhr.abort();
 			}
-			$('#tooltip').html('');
-			$('#details').html('');
+			$('#tooltip').empty();
+			$('#details').empty();
 			current_group_label_xhr = $.ajax({
 				type: "GET", 
 				url: "<?php echo PATH ?>/events/view_info/" + activity_id + "/" + group_id,
 				asynchronous: false,
 				success: function(data) {
-					current_group_label_xhr = null;
 					$('#tooltip').html(data);
 					$('#details').html(data);
+				},
+				complete: function() {
+					current_group_label_xhr = null;
 				}
 			});
 			setTimeout(function() {

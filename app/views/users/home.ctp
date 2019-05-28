@@ -85,26 +85,46 @@ $(document).ready(function() {
           }
         }
       });
+    },
+    eventRender: function(event, element) {
+			element.hoverIntent({
+				sensitivity: 1,
+				interval: 100,
+				over: function () {
+					var id = event.id.match(/\d+/);
+          var url;
+          if (event.className == 'booking')
+            url = "<?php echo PATH ?>/bookings/view/";
+          else
+            url = "<?php echo PATH ?>/events/view/";
+
+          var eventDetails = $('#EventDetails');
+					if (eventDetails.data('eventId') !== event.id) {
+						var currentXhr = eventDetails.data('xhr');
+						if (currentXhr) {
+							currentXhr.abort();
+						}
+						eventDetails.empty().data('eventId', event.id);
+						$('#tooltip').empty();
+						var xhr = $.ajax({
+							cache: false,
+							type: "GET",
+							url: url + id,
+							asynchronous: false,
+							success: function(data) {
+								$('#tooltip').html(data).find('a, .actions').remove();
+								eventDetails.html(data).find('a, .actions').remove();
+							},
+							complete: function() {
+								eventDetails.data('xhr', null);
+							}
+						});
+						eventDetails.data('xhr', xhr);
+					}
+				}
+			});
 		},
 		eventMouseover: function(event, jsEvent, view) {
-      var id = event.id.match(/\d+/);
-      var url;
-      if (event.className == 'booking')
-        url = "<?php echo PATH ?>/bookings/view/";
-      else
-        url = "<?php echo PATH ?>/events/view/";
-
-      $.ajax({
-        cache: false,
-        type: "GET",
-        url: url + id,
-        asynchronous: false,
-        success: function(data) {
-          $('#tooltip').html(data).find('a, .actions').remove();
-          $('#EventDetails').html(data).find('a, .actions').remove();
-        }
-      });
-
       $(this).tooltip({
         delay: 500,
         bodyHandler: function() {

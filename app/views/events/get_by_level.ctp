@@ -12,6 +12,16 @@ var events = [
 
 		array_push($events_array,"{id: '{$event['Event']['id']}', parent_id: {$parent_id}, start: '{$initial_date->format('Y-m-d H:i:s')}', end: '{$final_date->format('Y-m-d H:i:s')}', title: {$title}, allDay: false, className: {$className}, deletable: {$deletable}}");
 	endforeach;
+	foreach($bookings as $booking):
+		$parent_id = json_encode(null);
+        $initial_date = date_create($booking['Booking']['initial_hour']);
+		$final_date = date_create($booking['Booking']['final_hour']);
+		$title = json_encode($booking['Booking']['reason']);
+		$className = json_encode('booking');
+		$deletable = json_encode(false);
+
+        array_push($events_array, "{id: 'booking_{$booking['Booking']['id']}', parent_id: {$parent_id}, start: '{$initial_date->format('Y-m-d H:i:s')}', end: '{$final_date->format('Y-m-d H:i:s')}', title: {$title}, allDay: false, className: {$className}, deletable: {$deletable}}");
+	endforeach;
 	echo implode($events_array, ",");
 ?>
 ];
