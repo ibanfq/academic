@@ -21,7 +21,7 @@
   <?php elseif ($numAttendees): ?>
     <p><strong>Asistentes:</strong> <?php echo $numAttendees ?></p>
   <?php endif ?>
-  <?php if ($userType && $numAttendees && ($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje")): ?>
+  <?php if (isset($auth) && $userType && $numAttendees && ($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje")): ?>
     <p><strong>Otros asistentes:</strong> <?php echo $numAttendees ?></p>
   <?php endif; ?>
   <p><strong>Aula:</strong>
@@ -34,7 +34,7 @@
   <?php endif; ?>
   <p><strong>Más información:</strong> <?php echo $booking['Booking']['required_equipment'] ?></p>
   <br />
-  <?php if (isset($auth) && (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Conserje")) || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking'])): ?>
+  <?php if (isset($auth) && (($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje") || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking']))): ?>
   <p class="actions">
     <?php if ($numAttendees): ?>
       <a class="button button-action" href="<?php echo PATH ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>

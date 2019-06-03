@@ -179,7 +179,8 @@ $(document).ready(function() {
 		$('#level').val("");
 
 		$('#booking').change(function() {
-			$('#degree').change();
+			var degreeInput = $('#degree');
+			degreeInput.length ? degreeInput.change() : $('#level').change();
 		});
 
 		$('#degree').change(function() {
