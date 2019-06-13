@@ -11,17 +11,22 @@
                     </video>
                 <?php elseif ($media['type'] === 'Youtube'): ?>
                     <div class="embed-video-container">
-                        <div class="youtube-player" data-video-id="<?php echo htmlspecialchars($media['video_id']) ?>"></div>
+                        <div class="player" data-video-id="<?php echo htmlspecialchars($media['video_id']) ?>"></div>
                     </div>
                 <?php elseif ($media['type'] === 'Vimeo'): ?>
                     <div class="embed-video-container">
-                        <iframe frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen src="https://player.vimeo.com/video/<?php echo htmlspecialchars($media['video_id']) ?>?byline=0&portrait=0&title=0&background=0&mute=1&loop=0&autoplay=0&autopause=0&id=<?php echo htmlspecialchars($media['video_id']) ?>"></iframe>
+                        <div class="player" data-video-id="<?php echo htmlspecialchars($media['video_id']) ?>"></div>
                     </div>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
     <?php endforeach; ?>
 </div>
+
+<template id="vimeo-template">
+    <iframe frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen src="https://player.vimeo.com/video/%id%?byline=0&portrait=0&title=0&background=1&mute=1&loop=1&autoplay=0&autopause=0&id=%id%"></iframe>
+</template>
+
 
 <?php if (empty($ajax_section)): ?>
     <script src="https://player.vimeo.com/api/player.js"></script>
@@ -80,8 +85,103 @@
                 var video = item.find('video')[0];
                 video.onseeked = onReady;
                 setTimeout(function () {
-                    video.currentTime = 0;
+                    video.currentTime = 0; // trigger onseeked event
                 }, itemHasClasses(item, animationOut) ? animationDuration : 0);
+            } else if (mediaType === 'Vimeo') {
+                var playerElement = item.find('.player');
+                var player = playerElement.data('vimeo-player');
+                var template, iframe, videoId;
+                if (player) {
+                    onReady();
+                } else {
+                    videoId = playerElement.data('video-id');
+                    template = document.getElementById('vimeo-template').content.cloneNode(true);
+                    iframe = template.querySelector('iframe');
+                    iframe.src = iframe.src.replace(/%id%/g, videoId)
+                    playerElement.append(template);
+                    var player = new Vimeo.Player(iframe);
+                    player.ready().then(function() {
+                        item.find('.player').data('vimeo-player', player);
+                        player.setVolume(0);
+                        player.play();
+                        player.pause();
+                        player.setCurrentTime(0);
+                        player.rewinding = false;
+                        player.on('timeupdate', function (e) {
+                            var previous = player.videoSeconds;
+                            var ended = e.secods === e.duration || typeof previous === 'number' && previous > e.seconds;
+                            var isEnding = !ended && e.duration + 0.5 < e.seconds + animationDuration/1000;
+                            player.videoSeconds = e.seconds;
+                            if (isEnding && !player.isEndingCalled) {
+                                player.isEndingCalled = true;
+                                player.onVideoEnding && player.onVideoEnding.call(this);
+                            } else if (ended) {
+                                if (player.rewinding) {
+                                    player.rewinding = false;
+                                } else {
+                                    player.onVideoEnded && player.onVideoEnded.call(this);
+                                }
+                            }
+                            if (!isEnding) {
+                                player.isEndingCalled = false;
+                            }
+                        });
+                        onReady();
+                    });
+                }
+            } else if (mediaType === 'Youtube') {
+                waitUntilYoutubeIframeAPIReady(function () {
+                    var playerContainer = item.find('.embed-video-container');
+                    var playerElement = item.find('.player');
+                    var player = playerElement.data('youtube-player');
+                    var videoId;
+                    if (player) {
+                        player.playVideo();
+                        onReady();
+                    } else {
+                        videoId = playerElement.data('video-id');
+                        player = new YT.Player(playerElement[0], {
+                            width: '100%',
+                            height: '100%',
+                            videoId: videoId,
+                            playerVars: { 'autoplay': 0, 'controls': 1, 'fs': 1, 'iv_load_policy': 3, 'loop': 1, 'playlist': videoId, 'modestbranding': 1 },
+                            events: {
+                                'onReady': function (e) {
+                                    item.find('.player').data('youtube-player', player);
+                                    player.setVolume(0);
+                                    player.playVideo();
+                                    onReady();
+                                    setInterval(function () {
+                                        var previous = player.videoSeconds;
+                                        var duration = player.getDuration();
+                                        var seconds = player.getCurrentTime();
+                                        var ended = seconds === duration || typeof previous === 'number' && previous > seconds;
+                                        var isEnding = !ended && duration + 0.5 < seconds + animationDuration/1000;
+                                        player.videoSeconds = seconds;
+                                        if (isEnding && !player.isEndingCalled) {
+                                            if (!item.hasClass('media-item-current')) {
+                                                player.rewinding = true;
+                                                player.seekTo(0);
+                                            } else {
+                                                player.onVideoEnding && player.onVideoEnding.call(this);
+                                            }
+                                            player.isEndingCalled = true;
+                                        } else if (ended) {
+                                            if (player.rewinding) {
+                                                player.rewinding = false;
+                                            } else {
+                                                player.onVideoEnded && player.onVideoEnded.call(this);
+                                            }
+                                        }
+                                        if (!isEnding) {
+                                            player.isEndingCalled = false;
+                                        }
+                                    }, 250);
+                                }
+                            }
+                        });
+                    };
+                });
             }
         }
 
@@ -94,6 +194,8 @@
                 var nextItem = item.next();
                 var prevItem = item.prev();
 
+                item.removeClass('media-item-next');
+
                 if (!nextItem.length) {
                     nextItem = parent.children(':first');
                 }
@@ -102,12 +204,17 @@
                     prevItem = parent.children(':last');
                 }
 
+                if (nextItem[0] === item[0]) {
+                    nextItem = null;
+                }
+
                 if (prevItem.hasClass('media-item-current')) {
                     prevItem.removeClass('media-item-current').removeClass(animationIn).addClass(animationOut);
                 }
                 item.addClass('media-item-current').removeClass(animationOut).addClass(animationIn);
 
                 if (nextItem) {
+                    nextItem.addClass('media-item-next');
                     prepareMediaItem(nextItem);
                 }
 
@@ -129,8 +236,58 @@
                     setTimeout(function () {
                         video.play();
                     }, animationDelay);
+                } else if (mediaType === 'Vimeo') {
+                    var playerContainer = item.find('.embed-video-container');
+                    var player = item.find('.player').data('vimeo-player');
+                    player.onVideoEnding = function () {
+                        if (nextItem) {
+                            player.onVideoEnding = null;
+                            showMediaItem(nextItem);
+                            setTimeout(function () {
+                                player.pause();
+                                player.rewinding = true;
+                                player.setCurrentTime(0);
+                            }, animationDuration);
+                        }
+                    };
+                    player.onVideoEnded = function () {
+                        if (nextItem) {
+                            player.pause();
+                            player.onVideoEnded = null;
+                            player.onVideoEnding && player.onVideoEnding.call(this);
+                        }
+                    }
+                    setTimeout(function () {
+                        player.play();
+                    }, animationDelay);
+                } else if (mediaType === 'Youtube') {
+                    var playerContainer = item.find('.embed-video-container');
+                    var playerElement = item.find('.player');
+                    var player = playerElement.data('youtube-player');
+                    player.onVideoEnding = function (e) {
+                        if (nextItem) {
+                            player.onVideoEnding = null;
+                            showMediaItem(nextItem);
+                            setTimeout(function () {
+                                if (!item.hasClass('media-item-next')) {
+                                    player.pauseVideo();
+                                }
+                            }, animationDuration);
+                        }
+                    };
+                    player.onVideoEnded = function () {
+                        if (nextItem) {
+                            player.onVideoEnded = null;
+                            player.onVideoEnding && player.onVideoEnding.call(this);
+                        }
+                    }
+                    player.rewinding = true;
+                    player.seekTo(0);
+                    setTimeout(function () {
+                        player.rewinding = true;
+                        player.seekTo(0);
+                    }, animationDelay);
                 }
-
             }
         }
 

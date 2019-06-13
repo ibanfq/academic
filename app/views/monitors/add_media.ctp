@@ -16,9 +16,13 @@
             <dt><label for="monitor-media-src-upload">Fichero a subir</label></dt>
             <dd><?php echo $form->file('src', array('type'=>'file', 'id' => 'monitor-media-src-upload')); ?></dd>
         </dl>
+        <span class="help-text">
+            Tamaño máximo: 8 MB<br>
+            Resolución recomendada: <span id="image-group">1280×720</span><span id="video-group">720x480</span>
+        </span>
     </div>
-    <?php echo $form->input('src', array('label' => 'Dirección de Youtube', 'id' => 'monitor-media-src-youtube', 'div' => array('id' => 'youtube-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-    <?php echo $form->input('src', array('label' => 'Dirección de Vimeo', 'id' => 'monitor-media-src-vimeo', 'div' => array('id' => 'vimeo-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+    <?php echo $form->input('src', array('label' => 'Dirección de Youtube', 'id' => 'monitor-media-src-youtube', 'placeholder' => 'https://youtu.be/EngW7tLk6R8', 'div' => array('id' => 'youtube-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+    <?php echo $form->input('src', array('label' => 'Dirección de Vimeo', 'id' => 'monitor-media-src-vimeo', 'placeholder' => 'https://vimeo.com/253989945', 'div' => array('id' => 'vimeo-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
     <div class="input text" id="duration-group">
         <dl>
             <dt><label for="monitor-media-duration">Duración en segundos</label></dt>
@@ -43,6 +47,8 @@
             var isUpload = isImage || isVideo;
             var isYoutube = value === 'Youtube';
             var isVimeo = value === 'Vimeo';
+            $('#image-group').toggle(isImage).find('input').prop('disabled', !isImage);
+            $('#video-group').toggle(isVideo).find('input').prop('disabled', !isVideo);
             $('#upload-group').toggle(isUpload).find('input').prop('disabled', !isUpload);
             $('#youtube-group').toggle(isYoutube).find('input').prop('disabled', !isYoutube);
             $('#vimeo-group').toggle(isVimeo).find('input').prop('disabled', !isVimeo);

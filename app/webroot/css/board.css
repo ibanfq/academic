@@ -73,6 +73,16 @@ body, #container {
     object-fit: contain;
     object-position: 50% 0;
 }
+#content-media .youtube-ended:after {
+    display: block;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #000;
+}
 #header ul.logo {
     margin: 15px 0 0 20px;
 }

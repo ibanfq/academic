@@ -5,7 +5,7 @@
     <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>Academic</title>
-    <meta name="viewport" content="width=850"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
     <link rel="shortcut icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
     <?php 
