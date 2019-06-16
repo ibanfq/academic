@@ -17,8 +17,12 @@
             <dd><?php echo $form->file('src', array('type'=>'file', 'id' => 'monitor-media-src-upload')); ?></dd>
         </dl>
         <span class="help-text">
-            Tamaño máximo: 8 MB<br>
-            Resolución recomendada: <span id="image-group">1280×720</span><span id="video-group">720x480</span>
+            Tamaño máximo: <?php echo $uploadMaxSize ?><br>
+            <span id="image-group">
+                Resolución recomendada en pantalla dividida: 640x560<br>
+                Resolución recomendada en pantalla completa: 1280×600<br>
+            </span>
+            <span id="video-group">Resolución recomendada: 720x480</span>
         </span>
     </div>
     <?php echo $form->input('src', array('label' => 'Dirección de Youtube', 'id' => 'monitor-media-src-youtube', 'placeholder' => 'https://youtu.be/EngW7tLk6R8', 'div' => array('id' => 'youtube-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>

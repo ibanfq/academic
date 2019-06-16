@@ -233,6 +233,7 @@ class MonitorsController extends AppController {
         }
 
         $this->set('monitor', $monitor);
+        $this->set('uploadMaxSize', $this->_getUploadMaxSize());
     }
 
     function _saveAssociatedClassrooms($monitor, $data){
@@ -540,6 +541,43 @@ class MonitorsController extends AppController {
             }
         }
         return $a['sql_order'] - $b['sql_order'];
+    }
+
+    function _getUploadMaxSize() {
+        $max_size = 0;
+
+        $post_max_size = ini_get('post_max_size');
+        $post_max_size = $this->_parseSize(ini_get('post_max_size'));
+        if ($post_max_size > 0) {
+            $max_size = $post_max_size;
+        }
+    
+        $upload_max = ini_get('upload_max_filesize');
+        $upload_max = $this->_parseSize(ini_get('upload_max_filesize'));
+        if ($upload_max > 0 && $upload_max < $max_size) {
+            $max_size = $upload_max;
+        }
+
+        return $max_size ?: $this->_parseSize('8MB');
+    }
+      
+    function _parseSize($size) {
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
+        $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
+        if ($unit) {
+            $bytes = round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+        } else {
+            $bytes = round($size);
+        }
+
+        if ($bytes == 0) {
+            return "0.00 B";
+        }
+
+        $s = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
+        $e = floor(log($bytes, 1024));
+
+        return round($bytes/pow(1024, $e), 2).$s[$e];
     }
     
     function _authorize() {
