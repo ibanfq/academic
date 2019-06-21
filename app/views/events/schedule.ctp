@@ -33,7 +33,7 @@
         $.ajax({
             cache: false,
             type: "GET",
-            url: "<?php echo PATH ?>/events/copy/" + event_id + "/initial_hour:" + toEventDateString(start) + "/classroom:" + $('#classrooms').val(),
+            url: "<?php echo PATH ?>/events/copy/" + event_id + "/initial_hour:" + toEventDateString(start, '-') + "/classroom:" + $('#classrooms').val(),
             dataType: 'script'
         });
     }
@@ -42,7 +42,7 @@
         $.ajax({
             cache: false,
             type: "POST",
-            url: "<?php echo PATH ?>/bookings/copy/" + id + "/initial_hour:" + toEventDateString(start) + "/classroom:" + $('#classrooms').val(),
+            url: "<?php echo PATH ?>/bookings/copy/" + id + "/initial_hour:" + toEventDateString(start, '-') + "/classroom:" + $('#classrooms').val(),
             dataType: 'script'
         });
     }
@@ -84,13 +84,15 @@
         return false;
     }
     
-    function toEventDateString(date) {
+    function toEventDateString(date, dateSeparator) {
         var day = date.getDate();
         var month = date.getMonth() + 1;
         var year = date.getFullYear();
         var hour = date.getHours();
         var minute = date.getMinutes();
         
+        dateSeparator = dateSeparator || '/';
+
         if (day < 10) {
             day = "0" + day;
         }
@@ -103,8 +105,8 @@
         if (minute < 10) {
             minute = "0" + minute;
         }
-        
-        return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":00";
+
+        return year + dateSeparator + month + dateSeparator + day + " " + hour + ":" + minute + ":00";
     }
     
     function addEvent() {
