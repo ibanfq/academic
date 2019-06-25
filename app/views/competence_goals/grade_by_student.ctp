@@ -50,7 +50,7 @@
 	</div>
 </fieldset>
 	
-<?php echo $form->end(isset($competence_goal_request)? 'Compeletar solicitud de evaluación' : 'Modificar'); ?>
+<?php echo $form->end(isset($competence_goal_request)? 'Completar solicitud de evaluación' : 'Modificar'); ?>
 
 <script type="text/javascript">
 	$(function () {

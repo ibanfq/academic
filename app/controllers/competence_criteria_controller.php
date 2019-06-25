@@ -29,7 +29,14 @@ class CompetenceCriteriaController extends AppController {
         $auth_is_coordinator = false;
 
         if (empty($this->data)) {
-            $this->set('competence_criterion', array());
+            $this->set('competence_criterion', array(
+                'CompetenceCriterionRubric' => array(
+                    array('title' => '1', 'definition' => 'Poor:', 'value' => 0.25),
+                    array('title' => '2', 'definition' => 'Fair:', 'value' => 0.5),
+                    array('title' => '3', 'definition' => 'Good:', 'value' => 0.75),
+                    array('title' => '4', 'definition' => 'Excelent:', 'value' => 1),
+                )
+            ));
         } else {
             $filteredData = array('CompetenceCriterion' => $this->data['CompetenceCriterion']);
             if ($this->CompetenceCriterion->save($filteredData)) {

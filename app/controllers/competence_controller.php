@@ -725,7 +725,10 @@ class CompetenceController extends AppController {
                 'conditions' => array('Competence.id' => $id)
             ));
             $this->set('competence', $this->data);
-            $this->set('course', array('Course' => $this->data['Course']));
+            $this->set('course', $this->Competence->Course->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('Course.id' => $this->data['Competence']['course_id'])
+            )));
         } else {
             if ($this->Competence->save($this->data)) {
                 $this->Session->setFlash('La competencia se ha modificado correctamente.');
