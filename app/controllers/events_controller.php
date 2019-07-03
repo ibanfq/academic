@@ -51,6 +51,11 @@ class EventsController extends AppController {
             }
         }
 
+        if (!empty($this->params['named']['course'])) {
+            $course_id = $this->params['named']['course'];
+            $conditions[] =  "Subject.course_id = {$db->value($course_id)}";
+        }
+
         if ($level !== 'all') {
             $conditions[] = "Subject.level = {$db->value($level)}";
         }
@@ -529,6 +534,8 @@ class EventsController extends AppController {
     
     function calendar_by_level() {
         $this->layout = 'public';
+        $this->set('courses', $this->Event->Activity->Subject->Course->find('all'));
+        $this->set('current_course', $this->Event->Activity->Subject->Course->current());
     }
 
     function calendar_by_teacher($id = null) {

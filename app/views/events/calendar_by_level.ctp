@@ -109,6 +109,22 @@ $(document).ready(function() {
 <p>Seleccione un curso para ver su calendario.</p>
 <br/>
 
+<dl id="course_form_group">
+	<dt>Año académico</dt>
+	<dd>
+		<select id="course" name="course">
+			<?php foreach ($courses as $course): ?>
+				<?php 
+					if ($course["Course"]["id"] == $current_course["id"])
+						$selected = "selected";
+					else
+						$selected = "";
+				?>
+				<option value="<?php echo h($course['Course']['id']) ?>" <?php echo $selected ?>><?php echo h($course['Course']['name']) ?></option>
+			<?php endforeach; ?>
+		</select>
+	</dd>
+</dl>
 <?php if ($degreeEnabled): ?>
 	<dl>
 		<dt>Titulación</dt>
@@ -178,7 +194,7 @@ $(document).ready(function() {
 		$('#degree').val("");
 		$('#level').val("");
 
-		$('#booking').change(function() {
+		$('#course, #booking').change(function() {
 			var degreeInput = $('#degree');
 			degreeInput.length ? degreeInput.change() : $('#level').change();
 		});
@@ -201,7 +217,7 @@ $(document).ready(function() {
 				level.removeAttr('disabled');
 			}
 			if ($(levelOptions[levelSelectedIndex]).prop('disabled')) {
-				level.val('');
+				level.val("");
 			} else {
 				level.change();
 			}
@@ -210,12 +226,13 @@ $(document).ready(function() {
 		$('#level').change(function() {
 			$('#calendar').fullCalendar('removeEvents');
 			var booking = $('#booking');
+			var course = $('#course');
 			var degree = $('#degree');
 			var level = $('#level');
 			if (level.val()) {
 				var url = degree.length
-					? "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
-					: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/booking:" + encodeURIComponent(booking.val())
+					? "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
+					: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/booking:" + encodeURIComponent(booking.val())
 				;
 				$.ajax({
 					cache: false,
