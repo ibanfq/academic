@@ -1,6 +1,6 @@
 h1. Academic
 
-Academic is a PHP Cake application for the Facultad de Veterinaria de la ULPGC developed by recrea.es. 
+Academic is a PHP Cake application for the university ULPGC (Universidad de Las Palmas de Gran Canaria) developed by recrea.es. 
 
 h2. License
 
