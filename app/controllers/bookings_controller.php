@@ -164,7 +164,9 @@ class BookingsController extends AppController {
             'conditions' => array('Booking.id' => $id),
             'recursive' => 0
         ));
-        if ($this->Auth->user('type') != "Administrador" && $this->Auth->user('id') != $booking['Booking']['user_id']) {
+        
+        if (!$this->_authorizeEdit($booking)) {
+            $this->Session->setFlash('No tienes los permisos necesarios para editar la reserva.');
             $this->redirect(array('action' => 'view', $id));
         }
   
@@ -236,14 +238,6 @@ class BookingsController extends AppController {
                 $this->redirect(array('action' => 'index'));
             }
             
-            if (($this->data['Booking']['user_id'] != $uid) && ($this->Auth->user('type') != "Administrador")) {
-                $this->redirect(array('action' => 'view', $id));
-            }
-
-            if (Configure::read('app.classroom.teachers_can_booking') && $this->Auth->user('type') === 'Profesor' && !$this->data['Classroom']['teachers_can_booking']) {
-                $this->redirect(array('action' => 'view', $id));
-            }
-
             $attendees = $this->Booking->Attendee->query("SELECT Attendee.*
                 FROM users Attendee
                 INNER JOIN users_booking UB ON UB.user_id = Attendee.id
@@ -289,10 +283,14 @@ class BookingsController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->Booking->id = $id;
         $booking = $this->Booking->read();
-        $uid = $this->Auth->user('id');
+
+        if (!$this->_authorizeEdit($booking)) {
+            $this->set('notAllowed', true);
+            return;
+        }
   
         if ($this->Auth->user('type') != "Administrador" && isset($this->data['Booking']['classroom_id'])) {
-            if ($this->data['Booking']['classroom_id'] == -1 && $booking->classroom_id != -1) {
+            if ($this->data['Booking']['classroom_id'] == -1 && $booking['Booking']['classroom_id'] != -1) {
                 $this->set('notAllowed', true);
                 return;
             }
@@ -305,33 +303,29 @@ class BookingsController extends AppController {
             }
         }
   
-        if (($booking['Booking']['user_id'] == $uid) || ($this->Auth->user('type') == "Administrador") || ($this->Auth->user('type') == "Administrativo")) {
-            if ($resize == null) {
-                $initial_hour = date_create($booking['Booking']['initial_hour']);
-                $this->_add_days($initial_hour, $deltaDays, $deltaMinutes);
-                $booking['Booking']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
-            }
-        
-            $final_hour = date_create($booking['Booking']['final_hour']);
-            $this->_add_days($final_hour, $deltaDays, $deltaMinutes);
-            $booking['Booking']['final_hour'] = $final_hour->format('Y-m-d H:i:s');
+        if ($resize == null) {
+            $initial_hour = date_create($booking['Booking']['initial_hour']);
+            $this->_add_days($initial_hour, $deltaDays, $deltaMinutes);
+            $booking['Booking']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
+        }
+    
+        $final_hour = date_create($booking['Booking']['final_hour']);
+        $this->_add_days($final_hour, $deltaDays, $deltaMinutes);
+        $booking['Booking']['final_hour'] = $final_hour->format('Y-m-d H:i:s');
 
-            if (!($this->Booking->save($booking))) {
-                if ($this->Booking->booking_id_overlaped) {
-                    $this->Booking->id = $this->Booking->booking_id_overlaped;
-                    $booking_overlaped = $this->Booking->read();
-                    $this->set('booking_overlaped', $booking_overlaped);
-                } elseif ($this->Booking->event_id_overlaped) {
-                    $this->loadModel('Event');
-                    $this->Event->id = $this->Booking->event_id_overlaped;
-                    $event_overlaped = $this->Event->read();
-                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
-                    $this->set('event_overlaped', $event_overlaped);
-                    $this->set('activity_overlaped', $activity_overlaped);
-                }
+        if (!($this->Booking->save($booking))) {
+            if ($this->Booking->booking_id_overlaped) {
+                $this->Booking->id = $this->Booking->booking_id_overlaped;
+                $booking_overlaped = $this->Booking->read();
+                $this->set('booking_overlaped', $booking_overlaped);
+            } elseif ($this->Booking->event_id_overlaped) {
+                $this->loadModel('Event');
+                $this->Event->id = $this->Booking->event_id_overlaped;
+                $event_overlaped = $this->Event->read();
+                $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                $this->set('event_overlaped', $event_overlaped);
+                $this->set('activity_overlaped', $activity_overlaped);
             }
-        } else {
-            $this->set('notAllowed', true);
         }
     }
 
@@ -366,11 +360,14 @@ class BookingsController extends AppController {
         return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
     }
     
-    function _authorizeDelete($booking) {
+    function _authorizeEdit($booking) {
         $uid = $this->Auth->user('id');
 
         if (Configure::read('app.classroom.teachers_can_booking') && $this->Auth->user('type') === 'Profesor') {
-            if ($booking['Booking']['classroom_id'] != -1 && empty($booking['Classroom']['id'])) {
+            if ($booking['Booking']['user_id'] != $uid || $booking['Booking']['classroom_id'] == -1) {
+                return false;
+            }
+            if (empty($booking['Classroom']['id'])) {
                 $classroom = $this->Booking->Classroom->find('first', array(
                     'fields' => array('Classroom.id', 'Classroom.teachers_can_booking'), 'conditions' => array('Classroom.id' => $booking['Booking']['classroom_id']),
                     'recursive' => -1
@@ -378,10 +375,14 @@ class BookingsController extends AppController {
                 $booking['Classroom'] = $classroom['Classroom'];
             }
 
-            return $booking['Booking']['user_id'] == $uid && $booking['Classroom']['teachers_can_booking'];
+            return $booking['Classroom']['teachers_can_booking'];
         }
 
         return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Administrativo") || ($this->Auth->user('type') === "Conserje");
+    }
+
+    function _authorizeDelete($booking) {
+        return $this->_authorizeEdit($booking);
     }
 
     function _authorize() {
