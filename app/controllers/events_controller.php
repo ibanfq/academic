@@ -25,7 +25,7 @@ class EventsController extends AppController {
     function get($classroom_id = null) {
         $classroom_id = $classroom_id === null ? null : intval($classroom_id);
         $db = $this->Event->getDataSource();
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.classroom_id = {$db->value($classroom_id)}");
+        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.classroom_id = {$db->value($classroom_id)}");
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
@@ -34,7 +34,7 @@ class EventsController extends AppController {
     function get_by_subject($subject_id = null) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
         $db = $this->Event->getDataSource();
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Activity.subject_id = {$db->value($subject_id)}");
+        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Activity.subject_id = {$db->value($subject_id)}");
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
@@ -67,7 +67,7 @@ class EventsController extends AppController {
             $where = implode(' AND ', $conditions);
         }
 
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE $where");
+        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE $where");
 
         if (empty($this->params['named']['booking'])) {
             $bookings = array();
@@ -256,10 +256,8 @@ class EventsController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->Event->id = $id;
         $event = $this->Event->read();
-        $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
-        $uid = $this->Auth->user('id');
 
-        if (($event['Event']['owner_id'] == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($uid == $subject['Subject']['coordinator_id']) || ($uid == $subject['Subject']['practice_responsible_id'])) {
+        if ($this->_authorizeEdit($event)) {
             if ($this->Auth->user('type') == "Administrador") {
                 foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
                     $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
@@ -274,10 +272,8 @@ class EventsController extends AppController {
         $id = $id === null ? null : intval($id);
         $this->Event->id = $id;
         $event = $this->Event->read();
-        $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id'])));
-        $uid = $this->Auth->user('id');
-        if (($event['Event']['owner_id'] == $this->Auth->user('id')) || ($this->Auth->user('type') == "Administrador") || ($uid == $subject['Subject']['coordinator_id']) || ($uid == $subject['Subject']['practice_responsible_id'])) {
-            
+
+        if ($this->_authorizeEdit($event)) {
             if ($resize == null) {
                 $initial_hour = date_create($event['Event']['initial_hour']);
                 $this->_add_days($initial_hour, $deltaDays, $deltaMinutes);
@@ -302,8 +298,9 @@ class EventsController extends AppController {
                 $this->set('event_overlaped', $event_overlaped);
                 $this->set('activity_overlaped', $activity_overlaped);
             }
-        } else
+        } else {
             $this->set('notAllowed', true);
+        }
     }
     
     function delete($id=null) {
@@ -676,10 +673,30 @@ class EventsController extends AppController {
         return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
     }
 
-    function _authorizeDelete($event) {
-        $uid = $this->Auth->user('id');
+    function _authorizeEdit($event) {
+        if ($this->Auth->user('type') == "Administrador") {
+            return true;
+        }
 
-        return ($this->Auth->user('type') === "Administrador") || ($this->Auth->user('type') === "Profesor");
+        if (isset($event['Event']['owner_id']) && $event['Event']['owner_id'] == $this->Auth->user('id')) {
+            return true;
+        }
+
+        $subject_id = isset($event['Subject']['id'])
+            ? $event['Subject']['id']
+            : (isset($event['Activity']['subject_id']) ? $event['Activity']['subject_id'] : null);
+        
+        if ($subject_id) {
+            $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id)));
+            $uid = $this->Auth->user('id');
+            return  $uid == $subject['Subject']['coordinator_id'] || $uid == $subject['Subject']['practice_responsible_id'];
+        }
+
+        return false;
+    }
+
+    function _authorizeDelete($event) {
+        return $this->_authorizeEdit($event);
     }
 
     function _authorize() {

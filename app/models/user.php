@@ -108,11 +108,11 @@ class User extends AppModel {
         $id = intval($this->id);
         switch($this->data['User']['type']){
             case "Estudiante":
-                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM registrations Registration INNER JOIN activities Activity ON Activity.id = Registration.activity_id INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Registration.student_id = {$id} AND Registration.group_id <> -1");
+                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Subject.id, Subject.acronym, Activity.name, Activity.type FROM registrations Registration INNER JOIN activities Activity ON Activity.id = Registration.activity_id INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Registration.student_id = {$id} AND Registration.group_id <> -1");
                 break;
             case "Profesor":
             case "Administrador":
-                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Subject.acronym, Activity.name, Activity.type FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.teacher_id = {$id} OR Event.teacher_2_id = {$id}");
+                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Subject.id, Subject.acronym, Activity.name, Activity.type FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.teacher_id = {$id} OR Event.teacher_2_id = {$id}");
                 break;
             default:
                 $events = array();
