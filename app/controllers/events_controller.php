@@ -713,6 +713,17 @@ class EventsController extends AppController {
 
         if (isset($children_actions[$action])) {
             $action = $children_actions[$action];
+
+            $auth_type = $this->Auth->user('type');
+            $acl = Configure::read('app.acl');
+
+            if ($auth_type && !empty($acl[$auth_type]["{$this->params['controller']}.{$action}"])) {
+                $this->Auth->allow($this->params['action']);
+                return true;
+            } elseif (!empty($acl['all']["{$this->params['controller']}.{$action}"])) {
+                $this->Auth->allow($this->params['action']);
+                return true;
+            }
         }
 
         if (array_search($action, $private_actions) !== false) {
@@ -724,7 +735,7 @@ class EventsController extends AppController {
         }
 
         if ((array_search($action, $public_actions) !== false)) {
-            $this->Auth->allow($action);
+            $this->Auth->allow($$this->params['action']);
             return true;
         }
 
