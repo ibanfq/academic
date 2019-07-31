@@ -735,7 +735,7 @@ class EventsController extends AppController {
         }
 
         if ((array_search($action, $public_actions) !== false)) {
-            $this->Auth->allow($$this->params['action']);
+            $this->Auth->allow($this->params['action']);
             return true;
         }
 
