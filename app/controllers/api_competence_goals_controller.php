@@ -33,6 +33,7 @@ class ApiCompetenceGoalsController extends AppController {
 
     function by_teacher($teacher_id = null)
     {
+        $db = $this->CompetenceGoal->getDataSource();
         $this->loadModel('User');
 
         $authIsTeacher = in_array($this->Auth->user('type'), array('Profesor', 'Administrador'));
@@ -182,7 +183,8 @@ class ApiCompetenceGoalsController extends AppController {
         }
 
         if ($student_id) {
-            $fields[] = "IFNULL((SELECT 1 FROM competence_goal_requests where goal_id = CompetenceGoal.id AND student_id = $student_id AND rejected is null AND canceled is null limit 1), 0) as has_requests";
+            $fields[] = "IFNULL((SELECT 1 FROM competence_goal_requests _request WHERE _request.goal_id = CompetenceGoal.id AND _request.student_id = {$db->value($student_id)} AND _request.completed IS NULL AND _request.canceled IS NULL AND _request.rejected IS NULL limit 1), 0) as has_requests";
+            $fields[] = "IFNULL((SELECT 0 FROM competence_goals _goal INNER JOIN competence_criteria _criterion ON _criterion.goal_id = _goal.id LEFT JOIN competence_criterion_grades _grade ON _grade.criterion_id = _criterion.id AND _grade.student_id = {$db->value($student_id)} WHERE _goal.id = CompetenceGoal.id AND _grade.rubric_id IS NULL limit 1), 1) as grade_completed";
             $competence_goal_joins[] = array(
                 'table' => 'subjects_users',
                 'alias' => 'SubjectUser',
@@ -352,7 +354,8 @@ class ApiCompetenceGoalsController extends AppController {
         foreach ($competence_goal['CompetenceCriterion'] as $i => $competence_criterion) {
             $rubrics = $this->CompetenceGoal->CompetenceCriterion->CompetenceCriterionRubric->find('all', array(
                 'recursive' => -1,
-                'conditions' => array('CompetenceCriterionRubric.criterion_id' => $competence_criterion['id'])
+                'conditions' => array('CompetenceCriterionRubric.criterion_id' => $competence_criterion['id']),
+                'order' => array('CompetenceCriterionRubric.value')
             ));
             $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionRubric'] = Set::combine(
                 $rubrics,
@@ -419,7 +422,7 @@ class ApiCompetenceGoalsController extends AppController {
                 'conditions' => array(
                     'id' => $competence_goal_request_id,
                     'teacher_id' => $this->Auth->user('id'),
-                    'completed is null AND canceled is null AND rejected is null'
+                    'completed IS NULL AND canceled IS NULL AND rejected IS NULL'
                 )
             ));
 
@@ -462,7 +465,13 @@ class ApiCompetenceGoalsController extends AppController {
                 $rubric_id = trim($data_criterion_rubrics[$criterion_id]);
                 
                 if ($rubric_id === '') {
-                    // Remove if not rubric_id 
+                    // If not rubric_id
+                    if ($competence_goal_request) {
+                        $this->Api->setError('Debe calificar todos los criterios.', 400);
+                        $this->Api->respond($this);
+                        return;
+                    }
+                    // Remove it
                     unset($filteredData[$i]);
                     $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = null;
                     if (isset($criterion['CompetenceCriterionGrade']['id'])) {
@@ -476,7 +485,13 @@ class ApiCompetenceGoalsController extends AppController {
                     $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = $filteredData[$i]['CompetenceCriterionGrade'];
                 }
             } elseif (!isset($filteredData[$i]['CompetenceCriterionGrade']['criterion_id'])) {
-                // If no in form and not persisted yet in database remove from filteredData
+                // If no in form and not persisted yet in database
+                if ($competence_goal_request) {
+                    $this->Api->setError('Debe calificar todos los criterios.', 400);
+                    $this->Api->respond($this);
+                    return;
+                }
+                // Remove from filteredData
                 unset($filteredData[$i]);
                 $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = null;
             }

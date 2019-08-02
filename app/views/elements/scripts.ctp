@@ -41,4 +41,10 @@
     }
     $(this).removeClass('ui-dialog-last');
   });
+
+  if (document.addEventListener) {
+			document.addEventListener('invalid', function(e){
+				e.target.className += ' validated';
+			}, true);
+		}
 </script>

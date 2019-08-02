@@ -5,16 +5,17 @@
 
 			$.widget( "custom.rubricselectmenu", $.ui.selectmenu, {
 		      	_renderItem: function(ul, item) {
-				  	var li = $("<li>"),
-				  		definition = rubrics_definitions[item.value] || '--- Sin evaluar ---',
-				  		col1 = $('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label);
-				  		col2 = $('<div class="ui-menu-item-cell">').text(definition);
+				  	var li = $('<li class="ui-menu-item-row-group">'),
+						definition = rubrics_definitions[item.value] || '--- Sin evaluar ---',
+						row = $('<div class="ui-menu-item-row">')
+				  			.append($('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label))
+				  			.append($('<div class="ui-menu-item-cell">').text(definition));
 
 				  	if ( item.disabled ) {
 				    	li.addClass( "ui-state-disabled" );
 				  	}
 
-				  	return li.append(col1).append(col2).appendTo(ul);
+				  	return li.append(row).appendTo(ul);
 				},
 				_renderMenu: function(ul, items) {
 					var that = this;

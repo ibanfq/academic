@@ -224,6 +224,10 @@ div.actions h3 {
     background-color: #ffffff;
 }
 
+/** Utils **/
+.position-relative {
+	position: relative !important;
+}
 
 /** Tables **/
 table {
@@ -357,6 +361,27 @@ p.error em {
 	line-height: 120%;
 	padding: 0.8em;
 	margin: 1em 0;
+}
+input.validated:invalid ~ .invalid-message,
+select.validated:invalid ~ .invalid-message {
+	z-index: 100;
+	display: block !important;
+}
+.ui-tooltip.invalid-message {
+	display: none;
+	margin-top: 8px;
+}
+.ui-tooltip.invalid-message::after {
+	content: '';
+	display: block;
+	position: absolute;
+	top: -10px;
+	left: 10px;
+	width: 0;
+	border-style: solid;
+	border-width: 10px 10px 10px 0;
+	border-color: #c73e14 transparent;
+	border-width: 0 10px 10px;
 }
 
 /**  Actions  **/
@@ -941,11 +966,14 @@ td .ui-button {
 	max-width: calc(400px + 30vw);
 	display: table;
 }
-.ui-menu--table li {
-    display: table-row;
-}
 .ui-menu .ui-menu-item-wrapper {
 	border: 1px solid transparent;
+}
+.ui-menu--table .ui-menu-item-row-group {
+	display: table-row-group;
+}
+.ui-menu--table .ui-menu-item-row {
+	display: table-row;
 }
 .ui-menu--table .ui-menu-item-cell {
 	display: table-cell;

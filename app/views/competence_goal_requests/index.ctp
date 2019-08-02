@@ -113,13 +113,19 @@
         $("input#teacher")
             .autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem})
             .result(function(event, item) {
-                var url = <?php echo $this->Javascript->object(Router::url(array(
-                    'controller' => 'api_competence_goals',
-                    '[method]' => 'GET',
-                    'action' => 'by_teacher',
-                    'teacher_id' => '00000000',
-                    '?' => array('group_path' => 'CompetenceGoal.competence_id')
-                ))); ?>;
+                var url = <?php echo
+                    str_replace(
+                        '00000000',
+                        '%teacher_id%',
+                        $this->Javascript->object(Router::url(array(
+                            'controller' => 'api_competence_goals',
+                            '[method]' => 'GET',
+                            'action' => 'by_teacher',
+                            'teacher_id' => '00000000',
+                            '?' => array('group_path' => 'CompetenceGoal.competence_id')
+                        )))
+                    );
+                ?>;
                 var teacher_id = item[1];
                 $("input#CompetenceGoalRequestTeacherId").val(teacher_id);
                 var goalIdSelect =  $("#CompetenceGoalRequestGoalId").prop('disabled', true);
@@ -128,7 +134,7 @@
                     cache: false,
                     type: "GET",
                     dataType: "json",
-                    url: url.replace('00000000', teacher_id),
+                    url: url.replace('%teacher_id%', teacher_id),
                     success: function(response) {
                         var data = response.data;
                         goalIdSelect.find(':not(:first)').remove();
@@ -138,7 +144,9 @@
                             $.each(this, function() {
                                 var goal = this.CompetenceGoal;
                                 var option = $('<option />').val(goal.id).html(goal.code + " - " + goal.definition);
-                                if (this[0].has_requests && this[0].has_requests !== '0') {
+                                if ('grade_completed' in this[0] && JSON.parse(this[0].grade_completed)) {
+                                    option.prop('disabled', true);
+                                } else if ('has_requests' in this[0] && JSON.parse(this[0].has_requests)) {
                                     option.prop('disabled', true);
                                 }
                                 option.appendTo(group);

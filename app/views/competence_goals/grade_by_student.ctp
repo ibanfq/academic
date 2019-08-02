@@ -6,9 +6,12 @@
 <?php $html->addCrumb("Objetivo {$competence_goal['CompetenceGoal']['code']}", "/competence_goals/view_by_student/{$student['User']['id']}/{$competence_goal['CompetenceGoal']['id']}"); ?>
 <?php $html->addCrumb('Evaluar criterios', "/competence_goals/grade_by_student/{$student['User']['id']}/{$competence_goal['CompetenceGoal']['id']}"); ?>
 
-<h1>Evaluar criterios por estudiante: <?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?></h1>
+<h1>
+	<?php echo isset($competence_goal_request)? 'Evaluar solicitud de evaluación del estudiante' : 'Evaluar criterios por estudiante' ?>:
+	<?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?>
+</h1>
 
-<?php echo $form->create('CompetenceCriterionGrade', array('url' => $this->Html->url(null, true)));?>
+<?php echo $form->create('CompetenceCriterionGrade', array('id' => 'competence_criterion_grade_form', 'url' => $this->Html->url(null, true)));?>
 
 <?php require('_view_resume.ctp') ?>
 
@@ -19,9 +22,9 @@
 			<thead>
 				<tr>
 					<th style="width:6em">Código</th>
-					<th style="width:50%">Definición</th>
-					<th style="width:6em">Valoración nota final</th>
-					<th style="width:50%">Rúbrica</th>
+					<th style="width:40%">Definición</th>
+					<th style="width:18em">Valoración nota final</th>
+					<th style="width:40%">Rúbrica</th>
 				</tr>
 			</thead>
 			<tbody id="competence_criterion_grades">
@@ -38,10 +41,13 @@
 						</td>
 						<td>
 							<?php echo $form->hidden("CompetenceCriterionGrade.{$criterion_id}.criterion_id", array('value' => $criterion_id)); ?>
-							<?php echo $form->select("CompetenceCriterionGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
+							<?php echo $form->select("CompetenceCriterionGrade.{$criterion_id}.rubric_id", $competence_criterion_rubrics_values, null, array('required' => isset($competence_goal_request), 'data-definitions' => $this->Javascript->object($competence_criterion_rubrics_definitions))); ?>
+							<div class="message invalid-message position-relative ui-tooltip ui-corner-all ui-widget ui-widget-content" style="display:none;">
+								<span class="ui-tooltip-content">Elija una opción válida</span>
+							</div>
 						</td>
 						<td>
-							<span class="competence_rubric_definition"><?php echo $this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id'] ? h($competence_criterion_rubrics_definitions[$this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']]) : '' ?></span>
+							<span class="competence_rubric_definition"><?php echo empty($this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']) ? '' : h($competence_criterion_rubrics_definitions[$this->data['CompetenceCriterionGrade'][$criterion_id]['rubric_id']]) ?></span>
 						</td>
 					</tr>
 				<?php endforeach; ?>
@@ -56,17 +62,24 @@
 	$(function () {
 		$.widget( "custom.rubricselectmenu", $.ui.selectmenu, {
 	      	_renderItem: function(ul, item) {
-			  	var li = $("<li>"),
+			  	var li = $('<li class="ui-menu-item-row-group">'),
 			  		definitions = $(item.element).closest('select').data('definitions'),
-			  		definition = definitions[item.value] || '--- Sin evaluar ---',
-			  		col1 = $('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label);
-			  		col2 = $('<div class="ui-menu-item-cell">').text(definition);
+					definition = definitions[item.value] || '--- Sin evaluar ---',
+					row = $('<div class="ui-menu-item-row">')
+						.append($('<div class="ui-menu-item-cell ui-menu-item-cell--nowrap">').text(item.label))
+			  			.append($('<div class="ui-menu-item-cell">').text(definition));
 
 			  	if ( item.disabled ) {
 			    	li.addClass( "ui-state-disabled" );
-			  	}
+				}
 
-			  	return li.append(col1).append(col2).appendTo(ul);
+				<?php if (isset($competence_goal_request)): ?>
+					if ( !item.value ) {
+						li.addClass( "ui-state-disabled" );
+					}	
+				<?php endif; ?>
+
+			  	return li.append(row).appendTo(ul);
 			},
 			_renderMenu: function(ul, items) {
 				var that = this;
