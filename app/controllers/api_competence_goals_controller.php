@@ -482,6 +482,7 @@ class ApiCompetenceGoalsController extends AppController {
                     $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
+                    unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
                     $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = $filteredData[$i]['CompetenceCriterionGrade'];
                 }
             } elseif (!isset($filteredData[$i]['CompetenceCriterionGrade']['criterion_id'])) {
@@ -507,6 +508,7 @@ class ApiCompetenceGoalsController extends AppController {
 
             if ($competence_goal_request) {
                 $competence_goal_request['CompetenceGoalRequest']['completed'] = date('Y-m-d H:i:s');
+                unset($competence_goal_request['CompetenceGoalRequest']['modified']);
                 $this->CompetenceGoal->CompetenceGoalRequest->save($competence_goal_request);
                 $this->Email->reset();
                 $this->Email->from = 'Academic <noreply@ulpgc.es>';

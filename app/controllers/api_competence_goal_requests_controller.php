@@ -236,6 +236,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
         } else {
             $competence_goal_request['CompetenceGoalRequest']['rejected'] = date('Y-m-d H:i:s');
         }
+        unset($competence_goal_request['CompetenceGoalRequest']['modified']);
 
         if ($this->CompetenceGoalRequest->save(array('CompetenceGoalRequest' => $competence_goal_request['CompetenceGoalRequest']))) {
             $this->Email->reset();

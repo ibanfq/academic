@@ -16,6 +16,9 @@
     <?php if (in_array($auth->user('type'), array("Administrador", "Profesor", "Estudiante"))): ?>
     <li><?php echo $html->link('Solicitudes de evaluación', array('controller' => 'competence_goal_requests', 'action' => 'by_course', $course['Course']['id'])) ?></li>
     <?php endif; ?>
+    <?php if (in_array($auth->user('type'), array("Administrador", "Profesor"))): ?>
+    <li><?php echo $html->link('Evaluación por asignaturas', array('controller' => 'courses', 'action' => 'view', 'ref' => 'competences', $course['Course']['id'])) ?></li>
+    <?php endif; ?>
 </ul>
 </div>
 <div class="view">

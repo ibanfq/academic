@@ -465,6 +465,7 @@ class CompetenceCriteriaController extends AppController {
                         $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                         $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $id;
                         $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
+                        unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
                     } elseif (empty($rubric_id)) {
                         // Remove
                         unset($filteredData[$i]);
@@ -649,20 +650,21 @@ class CompetenceCriteriaController extends AppController {
 
         // Criterion
         if ($auth_is_admin) {
-            if (isset($this->data['CompetenceCriterion'])) {
+            if (isset($data['CompetenceCriterion'])) {
                 $whiteList = array('code', 'definition');
 
                 $filteredData['CompetenceCriterion']
-                    = array_intersect_key($this->data['CompetenceCriterion'], array_flip($whiteList))
+                    = array_intersect_key($data['CompetenceCriterion'], array_flip($whiteList))
                     + $filteredData['CompetenceCriterion'];
+                unset($filteredData['CompetenceCriterion']['modified']);
             }
         }
 
         // Rubrics
         if ($auth_is_admin || $auth_is_coordinator) {
-            if (isset($this->data['CompetenceCriterionRubric'])) {
-                if (!is_array($this->data['CompetenceCriterionRubric'])) {
-                    $this->data['CompetenceCriterionRubric'] = array();
+            if (isset($data['CompetenceCriterionRubric'])) {
+                if (!is_array($data['CompetenceCriterionRubric'])) {
+                    $data['CompetenceCriterionRubric'] = array();
                 }
 
                 if ($auth_is_admin) {
@@ -672,19 +674,20 @@ class CompetenceCriteriaController extends AppController {
                 }
 
                 foreach ($filteredData['CompetenceCriterionRubric'] as $i => $rubric) {
-                    if (isset($this->data['CompetenceCriterionRubric'][$rubric['id']])) {
+                    if (isset($data['CompetenceCriterionRubric'][$rubric['id']])) {
                         // Update
-                        $this->data['CompetenceCriterionRubric'][$rubric['id']]['id'] = $rubric['id'];
+                        $data['CompetenceCriterionRubric'][$rubric['id']]['id'] = $rubric['id'];
                         $filteredData['CompetenceCriterionRubric'][$i]
-                            = array_intersect_key($this->data['CompetenceCriterionRubric'][$rubric['id']], array_flip($whiteList))
+                            = array_intersect_key($data['CompetenceCriterionRubric'][$rubric['id']], array_flip($whiteList))
                             + $filteredData['CompetenceCriterionRubric'][$i];
+                        unset($filteredData['CompetenceCriterionRubric'][$i]['modified']);
                     } else {
                         // Remove
                         unset($filteredData['CompetenceCriterionRubric'][$i]);
                         $deletedRubrics[] = $rubric['id'];
                     }
                 }
-                foreach ($this->data['CompetenceCriterionRubric'] as $rubric) {
+                foreach ($data['CompetenceCriterionRubric'] as $rubric) {
                     if (!isset($rubric['id'])) {
                         // Add
                         $filteredData['CompetenceCriterionRubric'][]
@@ -699,9 +702,9 @@ class CompetenceCriteriaController extends AppController {
 
         // Subjects
         if ($auth_is_admin) {
-            if (isset($this->data['CompetenceCriterionSubject'])) {
-                if (!is_array($this->data['CompetenceCriterionSubject'])) {
-                    $this->data['CompetenceCriterionSubject'] = array();
+            if (isset($data['CompetenceCriterionSubject'])) {
+                if (!is_array($data['CompetenceCriterionSubject'])) {
+                    $data['CompetenceCriterionSubject'] = array();
                 }
 
                 foreach ($filteredData['CompetenceCriterionSubject'] as $i => $subject) {
@@ -712,17 +715,18 @@ class CompetenceCriteriaController extends AppController {
                         }
                     }
 
-                    if (isset($this->data['CompetenceCriterionSubject'][$subject['id']])) {
+                    if (isset($data['CompetenceCriterionSubject'][$subject['id']])) {
                         // Update
-                        $this->data['CompetenceCriterionSubject'][$subject['id']]['id'] = $subject['id'];
+                        $data['CompetenceCriterionSubject'][$subject['id']]['id'] = $subject['id'];
                         // ...nothing to update
+                        unset($filteredData['CompetenceCriterionSubject'][$i]['modified']);
                     } else {
                         // Remove
                         unset($filteredData['CompetenceCriterionSubject'][$i]);
                         $deletedSubjects[] = $subject['id'];
                     }
                 }
-                foreach ($this->data['CompetenceCriterionSubject'] as $subject) {
+                foreach ($data['CompetenceCriterionSubject'] as $subject) {
                     if (!isset($subject['id']) && isset($subject['subject_id'])) {
                         // Add
                         $filteredData['CompetenceCriterionSubject'][] = array(
@@ -738,9 +742,9 @@ class CompetenceCriteriaController extends AppController {
 
         // Teacher
         if ($auth_is_admin || $auth_is_coordinator) {
-            if (isset($this->data['CompetenceCriterionTeacher'])) {
-                if (!is_array($this->data['CompetenceCriterionTeacher'])) {
-                    $this->data['CompetenceCriterionTeacher'] = array();
+            if (isset($data['CompetenceCriterionTeacher'])) {
+                if (!is_array($data['CompetenceCriterionTeacher'])) {
+                    $data['CompetenceCriterionTeacher'] = array();
                 }
 
                 foreach ($filteredData['CompetenceCriterionTeacher'] as $i => $teacher) {
@@ -751,17 +755,18 @@ class CompetenceCriteriaController extends AppController {
                         }
                     }
 
-                    if (isset($this->data['CompetenceCriterionTeacher'][$teacher['id']])) {
+                    if (isset($data['CompetenceCriterionTeacher'][$teacher['id']])) {
                         // Update
-                        $this->data['CompetenceCriterionTeacher'][$teacher['id']]['id'] = $teacher['id'];
+                        $data['CompetenceCriterionTeacher'][$teacher['id']]['id'] = $teacher['id'];
                         // ...nothing to update
+                        unset($filteredData['CompetenceCriterionTeacher'][$i]['modified']);
                     } else {
                         // Remove
                         unset($filteredData['CompetenceCriterionTeacher'][$i]);
                         $deletedTeachers[] = $teacher['id'];
                     }
                 }
-                foreach ($this->data['CompetenceCriterionTeacher'] as $teacher) {
+                foreach ($data['CompetenceCriterionTeacher'] as $teacher) {
                     if (!isset($teacher['id']) && isset($teacher['teacher_id'])) {
                         // Add
                         $filteredData['CompetenceCriterionTeacher'][] = array(
