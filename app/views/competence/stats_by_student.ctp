@@ -12,16 +12,16 @@
 <h1>Evaluación por estudiante: <?php echo "{$student['User']['first_name']} {$student['User']['last_name']}" ?></h1>
 
 <?php if (empty($subjects_stats)): ?>
-    Para poder ver la evaluación debes ser coordinador o responable de prácticas de al menos una asignatura con competencias y en la que el alumno esté matriculado
+    Para poder ver la evaluación debes ser coordinador o responable de prácticas de al menos una asignatura con competencias del estudiante.
 <?php else: ?>
-    <div class="actions">
-        <ul>
-            <?php if ($auth->user('type') == "Administrador"): ?>
+    <?php if ($auth->user('type') == "Administrador"): ?>
+        <div class="actions">
+            <ul>
                 <li><?php echo $html->link('Exportar', array('action' => 'export_stats_by_student', $course['Course']['id'], $student['User']['id'])) ?>
-            <?php endif; ?>
-        </ul>
-    </div>
-    <div class="view">
+            </ul>
+        </div>
+    <?php endif ?>
+    <div class="<?php echo $auth->user('type') == "Administrador" ? 'view' : '' ?>">
         <?php foreach ($subjects as $subject): ?>
             <fieldset>
                 <legend><?php echo "{$subject['code']} - {$subject['name']}" ?></legend>
@@ -39,11 +39,18 @@
                             <?php foreach ($subjects_stats[$subject['id']] as $student_grade): ?>
                                 <?php $total += $student_grade['CompetenceCriterionRubric']['value']; ?>
                                 <tr>
-                                <td><?php echo $html->link($student_grade['CompetenceCriterion']['code'], array('controller' => 'competence_criteria', 'action' => 'view', $student_grade['CompetenceCriterion']['id'])) ?></td>
-                                <td><?php echo $student_grade['CompetenceCriterion']['definition'] ?></td>
-                                <td><span class="tooltip" title="<?php echo htmlspecialchars("{$student_grade['CompetenceCriterionRubric']['title']} - {$student_grade['CompetenceCriterionRubric']['definition']}") ?>">
-                                    <?php echo number_format($student_grade['CompetenceCriterionRubric']['value'], 2) ?></td>
-                                </span></tr>
+                                    <td><?php echo $html->link($student_grade['CompetenceCriterion']['code'], array('controller' => 'competence_criteria', 'action' => 'view', $student_grade['CompetenceCriterion']['id'])) ?></td>
+                                    <td><?php echo $student_grade['CompetenceCriterion']['definition'] ?></td>
+                                    <td>
+                                        <?php if ($student_grade['CompetenceCriterionRubric']['value'] === null): ?>
+                                            -
+                                        <?php else: ?>
+                                            <span class="tooltip" title="<?php echo htmlspecialchars("{$student_grade['CompetenceCriterionRubric']['title']} - {$student_grade['CompetenceCriterionRubric']['definition']}") ?>">
+                                                <?php echo number_format($student_grade['CompetenceCriterionRubric']['value'], 2) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>

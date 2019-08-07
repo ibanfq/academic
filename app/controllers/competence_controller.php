@@ -994,12 +994,13 @@ class CompetenceController extends AppController {
 
         return $this->Competence->query("
             SELECT Subject.id, Subject.code, Subject.name, Student.id, Student.dni, Student.first_name, Student.last_name, SUM(CompetenceCriterionRubric.value) as total
-            FROM competence_criterion_grades CompetenceCriterionGrade
-            INNER JOIN competence_criteria CompetenceCriterion ON CompetenceCriterion.id = CompetenceCriterionGrade.criterion_id
-            INNER JOIN competence_criterion_rubrics CompetenceCriterionRubric ON CompetenceCriterionRubric.id = CompetenceCriterionGrade.rubric_id
-            INNER JOIN competence_criterion_subjects CompetenceCriterionSubject on CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id
+            FROM competence_criterion_subjects CompetenceCriterionSubject
+            INNER JOIN competence_criteria CompetenceCriterion ON CompetenceCriterion.id = CompetenceCriterionSubject.criterion_id
             INNER JOIN subjects Subject ON Subject.id = CompetenceCriterionSubject.subject_id
-            INNER JOIN users Student ON Student.id = CompetenceCriterionGrade.student_id
+            LEFT JOIN subjects_users SubjectUser ON SubjectUser.subject_id = CompetenceCriterionSubject.subject_id
+            LEFT JOIN users Student ON Student.id = SubjectUser.user_id
+            LEFT JOIN competence_criterion_grades CompetenceCriterionGrade ON CompetenceCriterionGrade.criterion_id = CompetenceCriterion.id AND CompetenceCriterionGrade.student_id = SubjectUser.user_id
+            LEFT JOIN competence_criterion_rubrics CompetenceCriterionRubric ON CompetenceCriterionRubric.id = CompetenceCriterionGrade.rubric_id
             $where $group_by ORDER BY Subject.name, Student.first_name, Student.last_name
         ");
     }
@@ -1008,21 +1009,22 @@ class CompetenceController extends AppController {
     {
         $db = $this->Competence->getDataSource();
 
-        $where = "WHERE CompetenceCriterionGrade.student_id = {$db->value($student_id)} AND Subject.course_id = {$db->value($course_id)}";
+        $where = "WHERE SubjectUser.user_id = {$db->value($student_id)} AND Subject.course_id = {$db->value($course_id)}";
 
         if ($this->Auth->user('type') === "Profesor") {
             $user_id = $this->Auth->user('id');
-            $where .= " AND (coordinator_id = {$db->value($user_id)} OR practice_responsible_id = {$db->value($user_id)})";
+            $where .= " AND (Subject.coordinator_id = {$db->value($user_id)} OR Subject.practice_responsible_id = {$db->value($user_id)})";
         }
 
         return $this->Competence->query("
             SELECT Subject.id, Subject.code, Subject.name, CompetenceCriterion.id, CompetenceCriterion.code, CompetenceCriterion.definition,
                 CompetenceCriterionRubric.id, CompetenceCriterionRubric.title, CompetenceCriterionRubric.definition, CompetenceCriterionRubric.value
-            FROM competence_criterion_grades CompetenceCriterionGrade
-            INNER JOIN competence_criteria CompetenceCriterion ON CompetenceCriterion.id = CompetenceCriterionGrade.criterion_id
-            INNER JOIN competence_criterion_rubrics CompetenceCriterionRubric ON CompetenceCriterionRubric.id = CompetenceCriterionGrade.rubric_id
-            INNER JOIN competence_criterion_subjects CompetenceCriterionSubject on CompetenceCriterionSubject.criterion_id = CompetenceCriterion.id
-            INNER JOIN subjects Subject ON Subject.id = CompetenceCriterionSubject.subject_id
+            FROM subjects_users SubjectUser
+            INNER JOIN subjects Subject ON Subject.id = SubjectUser.subject_id
+            INNER JOIN competence_criterion_subjects CompetenceCriterionSubject ON CompetenceCriterionSubject.subject_id = SubjectUser.subject_id
+            INNER JOIN competence_criteria CompetenceCriterion ON CompetenceCriterion.id = CompetenceCriterionSubject.criterion_id
+            LEFT JOIN competence_criterion_grades CompetenceCriterionGrade ON CompetenceCriterionGrade.criterion_id = CompetenceCriterion.id AND CompetenceCriterionGrade.student_id = SubjectUser.user_id
+            LEFT JOIN competence_criterion_rubrics CompetenceCriterionRubric ON CompetenceCriterionRubric.id = CompetenceCriterionGrade.rubric_id
             $where ORDER BY Subject.name, CompetenceCriterion.code
         ");
     }
@@ -1034,8 +1036,8 @@ class CompetenceController extends AppController {
             'by_course', 'by_subject', 'by_student',
             'view', 'view_by_subject','view_by_student',
             'add_to_course', 'edit', 'delete',
-            'stats_by_subject', 'export_stats_by_subject',
-            'stats_by_student', 'export_stats_by_student',
+            'stats_by_subject',
+            'stats_by_student',
         );
         $teacher_actions = array(
             'by_course', 'by_subject', 'by_student',
