@@ -87,7 +87,7 @@
             </thead>
             <tfoot>
                 <?php if ($auth_is_admin): ?>
-                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteSubjectRow('<?php echo PATH ?>/subjects/find_subjects_by_name')" title="Haga click para añadir una asignatura">Añadir asignatura</a></td></tr>
+                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteSubjectRow('<?php echo PATH ?>/subjects/find_subjects_by_name/course_id:<?php echo $competence['Competence']['course_id'] ?>')" title="Haga click para añadir una asignatura">Añadir asignatura</a></td></tr>
                 <?php endif; ?>
             </tfoot>
             <tbody id="subjects">
