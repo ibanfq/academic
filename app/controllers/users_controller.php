@@ -90,6 +90,7 @@ class UsersController extends AppController {
     
     function index() {
         App::import('Sanitize');
+        $db = $this->User->getDataSource();
         
         if (isset($this->params['url']['q'])) {
             $q = Sanitize::escape($this->params['url']['q']);
@@ -101,10 +102,58 @@ class UsersController extends AppController {
             }
         }
 
-        $users = $this->paginate('User', array("OR" => array('User.first_name LIKE' => "%$q%", 'User.last_name LIKE' => "%$q%", 'User.type LIKE' => "%$q%", 'User.username LIKE' => "%$q%", 'User.dni LIKE' => "%$q%")));
+        
+        if (empty($this->params['named']['type'])) {
+            $scope = array();
+        } else {
+            $scope = array('User.type' => $this->params['named']['type']);
+        }
+
+        if (!empty($this->params['named']['course'])) {
+            $course_id = intval($this->params['named']['course']);
+            
+            if (is_null($course_id)) {
+                $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            }
+            
+            $this->loadModel('Course');
+
+            $course = $this->Course->find('first', array(
+                'recursive' => -1,
+                'conditions' => array('Course.id' => $course_id)
+            ));
+
+            if (!$course) {
+                $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            }
+            
+            $scope[] = "
+                User.id IN (
+                    SELECT distinct SubjectUser.user_id FROM subjects_users SubjectUser
+                    INNER JOIN subjects Subject ON Subject.id = SubjectUser.subject_id
+                    WHERE Subject.course_id = {$db->value($this->params['named']['course'])}
+                )";
+        } elseif (isset($this->params['named']['ref']) && $this->params['named']['ref'] === 'competence') {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+        
+        if (!empty($q)) {
+            $scope['OR'] = array(
+                'User.first_name LIKE' => "%$q%",
+                'User.last_name LIKE' => "%$q%",
+                'User.username LIKE' => "%$q%",
+                'User.dni LIKE' => "%$q%",
+                'User.type LIKE' => "%$q%"
+            );
+        }
+
+        $users = $this->paginate('User', $scope);
 
         $this->set('users', $users);
         $this->set('q', $q);
+        $this->set('course', isset($course) ? $course : null);
+        $this->set('type', isset($this->params['named']['type']) ? $this->params['named']['type'] : null);
+        $this->set('ref', isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null);
     }
     
     function view($id = null){

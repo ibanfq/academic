@@ -11,13 +11,14 @@
 <div class="actions">
 <ul>
     <?php if ($auth->user('type') == "Administrador"): ?>
-    <li><?php echo $html->link('Crear competencia', array('action' => 'add_to_course', $course['Course']['id'])) ?></li>
+        <li><?php echo $html->link('Crear competencia', array('action' => 'add_to_course', $course['Course']['id'])) ?></li>
     <?php endif; ?>
     <?php if (in_array($auth->user('type'), array("Administrador", "Profesor", "Estudiante"))): ?>
-    <li><?php echo $html->link('Solicitudes de evaluación', array('controller' => 'competence_goal_requests', 'action' => 'by_course', $course['Course']['id'])) ?></li>
+        <li><?php echo $html->link('Solicitudes de evaluación', array('controller' => 'competence_goal_requests', 'action' => 'by_course', $course['Course']['id'])) ?></li>
     <?php endif; ?>
     <?php if (in_array($auth->user('type'), array("Administrador", "Profesor"))): ?>
-    <li><?php echo $html->link('Evaluación por asignaturas', array('controller' => 'courses', 'action' => 'view', 'ref' => 'competences', $course['Course']['id'])) ?></li>
+        <li><?php echo $html->link('Evaluación por asignaturas', array('action' => 'stats_by_subject', $course['Course']['id'])) ?></li>
+        <li><?php echo $html->link('Evaluación por estudiante', array('controller' => 'users', 'action' => 'index', 'type' => 'Estudiante', 'course' => $course['Course']['id'], 'ref' => 'competence')) ?></li>
     <?php endif; ?>
 </ul>
 </div>

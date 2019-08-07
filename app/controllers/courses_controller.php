@@ -21,6 +21,7 @@ class CoursesController extends AppController {
         $this->Course->id = $id;
         $this->set('course', $this->Course->read());
         $this->set('friendly_name', $this->Course->friendly_name());
+        $this->set('ref', isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null);
     }
 
     function edit($id = null) {
