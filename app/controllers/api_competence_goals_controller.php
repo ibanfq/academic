@@ -64,6 +64,17 @@ class ApiCompetenceGoalsController extends AppController {
             return;
         }
 
+        if (isset($this->params['url']['course_id'])) {
+            $course_id = intval($this->params['url']['course_id']);
+        } else {
+            $course = $this->CompetenceGoal->Competence->Course->current();
+            if (!$course) {
+                $this->Api->setError('No hay ningún curso activo actualmente.', 404);
+                $this->Api->respond($this);
+                return;
+            }
+            $course_id = $course["id"];
+        }
         
         if ($this->Auth->user('type') === 'Estudiante') {
             $student_id = $this->Auth->user('id');
@@ -198,6 +209,7 @@ class ApiCompetenceGoalsController extends AppController {
 
         $conditions = array(
             'AND' => array(
+                'Competence.course_id' => $course_id,
                 'OR' => array(
                     array('Subject.coordinator_id' => $teacher_id),
                     array('Subject.practice_responsible_id' => $teacher_id),

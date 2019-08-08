@@ -17,7 +17,7 @@
         <li><?php echo $html->link('Solicitudes de evaluación', array('controller' => 'competence_goal_requests', 'action' => 'by_course', $course['Course']['id'])) ?></li>
     <?php endif; ?>
     <?php if (in_array($auth->user('type'), array("Administrador", "Profesor"))): ?>
-        <li><?php echo $html->link('Evaluación por asignaturas', array('action' => 'stats_by_subject', $course['Course']['id'])) ?></li>
+        <li><?php echo $html->link('Evaluación por asignaturas', array('controller' => 'courses', 'action' => 'view', $course['Course']['id'], 'ref' => 'competence')) ?></li>
         <li><?php echo $html->link('Evaluación por estudiante', array('controller' => 'users', 'action' => 'index', 'type' => 'Estudiante', 'course' => $course['Course']['id'], 'ref' => 'competence')) ?></li>
     <?php endif; ?>
 </ul>

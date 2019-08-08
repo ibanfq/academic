@@ -525,13 +525,13 @@ class EventsController extends AppController {
 
     function calendar_by_subject() {
         $this->layout = 'public';
-        $this->set('courses', $this->Event->Activity->Subject->Course->find('all'));
+        $this->set('courses', $this->Event->Activity->Subject->Course->find('all', array('order' => 'initial_date desc')));
         $this->set('current_course', $this->Event->Activity->Subject->Course->current());
     }
     
     function calendar_by_level() {
         $this->layout = 'public';
-        $this->set('courses', $this->Event->Activity->Subject->Course->find('all'));
+        $this->set('courses', $this->Event->Activity->Subject->Course->find('all', array('order' => 'initial_date desc')));
         $this->set('current_course', $this->Event->Activity->Subject->Course->current());
     }
 

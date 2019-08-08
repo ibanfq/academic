@@ -122,7 +122,7 @@
                             '[method]' => 'GET',
                             'action' => 'by_teacher',
                             'teacher_id' => '00000000',
-                            '?' => array('group_path' => 'CompetenceGoal.competence_id')
+                            '?' => array('course_id' => $course['Course']['id'], 'group_path' => 'CompetenceGoal.competence_id')
                         )))
                     );
                 ?>;
