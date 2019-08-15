@@ -22,20 +22,30 @@ class CompetenceGoalsController extends AppController {
         ));
 
         if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
-        }
-
-        if (!empty($this->data)) {
-            if ($this->CompetenceGoal->save($this->data)) {
-                $this->Session->setFlash('El objetivo se ha guardado correctamente');
-                $this->redirect(array('controller' => 'competence', 'action' => 'view', $this->data['CompetenceGoal']['competence_id']));
-            }
         }
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
+            'Course.id' => $competence['Competence']['course_id'],
+            'Course.institution_id' => Environment::institution('id')
         ));
+
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        if (!empty($this->data)) {
+            $this->data['CompetenceGoal']['competence_id'] = $competence_id;
+
+            if ($this->CompetenceGoal->save($this->data)) {
+                $this->Session->setFlash('El objetivo se ha guardado correctamente');
+                $this->redirect(array('controller' => 'competence', 'action' => 'view', $competence_id));
+            }
+        }
 
         $this->set('competence', $competence);
         $this->set('course', $course);
@@ -159,6 +169,7 @@ class CompetenceGoalsController extends AppController {
         ));
 
         if (!$competence_goal_result) {
+            $this->Session->setFlash('No se ha podido acceder al objetivo.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -183,16 +194,29 @@ class CompetenceGoalsController extends AppController {
             'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
         ));
 
+        if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+        
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $goal_requests_response = $this->Api->call('GET', '/api/competence_goal_requests/by_goal/' . urlencode($id));
 
         if ($goal_requests_response['status'] !== 'error') {
             $this->set('competence_goal_requests', $goal_requests_response['data']);
         }
-
-        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-        ));
 
         $this->set('competence_goal', $competence_goal);
         $this->set('competence', $competence);
@@ -221,6 +245,19 @@ class CompetenceGoalsController extends AppController {
             );
 
         if (!$subject) {
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $subject['Subject']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -353,11 +390,6 @@ class CompetenceGoalsController extends AppController {
             $this->set('competence_goal_requests', $goal_requests_response['data']);
         }
 
-        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-        ));
-
         $this->set('competence_goal', $competence_goal);
         $this->set('competence', $competence);
         $this->set('course', $course);
@@ -380,6 +412,29 @@ class CompetenceGoalsController extends AppController {
         }
         $competence_goal = $response['data'];
 
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+
+        if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $this->loadModel('User');
         $student = $this->User->find('first', array(
             'recursive' => -1,
@@ -388,22 +443,11 @@ class CompetenceGoalsController extends AppController {
                 'User.type' => 'Estudiante'
             )
         ));
+
         if (!$student) {
+            $this->Session->setFlash('No se ha podido acceder al estudiante.');
             $this->redirect(array('controller' => 'users', 'action' => 'index'));
         }
-
-        $competence = $this->CompetenceGoal->Competence->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
-        ));
-        if (!$competence) {
-            $this->redirect(array('controller' => 'users', 'action' => 'index'));
-        }
-
-        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-        ));
 
         $this->set('student', $student);
         $this->set('competence_goal', $competence_goal);
@@ -432,7 +476,22 @@ class CompetenceGoalsController extends AppController {
             'recursive' => -1,
             'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
         ));
+
         if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -508,11 +567,6 @@ class CompetenceGoalsController extends AppController {
             )
         ));
 
-        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-        ));
-
         $this->set('student', $student);
         $this->set('competence_goal', $competence_goal);
         $this->set('competence_goal_request', $competence_goal_request);
@@ -528,26 +582,45 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
+        $competence_goal = $this->CompetenceGoal->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('CompetenceGoal.id' => $id)
+        ));
+
+        if (!$competence_goal) {
+            $this->Session->setFlash('No se ha podido acceder al objetivo.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+
+        if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
         if (empty($this->data)) {
-            $this->data = $this->CompetenceGoal->find('first', array(
-                'recursive' => -1,
-                'conditions' => array('CompetenceGoal.id' => $id)
-            ));
+            $this->data = $competence_goal;
         } else {
+            $this->data['CompetenceGoal']['id'] = $id;
+            $this->data['CompetenceGoal']['competence_id'] = $competence_goal['CompetenceGoal']['competence_id'];
+            
             if ($this->CompetenceGoal->save($this->data)) {
                 $this->Session->setFlash('La objetivo se ha modificado correctamente.');
                 $this->redirect(array('action' => 'view', $id));
             }
         }
-
-        $competence = $this->CompetenceGoal->Competence->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Competence.id' => $this->data['CompetenceGoal']['competence_id'])
-        ));
-        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'conditions' => array('Course.id' => $competence['Competence']['course_id'])
-        ));
 
         $this->set('competence_goal', $this->data);
         $this->set('competence', $competence);
@@ -568,6 +641,30 @@ class CompetenceGoalsController extends AppController {
         ));
 
         if (!$competence_goal) {
+            $this->Session->setFlash('No se ha podido acceder al objetivo.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $competence = $this->CompetenceGoal->Competence->find('first', array(
+            'recursive' => -1,
+            'conditions' => array('Competence.id' => $competence_goal['CompetenceGoal']['competence_id'])
+        ));
+
+        if (!$competence) {
+            $this->Session->setFlash('No se ha podido acceder a la competencia.');
+            $this->redirect(array('controller' => 'users', 'action' => 'index'));
+        }
+
+        $course = $this->CompetenceGoal->Competence->Course->find('first', array(
+            'recursive' => -1,
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 

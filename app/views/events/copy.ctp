@@ -2,7 +2,7 @@
 	$('#notice').removeClass('success');
 	$('#notice').addClass('error');
 	$('#notice').html("No tienes permisos para realizar esta acción");
-<?php elseif (isset($events)): ?>
+<?php elseif (isset($success)): ?>
 	if (currentEvent != null) {
 		$('#calendar').fullCalendar('removeEventSource', currentEvent);
 		$('#calendar').fullCalendar('refetchEvents');

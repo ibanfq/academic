@@ -1,20 +1,17 @@
 <?php
 
-$config['app'] = require('app.options.php');
+/**
+ * Default app config
+ */
 
-$config['app']['beta']['config_writes'] = array(
-    'app.competence.enable' => true
-);
-
-$config['app']['issuer'] = 'academic-fv';
+$config['app']['issuer'] = 'academic';
 $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_ulpgc.jpg';
-$config['app']['logo_ulpgc_white'] = '/img/logo_ulpgc_white.jpg';
-$config['app']['logo_ulpgc_link'] = 'http://www.fv.ulpgc.es';
+$config['app']['logo_ulpgc_white'] = '/img/logo_ulpgc_white.gif';
+$config['app']['logo_ulpgc_link'] = 'https://www.ulpgc.es';
 $config['app']['audit_email'] = 'admin@correo.es';
-$config['app']['email']['user_registered'] = 'user_registered_vet';
-$config['app']['fullcalendar']['menus'] = false;
-$config['app']['vcalendar']['name'] = 'Facultad de Veterinaria ULPGC';
+$config['app']['fullcalendar']['menus'] = true;
+$config['app']['vcalendar']['name'] = 'Academic';
 $config['app']['registration']['flexible_groups'] = true;
 $config['app']['activity']['teacher_can_block_groups_if_days_to_start'] = 7;
 $config['app']['activity']['teacher_can_block_groups_default_value'] = false;
@@ -26,17 +23,17 @@ $config['app']['classroom']['teachers_can_booking'] = false;
 $config['app']['competence']['enable'] = false;
 $config['app']['degrees'] = false;
 $config['app']['subject']['levels'] = array(
-    "Primero"   => "Primero",
-    "Segundo"   => "Segundo" ,
-    "Tercero"   => "Tercero",
-    "Cuarto"    => "Cuarto",
-    "Quinto"    => "Quinto",
-    "Postgrado" => "Postgrado"
+    'Primero'   => 'Primero',
+    'Segundo'   => 'Segundo' ,
+    'Tercero'   => 'Tercero',
+    'Cuarto'    => 'Cuarto',
+    'Quinto'    => 'Quinto',
+    'Postgrado' => 'Postgrado'
 );
 $config['app']['subject']['semesters'] = array(
-    "Primero" => "Primero",
-    "Segundo" => "Segundo",
-    "Anual"   => "Anual"
+    'Primero' => 'Primero',
+    'Segundo' => 'Segundo',
+    'Anual'   => 'Anual'
 );
 $config['app']['subject']['types'] = array(
     'Grado' => array(
@@ -52,7 +49,41 @@ $config['app']['subject']['types'] = array(
     )
 );
 $config['app']['subject']['default_type'] = 'Troncal';
-$config['app']['color_legend'] = array(
+$config['app']['activity']['types'] = array(
+    'Clase magistral'         => 'Clase magistral',
+    'Seminario'               => 'Seminario',
+    'Taller/trabajo en grupo' => 'Taller/trabajo en grupo',
+    'Práctica en aula'        => 'Práctica en aula',
+    'Práctica de problemas'   => 'Práctica de problemas',
+    'Práctica de informática' => 'Práctica de informática',
+    'Práctica de microscopía' => 'Práctica de microscopía',
+    'Práctica de laboratorio' => 'Práctica de laboratorio',
+    'Práctica clínica'        => 'Práctica clínica',
+    'Práctica externa'        => 'Práctica externa',
+    'Tutoría'                 => 'Tutoría',
+    'Evaluación'              => 'Evaluación',
+    'Otra presencial'         => 'Otra presencial'
+);
+$config['app']['activity']['theoretical_types'] = array(
+    'Clase magistral',
+    'Seminario'
+);
+$config['app']['activity']['practice_types'] = array(
+    'Práctica en aula',
+    'Práctica de problemas',
+    'Práctica de informática',
+    'Práctica de microscopía',
+    'Práctica de laboratorio',
+    'Práctica clínica',
+    'Práctica externa',
+    'Taller/trabajo en grupo'
+);
+$config['app']['activity']['other_types'] = array(
+    'Tutoría',
+    'Evaluación',
+    'Otra presencial'
+);
+$config['app']['activities']['calendar_legend'] = array(
     'legend_left' => array(
         'prac_aula'        => 'Práctica aula',
         'prac_problemas'   => 'Práctica problemas',
@@ -71,3 +102,6 @@ $config['app']['color_legend'] = array(
         'otra_presencial' => 'Otra presencial'
     )
 );
+
+// Set custom beta users config values
+$config['app']['beta']['config_writes'] = array();

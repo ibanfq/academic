@@ -61,7 +61,7 @@
     			<dt><label for="BookingClassroomId">Aula</label></dt>
     			<dd>
 			    	<select name="data[Booking][classroom_id]" id="BookingClassroomId">
-					    <?php if ($auth->user('type') == "Administrador"): ?>
+					    <?php if ($booking['Booking']['institution_id'] == Environment::institution('id') && $auth->user('type') == "Administrador"): ?>
 					    	<option value="-1" <?php if ($booking['Booking']['classroom_id'] == -1): ?>selected="selected"<?php endif; ?>>Todas las aulas</option>
 						<?php endif; ?>
 						<?php foreach ($classrooms as $classroom): ?>

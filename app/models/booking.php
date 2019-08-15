@@ -51,8 +51,10 @@ class Booking extends AcademicModel {
             )
         );
     
-    function bookingDontOverlap($initial_hour){
-        App::import('Sanitize');
+    function bookingDontOverlap($initial_hour) {
+        App::import('Core', 'Sanitize');;
+
+        $db = $this->getDataSource();
 
         $this->booking_id_overlaped = null;
         $this->event_id_overlaped = null;
@@ -61,10 +63,31 @@ class Booking extends AcademicModel {
         $final_hour = Sanitize::escape($this->data['Booking']['final_hour']);
         $classroom_id = intval($this->data['Booking']['classroom_id']);
                         
-        $query = "SELECT Booking.id AS id FROM bookings Booking WHERE ((Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}') OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}') OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}'))";
+        $query = "
+            SELECT Booking.id AS id FROM bookings Booking
+            WHERE
+            (
+                (Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}')
+                OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}')
+                OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')
+            )
+        ";
         
-        if ($classroom_id != -1) {
-            $query .= " AND (Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1)";
+        if ($classroom_id == -1) {
+            $query .= "
+                AND (
+                    (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                    OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
+                )
+            ";
+        } else {
+            $query .= "
+                AND (
+                    (Booking.classroom_id = {$classroom_id})
+                    OR (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                )
+            ";
+
         }
         if ((isset($this->data['Booking']['id'])) && ($this->data['Booking']['id'] > 0)) {
             $id = intval($this->data['Booking']['id']);
@@ -77,9 +100,20 @@ class Booking extends AcademicModel {
             return false;
         }
 
-        $query = "SELECT Event.id AS id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}'))";
-        if ($classroom_id != -1) {
-            $query .= "    AND Event.classroom_id = {$classroom_id}";
+        $query = "
+            SELECT Event.id AS id FROM events Event
+            WHERE
+            (
+                (Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}')
+                OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}')
+                OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')
+            )
+        ";
+
+        if ($classroom_id == -1) {
+            $query .= "  AND (Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))";
+        } else {
+            $query .= " AND Event.classroom_id = {$classroom_id}";
         }
         
         $events_count = $this->query($query);
@@ -116,7 +150,7 @@ class Booking extends AcademicModel {
     }
     
     function _get_timestamp($date){
-        $date_components = split("-", $date->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $date->format('Y-m-d-H-i-s'));
         return mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
     }
 
@@ -132,6 +166,8 @@ class Booking extends AcademicModel {
             return array();
         }
 
+        $db = $this->getDataSource();
+
         $this->Behaviors->attach('Containable');
         $this->bindModel(array(
             'belongsTo' => array(
@@ -142,6 +178,7 @@ class Booking extends AcademicModel {
                 ),
             ),
         ));
+
         return $this->find('all', array(
             'fields' => array(
                 'Booking.initial_hour', 'Booking.final_hour', 'Booking.reason',
@@ -149,7 +186,14 @@ class Booking extends AcademicModel {
                 'Classroom.name',
             ),
             'contain' => array('Teacher', 'Classroom'),
-            'conditions' => array('Booking.initial_hour >= ' => $date . ' 00:00:00', 'Booking.final_hour <=' => $date . ' 23:59:59'),
+            'conditions' => array(
+                'Booking.initial_hour >= ' => $date . ' 00:00:00',
+                'Booking.final_hour <=' => $date . ' 23:59:59',
+                'OR' => array(
+                    "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
+                    "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ),
             'order' => array('Booking.initial_hour'),
         ));
     }

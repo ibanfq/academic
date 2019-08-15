@@ -3,9 +3,14 @@ class MonitorsController extends AppController {
     var $name = 'Monitors';
     var $paginate = array('limit' => 10, 'order' => array('Monitor.name' => 'asc'), 'recursive' => 0);
     var $helpers = array('activityHelper', 'Text');
+    var $fields_fillable = array('Monitor', 'Classroom', 'MonitorMedia');
+    var $fields_guarded = array(
+        'Monitor' => ['id', 'institution_id', 'created', 'modified'],
+        'MonitorMedia' => ['monitor_id']
+    );
     
     function index(){
-        App::import('Sanitize');
+        App::import('Core', 'Sanitize');;
         if (isset($this->params['url']['q'])) {
             $q = Sanitize::escape($this->params['url']['q']);
         } elseif (isset($this->passedArgs['q'])) {
@@ -13,13 +18,20 @@ class MonitorsController extends AppController {
         } else {
             $q = '';
         }
-        $monitors = $this->paginate('Monitor', array('Monitor.name LIKE' => "%$q%"));
+        $conditions = array(
+            'Monitor.institution_id ' => Environment::institution('id'),
+            'Monitor.name LIKE' => "%$q%"
+        );
+        $monitors = $this->paginate('Monitor', $conditions);
         $this->set('monitors', $monitors);
         $this->set('q', $q);
     }
     
     function add(){
         if (!empty($this->data)){
+            $this->data = $this->Form->filter($this->data);
+            $this->data['Monitor']['institution_id'] = Environment::institution('id');
+
             if ($this->Monitor->save($this->data)){
                 $this->Session->setFlash('El monitor se ha guardado correctamente');
                 $this->redirect(array('action' => 'index'));
@@ -34,13 +46,18 @@ class MonitorsController extends AppController {
     function edit($id = null){
         $monitor = $this->_findMonitorOrFail($id, array('recursive' => 1));
 
+        $this->Monitor->set($monitor);
+
         if (empty($this->data['Monitor'])) {
             $this->data = array_intersect_key(
                 $monitor,
                 array_flip(array('Monitor', 'Classroom', 'MonitorMedia'))
             );
-            $this->set('monitor', $monitor);
         } else {
+            $this->data = $this->Form->filter($this->data);
+            $this->data['Monitor']['id'] = $monitor['Monitor']['id'];
+            $this->data['Monitor']['modified'] = null;
+
             if (!isset($this->data['Classroom'])) {
                 $this->data['Classroom'] = array();
             }
@@ -53,14 +70,14 @@ class MonitorsController extends AppController {
                         $this->data['MonitorMedia'][$dataKey]['type'] = $monitor['MonitorMedia'][$key]['type'];
                         $this->data['MonitorMedia'][$dataKey]['src'] = $monitor['MonitorMedia'][$key]['src'];
                         $this->data['MonitorMedia'][$dataKey]['mime_type'] = $monitor['MonitorMedia'][$key]['mime_type'];
+                        $this->data['MonitorMedia'][$dataKey]['video_id'] = $monitor['MonitorMedia'][$key]['video_id'];
                     }
                 }
             } else {
                 $this->data['MonitorMedia'] = array();
             }
-            $dataToSave = ['Monitor' => $this->data['Monitor']];
             
-            if ($this->Monitor->save($dataToSave)
+            if ($this->Monitor->save(array('Monitor' => $this->data['Monitor']))
                 && $this->_saveAssociatedClassrooms($monitor, $this->data)
                 && $this->_saveMedia($monitor, $this->data)
             ) {
@@ -69,9 +86,10 @@ class MonitorsController extends AppController {
             } else {
                 $this->Session->setFlash('No se ha podido actualizar correctamente el monitor.');
                 $this->data['Monitor'] += $monitor['Monitor'];
-                $this->set('monitor', $monitor);
             }
         }
+
+        $this->set('monitor', $monitor);
     }
     
     function delete($id = null){
@@ -108,7 +126,7 @@ class MonitorsController extends AppController {
         $this->set('ajax_section', $ajaxSection);
     }
 
-    function add_media($monitor_id){
+    function add_media($monitor_id) {
         $monitor = $this->_findMonitorOrFail($monitor_id);
 
         if (!empty($this->data)) {
@@ -236,8 +254,16 @@ class MonitorsController extends AppController {
         $this->set('uploadMaxSize', $this->_getUploadMaxSize());
     }
 
-    function _saveAssociatedClassrooms($monitor, $data){
+    function _saveAssociatedClassrooms($monitor, $data) {
         $this->loadModel('MonitorsClassroom');
+
+        $validClassrooms = $this->Monitor->Classroom->find('all', array(
+            'conditions' => array(
+                'Classroom.institution_id' => Environment::institution('id'),
+            ),
+            'recursive' => -1
+        ));
+        $validClassroomsIds = (array) Set::extract("Classroom.{n}.id", $validClassrooms);
 
         $existingClassroomsIds = (array) Set::extract("Classroom.{n}.id", $monitor);
         $deletedClassroomsIds = array();
@@ -246,17 +272,17 @@ class MonitorsController extends AppController {
             if (!empty($classroom['id'])) {
                 if (empty($classroom['show_in_monitor'])) {
                     $deletedClassroomsIds[$classroom['id']] = $classroom['id'];
+                } elseif (in_array($classroom['id'], $validClassroomsIds)) {
+                    $deletedClassroomsIds[$classroom['id']] = $classroom['id'];
+                } elseif (in_array($classroom['id'], $existingClassroomsIds)) {
+                    unset($deletedClassroomsIds[$classroom['id']]);
                 } else {
-                    if (in_array($classroom['id'], $existingClassroomsIds)) {
-                        unset($deletedClassroomsIds[$classroom['id']]);
-                    } else {
-                        $newMonitorsClassroomRecords[$classroom['id']] = array(
-                            'MonitorsClassroom' => array(
-                                'monitor_id' => $monitor['Monitor']['id'],
-                                'classroom_id' => $classroom['id']
-                            )
-                        );
-                    }
+                    $newMonitorsClassroomRecords[$classroom['id']] = array(
+                        'MonitorsClassroom' => array(
+                            'monitor_id' => $monitor['Monitor']['id'],
+                            'classroom_id' => $classroom['id']
+                        )
+                    );
                 }
             }
         }
@@ -283,7 +309,7 @@ class MonitorsController extends AppController {
         return $return;
     }
 
-    function _saveMedia($monitor, $data){
+    function _saveMedia($monitor, $data) {
         $return = true;
 
         if (isset($data['MonitorMedia'])) {
@@ -341,18 +367,23 @@ class MonitorsController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
+            $this->Session->setFlash('No se ha podido acceder al monitor.');
             $this->redirect(array('action' => 'index'));
         }
 
         $validOptions = array('recursive');
         $conditions = array_intersect_key((array)$options, array_flip($validOptions)) + array(
             'recursive' => -1,
-            'conditions' => array('Monitor.id' => $id)
+            'conditions' => array(
+                'Monitor.id' => $id,
+                'Monitor.institution_id ' => Environment::institution('id'),
+            )
         );
 
         $monitor = $this->Monitor->find('first', $conditions);
 
         if (!$monitor) {
+            $this->Session->setFlash('No se ha podido acceder al monitor.');
             $this->redirect(array('action' => 'index'));
         }
 
@@ -379,22 +410,25 @@ class MonitorsController extends AppController {
         if (!isset($this->Event)) {
             $this->loadModel('Event');
         }
+
         if (!isset($this->Booking)) {
             $this->loadModel('Booking');
         }
+
+        $db = $this->Event->getDataSource();
 
         $classroom_show_tv = Configure::read('app.classroom.show_tv');
         $event_show_tv = !$classroom_show_tv || Configure::read('app.event.show_tv');
         $booking_show_tv = !$classroom_show_tv || Configure::read('app.booking.show_tv');
 
-        $events_filters = [];
-        $bookings_filters = [];
+        $events_filters = array();
+        $bookings_filters = array();
 
         if ($event_show_tv) {
-            $events_filter[]= 'Event.show_tv';
+            $events_filters[]= 'Event.show_tv';
         }
         if ($booking_show_tv) {
-            $bookings_filter[]= 'Booking.show_tv';
+            $bookings_filters[]= 'Booking.show_tv';
         }
 
         if (empty($classrooms_ids)) {
@@ -403,19 +437,18 @@ class MonitorsController extends AppController {
                 $bookings_filters []= 'Booking.classroom_id = -1 OR Classroom.show_tv';
             }
         } else {
-            $db = $this->Event->getDataSource();
-            $classrooms_db_id_values = implode(', ', array_map(array($db, 'value'), $classrooms_ids));
-            $events_filters[]= "Classroom.id IN ($classrooms_db_id_values)";
-            $bookings_filters[]= "Classroom.id IN ($classrooms_db_id_values) OR Booking.classroom_id = -1";
+            $events_filters[]= array('Classroom.id' => $classrooms_ids);
+            $bookings_filters[]= array(
+                'OR' => array(
+                    'Classroom.id' => $classrooms_ids,
+                    'Booking.classroom_id = -1'
+                )
+            );
         }
 
-        $events_filters = '(' . implode(') AND (', $events_filters) . ')';
-        $bookings_filters = '(' . implode(') AND (', $bookings_filters) . ')';
-
-        $dbo = $this->Event->getDataSource();
-        $sql1 = $dbo->buildStatement(
+        $sql1 = $db->buildStatement(
             array(
-                'table' => $dbo->fullTableName($this->Event),
+                'table' => $db->fullTableName($this->Event),
                 'alias' => 'Event',
                 'fields' => array(
                     'Event.initial_hour',
@@ -431,7 +464,12 @@ class MonitorsController extends AppController {
                     'Event.classroom_id',
                     'Classroom.name as classroom_name'
                 ),
-                'conditions' => "Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND ($events_filters)",
+                'conditions' => array(
+                    'Event.initial_hour > CURDATE()',
+                    'Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})",
+                    $events_filters,
+                ),
                 'joins' => array(
                     array(
                         'table' => 'classrooms',
@@ -472,9 +510,9 @@ class MonitorsController extends AppController {
             $this->Event
         );
                     
-        $sql2 = $dbo->buildStatement(
+        $sql2 = $db->buildStatement(
             array(
-                'table' => $dbo->fullTableName($this->Booking),
+                'table' => $db->fullTableName($this->Booking),
                 'alias' => 'Booking',
                 'fields' => array(
                     'Booking.initial_hour',
@@ -490,7 +528,15 @@ class MonitorsController extends AppController {
                     'Booking.classroom_id',
                     'Classroom.name as classroom_name'
                 ),
-                'conditions' => "Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND ($bookings_filters)",
+                'conditions' => array(
+                    'Booking.initial_hour > CURDATE()',
+                    'Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+                    'OR' => array(
+                        "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
+                        "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                    ),
+                    $bookings_filters
+                ),
                 'joins' => array(
                     array(
                         'table' => 'classrooms',
@@ -507,7 +553,7 @@ class MonitorsController extends AppController {
             $this->Booking
         );
                     
-        $events = $dbo->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
+        $events = $db->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
 
         foreach($events as $i => &$event) {
             $event = $event[0];

@@ -1,4 +1,7 @@
 <?php
+
+App::import('lib', 'Environment');
+
 class EventsController extends AppController {
     var $name = 'Events';
     var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
@@ -6,18 +9,39 @@ class EventsController extends AppController {
     
     function schedule($course_id) {
         $course_id = $course_id === null ? null : intval($course_id);
+
+        $course = $this->Event->Activity->Subject->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $this->set('section', 'courses');
         $this->set('events_schedule', '1');
         $this->set('user_id', $this->Auth->user('id'));
-        
-        $this->Event->Activity->Subject->Course->id = $course_id;
-        $course = $this->Event->Activity->Subject->Course->read();
-        
-        $classrooms = array();
-        foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
-            $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
-        }
-        $this->set('classrooms', $classrooms);
+
+        $db = $this->Event->getDataSource();
+
+        $classrooms = $this->Event->Classroom->find('all', array(
+            'conditions' => array(
+                "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            ),
+            'order' => "name ASC",
+            'recursive' => 0
+        ));
+
+        $classrooms_mapped = array();
+        foreach($classrooms as $cl):
+            $classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
+        endforeach;
+
+        $this->set('classrooms', $classrooms_mapped);
         $this->set('subjects', $course['Subject']);
         $this->set('course', $course);
     }
@@ -25,7 +49,38 @@ class EventsController extends AppController {
     function get($classroom_id = null) {
         $classroom_id = $classroom_id === null ? null : intval($classroom_id);
         $db = $this->Event->getDataSource();
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.classroom_id = {$db->value($classroom_id)}");
+
+        $classroom = $this->Event->Classroom->find('first', array(
+            'conditions' => array(
+                'Classroom.id' => $classroom_id,
+                "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            ),
+            'recursive' => -1
+        ));
+
+        if ($classroom) {
+            $select = 'DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.coordinator_id, Subject.practice_responsible_id, Subject.acronym';
+            $from = 'events Event';
+            $joins = array(
+                'INNER JOIN activities Activity ON Activity.id = Event.activity_id',
+                'INNER JOIN subjects Subject ON Subject.id = Activity.subject_id',
+                'INNER JOIN groups `Group` ON `Group`.id = Event.group_id'
+            );
+            $conditions = array(
+                "Event.classroom_id = {$db->value($classroom_id)}"
+            );
+
+            // @todo: update fullcalender request to with range of dates
+            $from_date = date('Y-m-d H:i:s', strtotime('- 3 years'));
+            $where[] = "Event.initial_hour >= '$from_date'";
+
+            $with_joins = implode(' ', $joins);
+            $where = implode(' AND ', $conditions);
+    
+            $events = $this->Event->query("SELECT $select FROM $from $with_joins WHERE $where");
+        } else {
+            $events = array();
+        }
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
@@ -34,7 +89,49 @@ class EventsController extends AppController {
     function get_by_subject($subject_id = null) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
         $db = $this->Event->getDataSource();
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Activity.subject_id = {$db->value($subject_id)}");
+
+        $subject = $this
+            ->Event
+            ->Activity
+            ->Subject->find(
+                'first',
+                array(
+                    'fields' => array('Subject.id'),
+                    'joins' => array(
+                        array(
+                            'table' => 'courses',
+                            'alias' => 'Course',
+                            'type'  => 'INNER',
+                            'conditions' => array(
+                                'Course.id = Subject.course_id',
+                                'Course.institution_id' => Environment::institution('id')
+                            )
+                        )
+                    ),
+                    'conditions' => array('Subject.id' => $subject_id),
+                    'recursive' => -1,
+                )
+            );
+        
+        $events = array();
+
+        if ($subject) {
+            $select = 'DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.coordinator_id, Subject.practice_responsible_id, Subject.acronym';
+            $from = 'events Event';
+            $joins = array(
+                'INNER JOIN activities Activity ON Activity.id = Event.activity_id',
+                'INNER JOIN subjects Subject ON Subject.id = Activity.subject_id',
+                'INNER JOIN groups `Group` ON `Group`.id = Event.group_id'
+            );
+            $conditions = array(
+                "Activity.subject_id = {$db->value($subject_id)}"
+            );
+            
+            $with_joins = implode(' ', $joins);
+            $where = implode(' AND ', $conditions);
+
+            $events = $this->Event->query("SELECT $select FROM $from $with_joins WHERE $where");
+        }
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
@@ -42,7 +139,26 @@ class EventsController extends AppController {
     
     function get_by_level($level = null) {
         $db = $this->Event->getDataSource();
-        $conditions = [];
+        
+        $select = 'DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.coordinator_id, Subject.practice_responsible_id, Subject.acronym';
+        $from = 'events Event';
+        $joins = array(
+            'INNER JOIN activities Activity ON Activity.id = Event.activity_id',
+            'INNER JOIN subjects Subject ON Subject.id = Activity.subject_id',
+            'INNER JOIN groups `Group` ON `Group`.id = Event.group_id'
+        );
+        $conditions = [
+            "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+        ];
+
+        if (!empty($this->params['named']['course'])) {
+            $course_id = $this->params['named']['course'];
+            $conditions[] =  "Subject.course_id = {$db->value($course_id)}";
+        } else {
+            // @todo: update fullcalender request to with range of dates
+            $from_date = date('Y-m-d H:i:s', strtotime('- 3 years'));
+            $conditions[] = "Event.initial_hour >= '$from_date'";
+        }
 
         if (!empty($this->params['named']['degree'])) {
             $degree = $this->params['named']['degree'];
@@ -51,28 +167,22 @@ class EventsController extends AppController {
             }
         }
 
-        if (!empty($this->params['named']['course'])) {
-            $course_id = $this->params['named']['course'];
-            $conditions[] =  "Subject.course_id = {$db->value($course_id)}";
-        }
-
         if ($level !== 'all') {
             $conditions[] = "Subject.level = {$db->value($level)}";
         }
 
-        if (empty($conditions)) {
-            $course = $this->Event->Activity->Subject->Course->current();
-            $where = "Subject.course_id = {$db->value($course['id'])}";
-        } else {
-            $where = implode(' AND ', $conditions);
-        }
+        $with_joins = implode(' ', $joins);
+        $where = implode(' AND ', $conditions);
 
-        $events = $this->Event->query("SELECT DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.acronym FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN groups `Group` ON `Group`.id = Event.group_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE $where");
+        $events = $this->Event->query("SELECT $select FROM $from $with_joins WHERE $where");
 
         if (empty($this->params['named']['booking'])) {
             $bookings = array();
         } else {
-            $bookings = $this->Event->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking");
+            // @todo: update fullcalender request to with range of dates
+            $from_date = date('Y-m-d H:i:s', strtotime('- 3 years'));
+            $bookings_where = "Booking.initial_hour >= '$from_date'";
+            $bookings = $this->Event->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking WHERE $bookings_where");
         }
         
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
@@ -82,11 +192,38 @@ class EventsController extends AppController {
 
     function get_by_teacher($teacher_id = null) {
         $this->loadModel('User');
-        $this->User->id = $teacher_id;
+
+        $teacher = $this->User->find('first', array(
+            'joins' => array(
+                array(
+                    'table' => 'institutions_users',
+                    'alias' => 'InstitutionUser',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'InstitutionUser.user_id = User.id',
+                        'InstitutionUser.institution_id' => Environment::institution('id'),
+                        'InstitutionUser.active'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'User.id' => $teacher_id,
+                'OR' => array(
+                    array('User.type' => 'Profesor'),
+                    array('User.type' => 'Administrador')
+                ),
+            )
+        ));
+
         $events = array();
-        if ($this->User->read()) {
-            $events = $this->User->getEvents();
+
+        if ($teacher) {
+            $this->User->set($teacher);
+
+            // @todo: update fullcalender request to with range of dates
+            $events = $this->User->getEvents(strtotime('- 3 years'));
         }
+        
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
         $this->set('events', $events);
     }
@@ -107,10 +244,10 @@ class EventsController extends AppController {
     }
     
     function _getDuration($initial_hour, $final_hour) {
-        $date_components = split("-", $initial_hour->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $initial_hour->format('Y-m-d-H-i-s'));
         $initial_timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
         
-        $date_components = split("-", $final_hour->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $final_hour->format('Y-m-d-H-i-s'));
         $final_timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
         
         return ($final_timestamp - $initial_timestamp) / 3600.0;
@@ -126,6 +263,25 @@ class EventsController extends AppController {
     function add($finished_at = null, $frequency = null) {
         $events = array();
         $invalidFields = array();
+
+        if (empty($this->data['Event']['classroom_id'])) {
+            $this->set('notAllowed', true);
+            return;
+        }
+
+        $db = $this->Event->getDataSource();
+
+        $classroom = $this->Event->Classroom->find('first', array(
+            'conditions' => array(
+                'Classroom.id' => $this->data['Event']['classroom_id'],
+                "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            ),
+            'recursive' => -1
+        ));
+
+        if (!$classroom) {
+            $this->set('notAllowed', true);
+        }
 
         if (($finished_at != null) && ($frequency != null)) {
             $initial_hour = new DateTime($this->data['Event']['initial_hour']);
@@ -195,8 +351,19 @@ class EventsController extends AppController {
     
     function copy($id) {
         $id = $id === null ? null : intval($id);
+
+        $db = $this->Event->getDataSource();
+
+        $event = $this->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            ),
+            'recursive' => -1
+        ));
+
         $events = array();
-        $event = $this->Event->find('first', array('conditions' => array('Event.id' => $id), 'recursive' => -1));
+
         if (!$event) {
             $this->set('notAllowed', true);
         } else {
@@ -206,74 +373,119 @@ class EventsController extends AppController {
             } else {
                 $initial_hour = $event_initial_hour;
             }
+
             if (!empty($this->params['named']['classroom'])) {
                 $classroom_id = intval($this->params['named']['classroom']);
+
+                $classroom = $this->Event->Classroom->find('first', array(
+                    'conditions' => array(
+                        'Classroom.id' => $classroom_id,
+                        "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                    ),
+                    'recursive' => -1
+                ));
+
+                if (!$classroom) {
+                    $this->set('notAllowed', true);
+                    $classroom_id = false;
+                }
             } else {
                 $classroom_id = $event['Event']['classroom_id'];
             }
-            $duration = $this->_getDuration($event_initial_hour, new DateTime($event['Event']['final_hour']));
-            $final_hour = $this->_addDuration($initial_hour, $duration);
-            $this->data = array(
-                'id'           => null,
-                'group_id'     => $event['Event']['group_id'],
-                'activity_id'  => $event['Event']['activity_id'],
-                'teacher_id'   => $event['Event']['teacher_id'],
-                'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
-                'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
-                'classroom_id' => $classroom_id,
-                'duration'     => $event['Event']['duration'],
-                'owner_id'     => $this->Auth->user('id'),
-                'teacher_2_id' => $event['Event']['teacher_2_id'],
-                'show_tv'      => $event['Event']['show_tv']
-            );
-            if ($this->Event->save($this->data)) {
-                array_push($events, $this->Event->read());
-                $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
-                $this->set('success', true);
-                $this->set('events', $events);
-                $this->set('subject', $subject);
-            } else {
-                $invalidFields = $this->Event->invalidFields();
-                if ($this->Event->booking_id_overlaped) {
-                    $this->loadModel('Booking');
-                    $this->Booking->id = $this->Event->booking_id_overlaped;
-                    $booking_overlaped = $this->Booking->read();
-                    $this->set('booking_overlaped', $booking_overlaped);
-                } elseif ($this->Event->event_id_overlaped) {
-                    $this->Event->id = $this->Event->event_id_overlaped;
-                    $event_overlaped = $this->Event->read();
-                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
-                    $this->set('event_overlaped', $event_overlaped);
-                    $this->set('activity_overlaped', $activity_overlaped);
+
+            if ($classroom_id) {
+                $duration = $this->_getDuration($event_initial_hour, new DateTime($event['Event']['final_hour']));
+                $final_hour = $this->_addDuration($initial_hour, $duration);
+                $this->data = array(
+                    'id'           => null,
+                    'group_id'     => $event['Event']['group_id'],
+                    'activity_id'  => $event['Event']['activity_id'],
+                    'teacher_id'   => $event['Event']['teacher_id'],
+                    'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
+                    'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
+                    'classroom_id' => $classroom_id,
+                    'duration'     => $event['Event']['duration'],
+                    'owner_id'     => $this->Auth->user('id'),
+                    'teacher_2_id' => $event['Event']['teacher_2_id'],
+                    'show_tv'      => $event['Event']['show_tv']
+                );
+                if ($this->Event->save($this->data)) {
+                    array_push($events, $this->Event->read());
+                    $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $events[0]['Activity']['subject_id'])));
+                    $this->set('success', true);
+                    $this->set('subject', $subject);
+                } else {
+                    $invalidFields = $this->Event->invalidFields();
+                    if ($this->Event->booking_id_overlaped) {
+                        $this->loadModel('Booking');
+                        $this->Booking->id = $this->Event->booking_id_overlaped;
+                        $booking_overlaped = $this->Booking->read();
+                        $this->set('booking_overlaped', $booking_overlaped);
+                    } elseif ($this->Event->event_id_overlaped) {
+                        $this->Event->id = $this->Event->event_id_overlaped;
+                        $event_overlaped = $this->Event->read();
+                        $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                        $this->set('event_overlaped', $event_overlaped);
+                        $this->set('activity_overlaped', $activity_overlaped);
+                    }
+                    $this->set('invalidFields', $invalidFields);
                 }
-                $this->set('invalidFields', $invalidFields);
             }
         }
+        $this->set('events', $events);
         $this->set('authorizeDelete', array($this, '_authorizeDelete'));
     }        
 
     function edit($id = null) {
         $id = $id === null ? null : intval($id);
-        $this->Event->id = $id;
-        $event = $this->Event->read();
+        
+        $db = $this->Event->getDataSource();
 
-        if ($this->_authorizeEdit($event)) {
-            if ($this->Auth->user('type') == "Administrador") {
-                foreach($this->Event->Classroom->find('all', array('fields' => array('Classroom.id', 'Classroom.name'), 'recursive' => 0, 'order' => array('Classroom.name'))) as $classroom) {
-                    $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
-                }
-                $this->set('classrooms', $classrooms);
-            }
-            $this->set('event', $event);
+        $event = $this->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
+        if (!$event || !$this->_authorizeEdit($event)) {
+            $this->Session->setFlash('No tienes los permisos necesarios para editar el evento.');
+            $this->redirect($this->referer());
         }
+
+        if ($this->Auth->user('type') == "Administrador") {
+            $classrooms = $this->Event->Classroom->find('all', array(
+                'conditions' => array(
+                    "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                ),
+                'order' => "name ASC",
+                'recursive' => 0
+            ));
+    
+            $classrooms_mapped = array();
+            foreach($classrooms as $cl):
+                $classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
+            endforeach;
+            
+            $this->set('classrooms', $classrooms_mapped);
+        }
+        
+        $this->set('event', $event);
     }
     
     function update($id, $deltaDays, $deltaMinutes, $resize = null) {
         $id = $id === null ? null : intval($id);
-        $this->Event->id = $id;
-        $event = $this->Event->read();
+        
+        $db = $this->Event->getDataSource();
+        
+        $event = $this->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
 
-        if ($this->_authorizeEdit($event)) {
+        if ($event && $this->_authorizeEdit($event)) {
             if ($resize == null) {
                 $initial_hour = date_create($event['Event']['initial_hour']);
                 $this->_add_days($initial_hour, $deltaDays, $deltaMinutes);
@@ -305,10 +517,18 @@ class EventsController extends AppController {
     
     function delete($id=null) {
         $id = $id === null ? null : intval($id);
-        $this->Event->id = $id;
-        $event = $this->Event->read();
+        
+        $db = $this->Event->getDataSource();
+
+        $event = $this->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
         $ids = array();
-        if ($this->_authorizeDelete($event)) {
+        if ($event && $this->_authorizeDelete($event)) {
             $ids = $this->Event->query("SELECT Event.id FROM events Event where Event.id = {$id} OR Event.parent_id = {$id}");
             $this->Event->query("DELETE FROM events WHERE id = {$id} OR parent_id = {$id}");
         }
@@ -320,17 +540,57 @@ class EventsController extends AppController {
         $classroom_id = $classroom_id === null ? null : intval($classroom_id);
         $teacher_id = $teacher_id === null ? null : intval($teacher_id);
         $teacher_2_id = $teacher_2_id === null ? null : intval($teacher_2_id);
-        if (($this->Auth->user('type') == "Administrador") && ($classroom_id != null) && ($teacher_id != null) && ($event_id != null)) {
-            $this->Event->id = $event_id;
-            $event = $this->Event->read();
-            $event['Event']['classroom_id'] = $classroom_id;
-            if ($this->Event->save($event)) {
-                $this->update_teacher($event_id, $teacher_id, $teacher_2_id);
-            } else if ($this->Event->id != -1) {
-                $event = $this->Event->read();
-                $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
-                $this->set('event', $event);
-                $this->set('activity', $activity);
+
+        $db = $this->Event->getDataSource();
+
+        $event = null;
+        
+        if ($this->Auth->user('type') != "Administrador" || !isset($classroom_id, $teacher_id, $event_id)) {
+            $this->set('notAllowed', true);
+            $is_valid = false;
+        } else {
+            $event = $this->Event->find('first', array(
+                'conditions' => array(
+                    'Event.id' => $event_id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ));
+        }
+
+        if ($event) {
+            $classroom = $this->Event->Classroom->find('first', array(
+                'conditions' => array(
+                    'Classroom.id' => $classroom_id,
+                    "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                ),
+                'recursive' => -1
+            ));
+            
+            if ($classroom) {
+                $event['Event']['classroom_id'] = $classroom_id;
+
+                $this->Event->set($event);
+
+                $is_valid = $this->Event->eventDontOverlap();
+
+                if ($is_valid && $this->update_teacher($event_id, $teacher_id, $teacher_2_id)) {
+                    $this->Event->updateAll(
+                        array('Event.classroom_id' => $classroom_id,),
+                        array('Event.id' => $event_id)
+                    );
+                    $this->set('ok', true);
+                } elseif ($this->Event->booking_id_overlaped) {
+                    $this->loadModel('Booking');
+                    $this->Booking->id = $this->Event->booking_id_overlaped;
+                    $booking_overlaped = $this->Booking->read();
+                    $this->set('booking_overlaped', $booking_overlaped);
+                } elseif ($this->Event->event_id_overlaped) {
+                    $this->Event->id = $this->Event->event_id_overlaped;
+                    $event_overlaped = $this->Event->read();
+                    $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                    $this->set('event_overlaped', $event_overlaped);
+                    $this->set('activity_overlaped', $activity_overlaped);
+                }
             }
         }
     }
@@ -341,50 +601,128 @@ class EventsController extends AppController {
         $teacher_2_id = $teacher_2_id === null ? null : intval($teacher_2_id);
         $event_show_tv = Configure::read('app.event.show_tv');
 
-        if (($teacher_id != null) && ($event_id != null)) {
-            $teacher_id = trim("{$teacher_id}");
-            if ($teacher_2_id !== null) {
-                $teacher_2_id = trim("{$teacher_2_id}");
+        $this->loadModel('User');
+        $db = $this->Event->getDataSource();
+        $event = false;
+        $teacher = false;
+        $teacher2 = false;
+
+        if ($event_id && $teacher_id) {
+            $event = $this->Event->find('first', array(
+                'conditions' => array(
+                    'Event.id' => $event_id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                ),
+                'recursive' => -1
+            ));
+
+            if ($event) {
+                $teacher = $this->User->find('first', array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions_users',
+                            'alias' => 'InstitutionUser',
+                            'type' => 'INNER',
+                            'conditions' => array(
+                                'InstitutionUser.user_id = User.id',
+                                'InstitutionUser.institution_id' => Environment::institution('id'),
+                                'InstitutionUser.active'
+                            )
+                        )
+                    ),
+                    'conditions' => array(
+                        'User.id' => $teacher_id,
+                        'OR' => array(
+                            array('User.type' => 'Profesor'),
+                            array('User.type' => 'Administrador')
+                        ),
+                    )
+                ));
+
+                if (!$teacher) {
+                    $event = false;
+                }
             }
-            
+        }
+
+        if ($event && $teacher_2_id) {
+            $teacher2 = $this->User->find('first', array(
+                'joins' => array(
+                    array(
+                        'table' => 'institutions_users',
+                        'alias' => 'InstitutionUser',
+                        'type' => 'INNER',
+                        'conditions' => array(
+                            'InstitutionUser.user_id = User.id',
+                            'InstitutionUser.institution_id' => Environment::institution('id'),
+                            'InstitutionUser.active'
+                        )
+                    )
+                ),
+                'conditions' => array(
+                    'User.id' => $teacher_2_id,
+                    'OR' => array(
+                        array('User.type' => 'Profesor'),
+                        array('User.type' => 'Administrador')
+                    ),
+                )
+            ));
+
+            if (!$teacher2) {
+                $event = false;
+            }
+        }
+
+        if ($event) {
             $error = false;
             $events = $this->Event->query("SELECT id FROM events as Event where id = {$event_id} or parent_id = {$event_id}");
             $events_ids = Set::extract('/Event/id', $events);
+            $old_teacher_ids = array();
+            $old_teacher_2_ids = array();
+            $old_show_tvs = array();
     
             foreach ($events_ids as $event_id) {
                 $this->Event->id = $event_id;
                 $event = $this->Event->read();
                   
-                $old_teacher_id = $event['Event']['teacher_id'];
-                $old_teacher_2_id = $event['Event']['teacher_2_id'];
-                $old_show_tv = $event['Event']['show_tv'];
+                $old_teacher_ids[$event_id] = $event['Event']['teacher_id'];
+                $old_teacher_2_ids[$event_id] = $event['Event']['teacher_2_id'];
+                $old_show_tvs[$event_id] = $event['Event']['show_tv'];
                   
                 $event['Event']['teacher_id'] = $teacher_id;
                 $event['Event']['teacher_2_id'] = $teacher_2_id;
                 if ($event_show_tv && isset($this->params['named']['show_tv'])) {
-                    $event['Event']['show_tv'] = boolval($this->params['named']['show_tv']);
+                    $event['Event']['show_tv'] = (bool) $this->params['named']['show_tv'];
                 }
       
                 if (!$this->Event->save($event)) {
                     $error = true;
         
-                    $this->Event->updateAll(
-                        array(
-                          'Event.teacher_id' => $old_teacher_id,
-                          'Event.teacher_2_id' => $old_teacher_2_id,
-                          'Event.show_tv' => $old_show_tv
-                        ),
-                        array('Event.id' => $events_ids)
-                    );
-        
-                    if ($this->Event->id != -1) {
-                        $event = $this->Event->read();
-                        $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event['Activity']['id'])));
-                        $this->set('event', $event);
-                        $this->set('activity', $activity);
+                    foreach (array_keys($old_teacher_ids) as $event_id) {
+                        $this->Event->updateAll(
+                            array(
+                                'Event.teacher_id' => $old_teacher_ids[$event_id],
+                                'Event.teacher_2_id' => $old_teacher_2_ids[$event_id],
+                                'Event.show_tv' => $old_show_tvs[$event_id]
+                            ),
+                            array('Event.id' => $event_id)
+                        );
                     }
         
-                    break;
+                    if ($this->Event->booking_id_overlaped) {
+                        $this->loadModel('Booking');
+                        $this->Booking->id = $this->Event->booking_id_overlaped;
+                        $booking_overlaped = $this->Booking->read();
+                        $this->set('booking_overlaped', $booking_overlaped);
+                    } elseif ($this->Event->event_id_overlaped) {
+                        $this->Event->id = $this->Event->event_id_overlaped;
+                        $event_overlaped = $this->Event->read();
+                        $activity_overlaped = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $event_overlaped['Activity']['id'])));
+                        $this->set('event_overlaped', $event_overlaped);
+                        $this->set('activity_overlaped', $activity_overlaped);
+                    }
+        
+                    break; // Break save all events loop
                 }
             }
             
@@ -399,25 +737,60 @@ class EventsController extends AppController {
                 );
 
                 $this->set('ok', true);
+                return true;
             }
         }
     }
     
     function view($id) {
         $id = $id === null ? null : intval($id);
-        $this->Event->id = $id;
-        $event = $this->Event->read();
-        $this->set('event', $this->Event->read());
-        $this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id']))));
+        
+        $db = $this->Event->getDataSource();
+
+        $event = $this->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
+        if (!$event) {
+            $this->set('notAllowed', true);
+        } else {
+            $this->set('event', $event);
+            $this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $event['Activity']['subject_id']))));
+        }
     }
     
     function register_student($subject_id = null) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
-        $this->set("section", "my_subjects");
-        
-        $this->set('subject', $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id))));
-        
         $auth_user_id = $this->Auth->user('id');
+
+        $subject = $this->Event->Activity->Subject->find('first', array(
+            'joins' => array(
+                array(
+                    'table' => 'subjects_users',
+                    'alias' => 'SubjectUser',
+                    'type'  => 'INNER',
+                    'conditions' => array(
+                        'SubjectUser.subject_id = Subject.id',
+                        'SubjectUser.user_id' => $auth_user_id,
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Subject.id' => $subject_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'users', 'action' => 'my_subjects'));
+        }
+
+        $this->set("section", "my_subjects");
+        $this->set('subject', $subject);
         
         $db = $this->Event->getDataSource();
         $events = $this->Event->query("SELECT DATEDIFF(MIN(Event.initial_hour), CURDATE()) as days_to_start, UNIX_TIMESTAMP(MAX(Event.final_hour)) - UNIX_TIMESTAMP() as time_to_end, Activity.id, Activity.name, `Group`.id, `Group`.name, `Group`.capacity, Activity.duration, Activity.inflexible_groups FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN `groups` `Group` ON `Group`.id = Event.group_id WHERE Activity.subject_id = `Group`.subject_id AND Activity.subject_id = {$db->value($subject_id)} GROUP BY Activity.id, `Group`.id ORDER BY Activity.id, `Group`.id");
@@ -498,7 +871,31 @@ class EventsController extends AppController {
         $group_id = $group_id === null ? null : intval($group_id);
         $db = $this->Event->getDataSource();
 
-        $activity = $this->Event->Activity->find('first', array('conditions' => array('Activity.id' => $activity_id)));
+        $activity = $this->Event->Activity->find('first', array(
+            'joins' => array(
+                array(
+                    'table' => 'subjects',
+                    'alias' => 'Subject',
+                    'type'  => 'INNER',
+                    'conditions' => array(
+                        'Subject.id = Activity.subject_id',
+                    )
+                ),
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type'  => 'INNER',
+                    'conditions' => array(
+                        'Course.id = Subject.course_id',
+                        'Course.institution_id' => Environment::institution('id')
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Activity.id' => $activity_id
+            ),
+            'recursive' => -1
+        ));
         
         $events = $this->Event->query("SELECT DISTINCT DATE_FORMAT(Event.initial_hour, '%w') AS day, DATE_FORMAT(Event.initial_hour,'%H:%i') AS initial_hour, DATE_FORMAT(Event.final_hour,'%H:%i') AS final_hour FROM events Event WHERE activity_id = {$db->value($activity_id)} AND group_id = {$db->value($group_id)} ORDER BY day, initial_hour");
         
@@ -525,13 +922,27 @@ class EventsController extends AppController {
 
     function calendar_by_subject() {
         $this->layout = 'public';
-        $this->set('courses', $this->Event->Activity->Subject->Course->find('all', array('order' => 'initial_date desc')));
+        $courses = $this->Event->Activity->Subject->Course->find(
+            'all',
+            array(
+                'conditions' => array('institution_id' => Environment::institution('id')),
+                'order' => 'initial_date desc'
+            )
+        );
+        $this->set('courses', $courses);
         $this->set('current_course', $this->Event->Activity->Subject->Course->current());
     }
     
     function calendar_by_level() {
         $this->layout = 'public';
-        $this->set('courses', $this->Event->Activity->Subject->Course->find('all', array('order' => 'initial_date desc')));
+        $courses = $this->Event->Activity->Subject->Course->find(
+            'all',
+            array(
+                'conditions' => array('institution_id' => Environment::institution('id')),
+                'order' => 'initial_date desc'
+            )
+        );
+        $this->set('courses', $courses);
         $this->set('current_course', $this->Event->Activity->Subject->Course->current());
     }
 
@@ -548,16 +959,19 @@ class EventsController extends AppController {
         $this->layout = 'public';
     }
     
-    /* @todo: remove board and board.ctp */
     function board() {
+        /* @deprecated in favor of monitor::board */
+        $this->redirect(array('controller' => 'monitors', 'action' => 'board'));
+
+        /*
         $this->layout = 'board';
 
         $classroom_show_tv = Configure::read('app.classroom.show_tv');
 
-        $dbo = $this->Event->getDataSource();
-        $sql1 = $dbo->buildStatement(
+        $db = $this->Event->getDataSource();
+        $sql1 = $db->buildStatement(
             array(
-                'table' => $dbo->fullTableName($this->Event),
+                'table' => $db->fullTableName($this->Event),
                 'alias' => 'Event',
                 'fields' => array(
                     'Event.initial_hour',
@@ -573,7 +987,12 @@ class EventsController extends AppController {
                     'Event.classroom_id',
                     'Classroom.name as classroom_name'
                 ),
-                'conditions' => 'Event.initial_hour > CURDATE() AND Event.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND (Event.show_tv' . ($classroom_show_tv ? ' OR Classroom.show_tv' : '') . ')',
+                'conditions' => array(
+                    'Event.initial_hour > CURDATE()',
+                    'Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})",
+                    '(Event.show_tv' . ($classroom_show_tv ? ' OR Classroom.show_tv' : '') . ')'
+                ),
                 'joins' => array(
                     array(
                         'table' => 'classrooms',
@@ -615,9 +1034,9 @@ class EventsController extends AppController {
         );
                     
         $this->loadModel('Booking');
-        $sql2 = $dbo->buildStatement(
+        $sql2 = $db->buildStatement(
             array(
-                'table' => $dbo->fullTableName($this->Booking),
+                'table' => $db->fullTableName($this->Booking),
                 'alias' => 'Booking',
                 'fields' => array(
                     'Booking.initial_hour',
@@ -633,7 +1052,15 @@ class EventsController extends AppController {
                     'Booking.classroom_id',
                     'Classroom.name as classroom_name'
                 ),
-                'conditions' => 'Booking.initial_hour > CURDATE() AND Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY) AND (Booking.show_tv' . ($classroom_show_tv ? ' OR Booking.classroom_id = -1 OR Classroom.show_tv' : '') . ')',
+                'conditions' => array(
+                    'Booking.initial_hour > CURDATE()',
+                    'Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
+                    'OR' => array(
+                        "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
+                        "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                    ),
+                    '(Booking.show_tv' . ($classroom_show_tv ? ' OR Booking.classroom_id = -1 OR Classroom.show_tv' : '') . ')',
+                ),
                 'joins' => array(
                     array(
                         'table' => 'classrooms',
@@ -650,25 +1077,26 @@ class EventsController extends AppController {
             $this->Booking
         );
                     
-        $events = $dbo->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
+        $events = $db->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
         foreach($events as $i => &$event) {
             $event = $event[0];
             $event['sql_order'] = $i;
         }
         usort($events, array($this, '_sortBoardEvents'));
         $this->set('events', $events);
+        */
     }
     
     function _add_days(&$date, $ndays, $nminutes = 0) {
-        $date_components = split("-", $date->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $date->format('Y-m-d-H-i-s'));
         $timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2] + $ndays, $date_components[0]);
         $timestamp += ($nminutes * 60);
         $date_string = date('Y-m-d H:i:s', $timestamp);
         $date = new DateTime($date_string);
     }
     
-    function _parse_date($date, $separator = "/") {
-        $date_components = split($separator, $date);
+    function _parse_date($date, $separator = '/') {
+        $date_components = explode($separator, $date);
         
         return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
     }
@@ -682,12 +1110,26 @@ class EventsController extends AppController {
             return true;
         }
 
-        $subject_id = isset($event['Subject']['id'])
-            ? $event['Subject']['id']
-            : (isset($event['Activity']['subject_id']) ? $event['Activity']['subject_id'] : null);
+        $subject = isset($event['Subject']) &&
+            array_key_exists('coordinator_id', $event['Subject']) &&
+            array_key_exists('practice_responsible_id', $event['Subject'])
+            ? $event
+            : false;
+
+        if (! $subject) {
+            $subject_id = isset($event['Subject']['id'])
+                ? $event['Subject']['id']
+                : (isset($event['Activity']['subject_id']) ? $event['Activity']['subject_id'] : null);
         
-        if ($subject_id) {
-            $subject = $this->Event->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject_id)));
+            if ($subject_id) {
+                $subject = $this->Event->Activity->Subject->find('first', array(
+                    'conditions' => array('Subject.id' => $subject_id),
+                    'recursive' => -1
+                ));
+            }
+        }
+
+        if ($subject) {
             $uid = $this->Auth->user('id');
             return  $uid == $subject['Subject']['coordinator_id'] || $uid == $subject['Subject']['practice_responsible_id'];
         }

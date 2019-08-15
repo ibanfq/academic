@@ -26,6 +26,7 @@ class Registration extends AcademicModel {
     function enoughFreeSeats($activity_id, $group_id){
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $group_id = $group_id === null ? null : intval($group_id);
+
         if ($group_id != -1) {
             $busy_seats = $this->query("SELECT count(*) AS busy_seats FROM registrations WHERE activity_id = {$activity_id} AND group_id = {$group_id}");
             $busy_seats = $busy_seats[0][0]['busy_seats'];
@@ -33,8 +34,9 @@ class Registration extends AcademicModel {
             $group = $this->Group->findById($group_id);
 
             return $group['Group']['capacity'] > $busy_seats;
-        } else
-            return true;
+        }
+
+        return true;
     }
 
     function registerJustOnce() {

@@ -44,12 +44,22 @@ class ApiAttendanceRegistersController extends AppController {
         $status = $this->Api->getParameter('AttendanceRegister.status', array('required'));
         
         if ($this->Api->getStatus() === 'success') {
-            $attendanceRegister = $this->AttendanceRegister->findById(
-                $id,
-                array(), // Fields
-                array(), // Order
-                -1 // Recursive
-            );
+            $db = $this->AttendanceRegister->getDataSource();
+            $attendanceRegister = $this->AttendanceRegister->find('first', array(
+                'joins' => array(
+                    array(
+                        'table' => 'events',
+                        'alias' => 'Event',
+                        'type' => 'INNER',
+                        'conditions' => 'Event.id = AttendanceRegister.event_id'
+                    )
+                ),
+                'conditions' => array(
+                    'AttendanceRegister.id' => $id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                ),
+                'recursive' => -1
+            ));
             
             if ($attendanceRegister && ($this->Auth->user('type') === "Profesor")) {
                 $event = $this->AttendanceRegister->Event->findById(
@@ -113,6 +123,7 @@ class ApiAttendanceRegistersController extends AppController {
     
     function _view($id) {
         $id = $id === null ? null : intval($id);
+        $db = $this->AttendanceRegister->getDataSource();
         $this->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('Student')));
         $this->AttendanceRegister->bindModel(array('belongsTo' => array(
             'Classroom' => array(
@@ -120,7 +131,12 @@ class ApiAttendanceRegistersController extends AppController {
                 'conditions' => array('Classroom.id = Event.classroom_id')
             )
         )));
-        $attendance_register = $this->AttendanceRegister->read(null, $id);
+        $attendance_register = $this->AttendanceRegister->find('first', array(
+            'conditions' => array(
+                'AttendanceRegister.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
         if ($attendance_register && ($this->Auth->user('type') === "Profesor")) {
             if ($attendance_register['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendance_register['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
                 $attendance_register = false;
@@ -141,8 +157,14 @@ class ApiAttendanceRegistersController extends AppController {
     
     function _openByEvent($event_id) {
         $event_id = $event_id === null ? null : intval($event_id);
+        $db = $this->AttendanceRegister->getDataSource();
         $this->AttendanceRegister->Event->unbindModel(array('belongsTo' => array('Parent'), 'hasMany' => array('Events')));
-        $event = $this->AttendanceRegister->Event->findById($event_id);
+        $event = $this->AttendanceRegister->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $event_id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
         if ($event && ($this->Auth->user('type') === "Profesor")) {
             if ($event['Event']['teacher_id'] !== $this->Auth->user('id') && $event['Event']['teacher_2_id'] !== $this->Auth->user('id')) {
                 $event = false;

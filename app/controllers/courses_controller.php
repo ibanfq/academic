@@ -2,13 +2,23 @@
 class CoursesController extends AppController {
     var $name = 'Courses';
     var $paginate = array('limit' => 10, 'order' => array('Course.initial_date' => 'asc'));
+    var $fields_fillable = array('Course');
+    var $fields_guarded = array('Course' => ['id', 'institution_id', 'created', 'modified']);
 
     function index() {
-        $this->set('courses', $this->Course->find('all', array('order' => array('Course.initial_date desc'))));
+        $courses = $this->Course->find('all', array(
+            'conditions' => array('Course.institution_id' => Environment::institution('id')),
+            'order' => array('Course.initial_date desc'))
+        );
+
+        $this->set('courses', $courses);
     }
 
     function add(){
         if (!empty($this->data)){
+            $this->data = $this->Form->filter($this->data);
+            $this->data['Course']['institution_id'] = Environment::institution('id');
+            
             if ($this->Course->save($this->data)){
                 $this->Session->setFlash('El curso se ha guardado correctamente');
                 $this->redirect(array('action' => 'index'));
@@ -18,25 +28,67 @@ class CoursesController extends AppController {
 
     function view($id = null) {
         $id = $id === null ? null : intval($id);
-        $this->Course->id = $id;
-        $this->set('course', $this->Course->read());
+
+        if (! $id) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+        
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->Course->set($course);
+
+        $this->set('course', $this->Course->data);
         $this->set('friendly_name', $this->Course->friendly_name());
         $this->set('ref', isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null);
     }
 
     function edit($id = null) {
         $id = $id === null ? null : intval($id);
-        $this->Course->id = $id;
+
+        if (! $id) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+        
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->Course->set($course);
+
         if (empty($this->data)) {
-            $this->data = $this->Course->read();
-            $this->set('course', $this->data);
+            $this->data = $course;
         } else {
+            $this->data = $this->Form->filter($this->data);
+            $this->data['Course']['id'] = $course['Course']['id'];
+            $this->data['Course']['modified'] = null;
+            
             if ($this->Course->save($this->data)) {
                 $this->Session->setFlash('El curso se ha actualizado correctamente.');
                 $this->redirect(array('action' => 'view', $id));
-            } else
-                $this->set('course', $this->data);
+            }
         }
+
+        $this->set('course', $course);
     }
 
     /**
@@ -51,14 +103,25 @@ class CoursesController extends AppController {
         $this->loadModel('Competence');
 
         $id = $id === null ? null : intval($id);
-        $course = $this->Course->findById($id);
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
 
         // Creates the new course
         $newCourse = array('Course' => array());
-        $newCourse["Course"]["name"] = sprintf('%s (COPIA)', $course["Course"]["name"]);
+        $newCourse['Course']['institution_id'] = $course['Course']['institution_id'];
+        $newCourse['Course']['name'] = sprintf('%s (COPIA)', $course['Course']['name']);
         $latestFinalDate = $this->Course->latestFinalDate();
-        $newCourse["Course"]["initial_date"] = date('Y-m-d', strtotime($latestFinalDate) + 86400);
-        $newCourse["Course"]["final_date"] = date('Y-m-d', strtotime($latestFinalDate) + 31536000);
+        $newCourse['Course']['initial_date'] = date('Y-m-d', strtotime($latestFinalDate) + 86400);
+        $newCourse['Course']['final_date'] = date('Y-m-d', strtotime($latestFinalDate) + 31536000);
 
         $this->Course->create();
         if ($this->Course->save($newCourse) === false) {
@@ -293,6 +356,25 @@ class CoursesController extends AppController {
 
     function delete($id) {
         $id = $id === null ? null : intval($id);
+
+        if (!$id) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
         $this->Course->delete($id);  // Delete subjects implicitly
 
         $currentSubjectsQuery = "SELECT DISTINCT `Subject`.id FROM subjects `Subject`";
@@ -334,7 +416,23 @@ class CoursesController extends AppController {
      */
     function stats_by_teacher($course_id = null) {
         $course_id = $course_id === null ? null : intval($course_id);
-        $this->set('course', $this->Course->read(null, $course_id));
+
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+        
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->Course->set($course);
+
+        $this->set('course', $course);
         $this->set('friendly_name', $this->Course->friendly_name());
 
         $initialDate = date('Y-m-d', strtotime($this->Course->field('initial_date', array('Course.id' => $course_id))));
@@ -408,8 +506,23 @@ class CoursesController extends AppController {
 
     function stats_by_subject($course_id = null){
         $course_id = $course_id === null ? null : intval($course_id);
-        $this->Course->id = $course_id;
-        $this->set('course', $this->Course->read());
+        
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+        
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $this->Course->set($course);
+
+        $this->set('course', $course);
         $this->set('friendly_name', $this->Course->friendly_name());
 
         $subjects = $this->Course->Subject->query("
@@ -433,7 +546,7 @@ class CoursesController extends AppController {
                     GROUP BY activity_id, event_id
                 ) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id
                 GROUP BY Activity.id
-                        )    activities ON activities.subject_id = subjects.id
+            )    activities ON activities.subject_id = subjects.id
             WHERE subjects.course_id = {$course_id}
             GROUP BY subjects.id
             ORDER BY subjects.code ASC
@@ -444,9 +557,46 @@ class CoursesController extends AppController {
 
     function export_stats_by_subject($course_id = null) {
         $course_id = $course_id === null ? null : intval($course_id);
-        $date = Date('Y-m-d');
 
-        $subjects = $this->Course->Subject->query("SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students FROM subjects LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id INNER JOIN (SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration FROM activities Activity LEFT JOIN events Event ON Event.activity_id = Activity.id LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type LEFT JOIN (SELECT activity_id, event_id, SUM(duration) AS duration FROM attendance_registers GROUP BY activity_id, event_id) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id GROUP BY Activity.id) activities ON activities.subject_id = subjects.id WHERE subjects.course_id = {$course_id} GROUP BY subjects.id ORDER BY subjects.code ASC");
+        $course = $this->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('action' => 'index'));
+        }
+
+        $subjects = $this->Course->Subject->query("
+            SELECT subjects.id, subjects.code, subjects.name, SUM(activities.expected_duration) AS expected_hours, SUM(activities.programmed_duration) AS programmed_hours, SUM(activities.registered_duration) AS registered_hours, IFNULL(su.total,0) AS students
+            FROM subjects
+            LEFT JOIN (SELECT subjects_users.subject_id, IFNULL(count(distinct subjects_users.user_id), 0) as total FROM subjects_users INNER JOIN activities ON activities.subject_id = subjects_users.subject_id GROUP BY subjects_users.subject_id) su ON su.subject_id = subjects.id
+            INNER JOIN (
+                SELECT Activity.id, Activity.subject_id, Activity.duration AS expected_duration, SUM(IFNULL(Event.duration, 0)) / `Group`.total AS programmed_duration, IFNULL(SUM(AttendanceRegister.duration), 0) / `Group`.total AS registered_duration
+                FROM activities Activity
+                LEFT JOIN events Event ON Event.activity_id = Activity.id
+                LEFT JOIN (
+                    SELECT `Event`.`activity_id` AS `activity_id`, COUNT(DISTINCT `TemporaryGroup`.`id`) AS `total`
+                    FROM `events` `Event`
+                    LEFT JOIN `groups` `TemporaryGroup` ON `TemporaryGroup`.`id` = `Event`.`group_id`
+                    WHERE `TemporaryGroup`.`name` NOT LIKE '%%no me presento%%'
+                    GROUP BY `Event`.`activity_id`
+                ) `Group` ON `Group`.`activity_id` = `Activity`.`id`
+                LEFT JOIN (
+                    SELECT activity_id, event_id, SUM(duration) AS duration
+                    FROM attendance_registers
+                    GROUP BY activity_id, event_id
+                ) AttendanceRegister ON AttendanceRegister.activity_id = Activity.id AND AttendanceRegister.event_id = Event.id
+                GROUP BY Activity.id
+            )    activities ON activities.subject_id = subjects.id
+            WHERE subjects.course_id = {$course_id}
+            GROUP BY subjects.id
+            ORDER BY subjects.code ASC
+        ");
         $response = "Código;Nombre;Nº de matriculados;Horas planificadas;Horas programadas;Horas registradas\n";
 
         foreach($subjects as $subject):

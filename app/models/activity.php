@@ -37,7 +37,12 @@ class Activity extends AcademicModel {
         );
 
     function _exists($id){
-        $activity = $this->findById($id);
+        $activity = $this->find('first', array(
+            'conditions' => array(
+                'Activity.id' => $id
+            ),
+            'recursive' => -1
+        ));
 
         return ($activity != null);
     }

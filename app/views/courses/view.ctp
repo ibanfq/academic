@@ -67,23 +67,25 @@
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ($course['Subject'] as $subject): ?>
-						<tr>
-							<td><?php
-								if ($ref === 'competence') {
-									echo $html->link($subject['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['id']));
-								} else {
-									echo $html->link($subject['code'], array('controller' => 'subjects', 'action' => 'view', $subject['id']));
-								}
-							?></td>
-							<td><?php echo $subject['name'] ?></td>
-							<td><?php echo $subject['acronym'] ?></td>
-							<?php if ($degreeEnabled): ?>
-								<td><?php echo $subject['degree'] ?></td>
-							<?php endif; ?>
-							<td><?php echo $subject['level'] ?></td>
-						</tr>
-					<?php endforeach; ?>
+					<?php if (isset($course['Subject'])): ?>
+						<?php foreach ($course['Subject'] as $subject): ?>
+							<tr>
+								<td><?php
+									if ($ref === 'competence') {
+										echo $html->link($subject['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['id']));
+									} else {
+										echo $html->link($subject['code'], array('controller' => 'subjects', 'action' => 'view', $subject['id']));
+									}
+								?></td>
+								<td><?php echo $subject['name'] ?></td>
+								<td><?php echo $subject['acronym'] ?></td>
+								<?php if ($degreeEnabled): ?>
+									<td><?php echo $subject['degree'] ?></td>
+								<?php endif; ?>
+								<td><?php echo $subject['level'] ?></td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
 				</tbody>
 			</table>
 		</div>

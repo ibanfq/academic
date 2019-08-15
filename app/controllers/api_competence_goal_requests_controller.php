@@ -60,6 +60,30 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
         $goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
             'recursive' => -1,
+            'joins' => array(
+                array(
+                    'table' => 'competence',
+                    'alias' => 'Competence',
+                    'type'  => 'INNER',
+                    'conditions' => isset($course_id)
+                        ? array(
+                            'Competence.id = CompetenceGoal.competence_id',
+                            'Competence.course_id' => $course_id
+                        )
+                        : array(
+                            'Competence.id = CompetenceGoal.competence_id',
+                        )
+                ),
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type'  => 'INNER',
+                    'conditions' => array(
+                        'Course.id = Competence.course_id',
+                        'Course.institution_id' => Environment::institution('id')
+                    )
+                )
+            ),
             'conditions' => array('CompetenceGoal.id' => $goal_id)
         ));
 
@@ -81,7 +105,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
-            'conditions' => array('Course.id' => $course_id)
+            'conditions' => array('Course.id' => $course_id, 'Course.institution_id' => Environment::institution('id'))
         ));
 
         if (!$course) {
@@ -106,13 +130,15 @@ class ApiCompetenceGoalRequestsController extends AppController {
             return;
         }
 
+        $db = $this->CompetenceGoalRequest->getDataSource();
         $this->CompetenceGoalRequest->CompetenceGoal->Behaviors->attach('Containable');
         $competence_goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
             'contain' => array(
                 'Competence'
             ),
             'conditions' => array(
-                'CompetenceGoal.id' => $goal_id
+                'CompetenceGoal.id' => $goal_id,
+                "Competence.course_id IN (SELECT id FROM courses Course WHERE Course.institution_id = {$db->value(Environment::institution('id'))})"
             )
         ));
 
@@ -313,6 +339,15 @@ class ApiCompetenceGoalRequestsController extends AppController {
                     : array(
                         'Competence.id = CompetenceGoal.competence_id',
                     )
+            ),
+            array(
+                'table' => 'courses',
+                'alias' => 'Course',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'Course.id = Competence.course_id',
+                    'Course.institution_id' => Environment::institution('id')
+                )
             ),
             array(
                 'table' => 'competence_criteria',

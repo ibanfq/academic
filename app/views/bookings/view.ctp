@@ -2,6 +2,8 @@
   $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking');
   $numAttendees = count($booking['Attendee']);
   $userType = $booking['Booking']['user_type'];
+  $editable = call_user_func($authorizeEdit, $booking);
+  $deletable = call_user_func($authorizeDelete, $booking);
 ?>
 <?php if ($isAjax): ?>
   <h3><?php echo "{$booking['Booking']['reason']}" ?></h3>
@@ -39,11 +41,11 @@
     <?php if ($numAttendees): ?>
       <a class="button button-action" href="<?php echo PATH ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
     <?php endif ?>
-    <?php if ($auth->user('type') != "Profesor" || $auth->user('id') == $booking['Booking']['user_id']): ?>
+    <?php if ($editable): ?>
       <a class="button button-action" href="<?php echo PATH ?>/bookings/edit/<?php echo $booking['Booking']['id'] ?>">Editar</a>
-      o
     <?php endif ?>
-    <?php if ($auth->user('type') != "Profesor" || $auth->user('id') == $booking['Booking']['user_id']): ?>
+    <?php if ($deletable): ?>
+      <?php if ($editable): ?>o<?php endif ?>
       <a href="javascript:;" onclick="deleteBooking(<?php echo $booking['Booking']['id'] ?>, '<?php echo $booking['Booking']['parent_id']?>')">Eliminar reserva</a>
     <?php endif; ?>
   </p>
@@ -59,10 +61,12 @@
   <div class="actions">
   <?php if (isset($auth) && (($auth->user('type') == "Administrador") || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje" || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking']))): ?>
     <ul>
-      <?php if ($auth->user('type') != "Profesor" || $auth->user('id') == $booking['Booking']['user_id']): ?>
+      <?php if ($editable): ?>
         <li><?php echo $html->link('Modificar reserva', array('action' => 'edit', $booking['Booking']['id'])) ?></li>
       <?php endif; ?>
-      <li><?php echo $html->link('Eliminar reserva', array('action' => 'delete', $booking['Booking']['id'])) ?></li>
+      <?php if ($deletable): ?>
+        <li><?php echo $html->link('Eliminar reserva', array('action' => 'delete', $booking['Booking']['id'])) ?></li>
+      <?php endif; ?>
     </ul>
   <?php endif; ?>
   </div>

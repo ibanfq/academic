@@ -13,6 +13,11 @@ class Course extends AcademicModel {
         )
     );
     var $validate = array(
+        'institution_id' => array(
+            'rule' => 'notEmpty',
+            'required' => true,
+            'message' => 'Debe especificar el centro academico'
+        ),
         'name' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
@@ -43,21 +48,24 @@ class Course extends AcademicModel {
     );
     
     function courseOverlap($initial_date) {
-    	App::import('Sanitize');
-        Sanitize::escape($initial_date = $this->data[$this->alias]['initial_date']);
-        Sanitize::escape($final_date = $this->data[$this->alias]['final_date']);
+    	App::import('Core', 'Sanitize');;
+        $institution_id = Sanitize::escape($this->data[$this->alias]['institution_id']);
+        $initial_date = Sanitize::escape($this->data[$this->alias]['initial_date']);
+        $final_date = Sanitize::escape($this->data[$this->alias]['final_date']);
         $query = "
             SELECT *
             FROM courses
-            WHERE (
+            WHERE institution_id = '{$institution_id}' AND (
                 (initial_date <= '{$initial_date}' AND final_date >= '{$initial_date}')
                 OR (initial_date <= '{$final_date}' AND final_date >= '{$final_date}')
                 OR (initial_date >= '{$initial_date}' AND final_date <= '{$final_date}')
             )
             ";
 
-        if (isset($this->data[$this->alias]['id']))
-            $query .= " AND id <> {$this->data[$this->alias]['id']}";
+        if (isset($this->data[$this->alias]['id'])) {
+            $id = Sanitize::escape($this->data[$this->alias]['id']);
+            $query .= " AND id <> '{$id}'";
+        }
 
         $overlaped_courses = $this->query($query);
 
@@ -71,7 +79,19 @@ class Course extends AcademicModel {
      * @since 2012-05-19
      */
     function latestFinalDate() {
-        $course = $this->query(sprintf("SELECT MAX(%s.final_date) AS max_final_date FROM %s AS %s", $this->alias, $this->useTable, $this->alias));
+        App::import('Lib', 'Environment');
+        App::import('Core', 'Sanitize');;
+        $institution_id = Sanitize::escape(Environment::institution('id'));
+        $course = $this->query(
+            sprintf(
+                "SELECT MAX(%s.final_date) AS max_final_date FROM %s AS %s WHERE %s.institution_id = '%s'",
+                $this->alias,
+                $this->useTable,
+                $this->alias,
+                $this->alias,
+                $institution_id
+            )
+        );
 
         if ($course) {
             return $course[0][0]['max_final_date'];
@@ -122,16 +142,31 @@ class Course extends AcademicModel {
             $this->data['Course']['initial_date'] = $thist->dateFormatInternal($this->data['Course']['initial_date']);
     }
     
-    function current(){
+    function current() {
+        App::import('Lib', 'Environment');
         $today = date("Y-m-d");
         
-        $course = $this->find('first', array(
-            'conditions' => array("Course.initial_date <= '{$today}' AND Course.final_date >= '{$today}'"),
-            'recursive' => -1
-        ));
+        $course = $this->find(
+            'first',
+            array(
+                'conditions' => array(
+                    'Course.institution_id' => Environment::institution('id'),
+                    'Course.initial_date <=' => $today,
+                    'Course.final_date >=' => $today,
+                ),
+                'recursive' => -1
+            )
+        );
 
-        if ($course == null)
-            $course = $this->find('first');
+        if ($course == null) {
+            $course = $this->find(
+                'first',
+                array(
+                    'conditions' => array('Course.institution_id' => Environment::institution('id')),
+                    'order' => array('Course.initial_date desc')
+                )
+            );
+        }
         
         return $course['Course'];
     }

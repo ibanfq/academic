@@ -5,6 +5,7 @@ class AttendanceRegistersController extends AppController {
     var $paginate = array(
         'limit' => 10,
         'order' => array('AttendanceRegister.initial_hour' => 'desc'),
+        'contain' => array('Event.Activity.*')
     );
 
     var $helpers = array('Ajax', 'Barcode');
@@ -20,7 +21,7 @@ class AttendanceRegistersController extends AppController {
                 $this->data['AttendanceRegister']['date'],
                 $this->data['AttendanceRegister']['id']
             );
-            $registers = $this->paginate('AttendanceRegister', array($conditions));
+            $registers = $this->paginate('AttendanceRegister', $conditions);
         } elseif (($teacher_id != -1) || ($activity_id != -1) || ($date != -1) || ($id != -1)) {
             if ($activity_id == -1) {
                 $activity_id = null;
@@ -39,18 +40,21 @@ class AttendanceRegistersController extends AppController {
             }
 
             $conditions = $this->_get_search_conditions($activity_id, $teacher_id, $date, $id);
-            $registers = $this->paginate('AttendanceRegister', array($conditions));
+            $registers = $this->paginate('AttendanceRegister', $conditions);
         } else {
-            $registers = $this->paginate('AttendanceRegister', array('AttendanceRegister.duration > 0'));
+            $registers = $this->paginate('AttendanceRegister', $this->_get_search_conditions());
         }
 
         $this->set('registers', $registers);
     }
 
-    function _get_search_conditions($activity_id, $teacher_id, $date, $id){
-        App::import('Sanitize');
+    function _get_search_conditions($activity_id = null, $teacher_id = null, $date = null, $id = null){
+        $db = $this->AttendanceRegister->getDataSource();
+        
+        $conditions = "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})";
 
-        $conditions = " AttendanceRegister.duration > 0";
+        $conditions .= " AND AttendanceRegister.duration > 0";
+
         if ($activity_id != null){
             $activity_id = intval($activity_id);
             $activity = $this->AttendanceRegister->Activity->findById($activity_id);
@@ -86,11 +90,18 @@ class AttendanceRegistersController extends AppController {
     function add_by_event($event_id = null) {
         $event_id = $event_id === null ? null : intval($event_id);
         $this->AttendanceRegister->Event->id = $event_id;
-        if (!$this->AttendanceRegister->Event->exists()) {
+        $db = $this->AttendanceRegister->getDataSource();
+        $event = $this->AttendanceRegister->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $event_id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
+        if (!$event) {
             $this->Session->setFlash('No se puede crear un registro de impartición sin un evento válido.');
             $this->redirect($this->referer());
         }
-        $event = $this->AttendanceRegister->Event->findById($event_id);
 
         // Set fixed values
         $subject = $this->AttendanceRegister->Activity->Subject->findById($event['Activity']['subject_id']);
@@ -118,7 +129,7 @@ class AttendanceRegistersController extends AppController {
             } else {
                 // If teacher is missing, assign the one programmed in event
                 if (!(isset($this->data['AttendanceRegister']['teacher_id']))) {
-                    $this->data['AttendanceRegister']['teacher_id'] = $ar["Event"]["teacher_id"];
+                    $this->data['AttendanceRegister']['teacher_id'] = $event["Event"]["teacher_id"];
                 }
 
                 // Cleanup list of students
@@ -153,9 +164,9 @@ class AttendanceRegistersController extends AppController {
                     $teacher = $this->AttendanceRegister->Teacher->findById($this->data['AttendanceRegister']['teacher_id']);
                     $teacher2 = $this->AttendanceRegister->Teacher_2->findById($this->data['AttendanceRegister']['teacher_2_id']);
                     $students = array();
-                    foreach ($this->data['Student']['Student'] as $id) {
+                    foreach ($this->data['Student'] as $student_attendance_register) {
                         $students[] = $this->AttendanceRegister->Student->find('first', array(
-                            'conditions' => array('Student.id' => $id),
+                            'conditions' => array('Student.id' => $student_attendance_register['UserAttendanceRegister']['user_id']),
                             'recursive' => -1,
                         ));
                     }
@@ -203,10 +214,16 @@ class AttendanceRegistersController extends AppController {
      */
     function add() {
         if (!empty($this->data)) {
-            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
+            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanitize the data
             list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
             if ($id != null) {
-                $ar = $this->AttendanceRegister->read(null, $id);
+                $db = $this->AttendanceRegister->getDataSource();
+                $ar = $this->AttendanceRegister->find('first', array(
+                    'conditions' => array(
+                        'AttendanceRegister.id' => $id,
+                        "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                    )
+                ));
 
                 // Recover information in case of error
                 $students = array();
@@ -288,16 +305,25 @@ class AttendanceRegistersController extends AppController {
     function clean_up_day() {
         $log_file = dirname(dirname(__FILE__)) . '/tmp/clean_up_day_' . date('l');
         file_put_contents($log_file, 'init: ' . date('c'));
+
+        if (! Environment::institution('id')) {
+            file_put_contents($log_file, "\nERROR!!!! not institution_id set in Environment", FILE_APPEND);
+            file_put_contents($log_file, "\nend: " . date('c'), FILE_APPEND);
+            exit;
+        }
         
         if (intval(date('H') < 20)) {
             $today_filter = '"' . date('Y-m-d', strtotime('yesterday')) . '" AND "' . date('Y-m-d') . '"';
         } else {
             $today_filter = '"' . date('Y-m-d') . '" AND "' . date('Y-m-d H:i:s') . '"';
         }
+
+        $db = $this->AttendanceRegister->getDataSource();
         
         $events = $this->AttendanceRegister->query("
             SELECT Event.*, AttendanceRegister.*, Activity.*, Teacher.*, Teacher_2.*, count(UserAttendanceRegister.user_id) as total_students
             FROM events Event
+            INNER JOIN classrooms_institutions ClassroomInstitution ON ClassroomInstitution.classroom_id = Event.classroom_id AND ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}
             LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.event_id = Event.id
             LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.attendance_register_id = AttendanceRegister.id
                 AND UserAttendanceRegister.user_gone
@@ -406,9 +432,15 @@ class AttendanceRegistersController extends AppController {
      *
      * @version 2012-05-30
      */
-    function get_register_info($event_id = null){
-        list($id) = sscanf($event_id, "%d");
-        $ar = $this->AttendanceRegister->findById($id);
+    function get_register_info($attendance_register_id = null){
+        list($id) = sscanf($attendance_register_id, "%d");
+        $db = $this->AttendanceRegister->getDataSource();
+        $ar = $this->AttendanceRegister->find('first', array(
+            'conditions' => array(
+                'AttendanceRegister.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
         $ar["AttendanceRegister"]["teacher_id"] = $ar["Event"]["teacher_id"];
         $ar["AttendanceRegister"]["teacher_2_id"] = $ar["Event"]["teacher_2_id"];
 
@@ -451,9 +483,27 @@ class AttendanceRegistersController extends AppController {
      * @version 2012-09-27
      */
     function find_by_barcode() {
-        App::import('Sanitize');
+        App::import('Core', 'Sanitize');;
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
         $attendanceRegisters = $this->AttendanceRegister->find('all', array(
+            'fields' => array('AttendanceRegister.*'),
+            'joins' => array(
+                array(
+                    'table' => 'events',
+                    'alias' => 'Event',
+                    'type' => 'INNER',
+                    'conditions' => 'Event.id = AttendanceRegister.event_id'
+                ),
+                array(
+                    'table' => 'classrooms_institutions',
+                    'alias' => 'ClassroomInstitution',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'ClassroomInstitution.classroom_id = Event.classroom_id',
+                        'ClassroomInstitution.institution_id' => Environment::institution('id')
+                    )
+                )
+            ),
             'conditions' => array('AttendanceRegister.id LIKE' => $q),
             'recursive' => -1,
         ));
@@ -465,8 +515,22 @@ class AttendanceRegistersController extends AppController {
      */
     function edit($id = null){
         $id = $id === null ? null : intval($id);
+
+        $db = $this->AttendanceRegister->getDataSource();
+        $attendance_register = $this->AttendanceRegister->find('first', array(
+            'conditions' => array(
+                'AttendanceRegister.id' => $id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
+        if (!$attendance_register) {
+            $this->Session->setFlash('No se ha podido encontrar el registro de impartición');
+            $this->redirect($this->referer());
+        }
+
         if (!empty($this->data)){
-            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
+            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanitize the data
             $this->data['AttendanceRegister']['id'] = $id;
             $this->data['AttendanceRegister']['initial_hour'] = $this->data['AttendanceRegister']['initial_hour']['hour'].":".$this->data['AttendanceRegister']['initial_hour']['minute'];
             $this->data['AttendanceRegister']['final_hour'] = $this->data['AttendanceRegister']['final_hour']['hour'].":".$this->data['AttendanceRegister']['final_hour']['minute'];
@@ -506,7 +570,7 @@ class AttendanceRegistersController extends AppController {
                 WHERE UAR.attendance_register_id = {$id}
                 ORDER BY Student.last_name, Student.first_name
             ");
-            $this->data = $this->AttendanceRegister->read(null, $id);
+            $this->data = $attendance_register;
             $this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($this->data['Activity']['subject_id']));
             $this->set('ar', $this->data);
             $this->set('students', $students);
@@ -527,7 +591,14 @@ class AttendanceRegistersController extends AppController {
         }
         $event_id = intval($event_id);
 
-        $event = $this->AttendanceRegister->Event->findById($event_id);
+        $db = $this->AttendanceRegister->getDataSource();
+        $event = $this->AttendanceRegister->Event->find('first', array(
+            'conditions' => array(
+                'Event.id' => $event_id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
+
         if (!$event) {
             $this->Session->setFlash('No se ha podido crear el registro de asistencia. Por favor, revise que el evento todavía existe');
             $this->redirect(array('controller' => 'users', 'action' => 'home'));
@@ -552,7 +623,7 @@ class AttendanceRegistersController extends AppController {
             $course = $this->AttendanceRegister->Activity->Subject->Course->find(
                 'first',
                 array(
-                    'conditions' => array('Course.id' => $course_id),
+                    'conditions' => array('Course.id' => $course_id, 'Course.institution_id' => Environment::institution('id')),
                     'recursive' => -1
                 )
             );
@@ -619,10 +690,16 @@ class AttendanceRegistersController extends AppController {
         $event_id = $event_id === null ? null : intval($event_id);
         // Preload student attendance by saving an attendance register
         if (!empty($this->data)) {
-            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanatize the data
+            $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanitize the data
             list($id) = sscanf($this->data['AttendanceRegister']['id'], "%d");
 
-            $ar = $this->AttendanceRegister->read(null, $id);
+            $db = $this->AttendanceRegister->getDataSource();
+            $ar = $this->AttendanceRegister->find('first', array(
+                'conditions' => array(
+                    'AttendanceRegister.id' => $id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ));
             if ($this->Auth->user('type') !== "Profesor" || ($ar && floatval($ar['AttendanceRegister']['duration']))) {
                 if (isset($this->data['AttendanceRegister']['students'])) {
                     $selected_students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
@@ -738,8 +815,36 @@ class AttendanceRegistersController extends AppController {
      */
     function delete($id) {
         $id = $id === null ? null : intval($id);
-        $this->AttendanceRegister->id = $id;
-        if (!$this->AttendanceRegister->exists()) {
+
+        if (!$id) {
+            $this->Session->setFlash('El registro de asistencia que intentas eliminar no existe.');
+            $this->redirect(array('action' => 'index'));
+        }
+        
+        $attendance_register = $this->AttendanceRegister->find('all', array(
+            'fields' => array('AttendanceRegister.*'),
+            'joins' => array(
+                array(
+                    'table' => 'events',
+                    'alias' => 'Event',
+                    'type' => 'INNER',
+                    'conditions' => 'Event.id = AttendanceRegister.event_id'
+                ),
+                array(
+                    'table' => 'classrooms_institutions',
+                    'alias' => 'ClassroomInstitution',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'ClassroomInstitution.classroom_id = Event.classroom_id',
+                        'ClassroomInstitution.institution_id' => Environment::institution('id')
+                    )
+                )
+            ),
+            'conditions' => array('AttendanceRegister.id' => $id),
+            'recursive' => -1,
+        ));
+
+        if (!$attendance_register) {
             $this->Session->setFlash('El registro de asistencia que intentas eliminar no existe.');
             $this->redirect(array('action' => 'index'));
         }

@@ -39,10 +39,8 @@ class ApiCompetenceGoalsController extends AppController {
         $authIsTeacher = in_array($this->Auth->user('type'), array('Profesor', 'Administrador'));
 
         if ($authIsTeacher && $teacher_id === 'me') {
-            if ($authIsTeacher) {
-                $teacher = $this->Auth->user();
-                $teacher_id = $this->Auth->user('id');
-            }
+            $teacher = $this->Auth->user();
+            $teacher_id = $this->Auth->user('id');
         } else {
             $teacher_id = $teacher_id === null ? null : intval($teacher_id);
             
@@ -225,7 +223,6 @@ class ApiCompetenceGoalsController extends AppController {
 
         $groupPath = trim($this->Api->getParameter('group_path', 'string'));
         if (!empty($groupPath) && !preg_match('/^\w+\.\w+$/', $groupPath)) {
-            var_dump($groupPath);exit;
             $this->Api->setError('Invalid group_path parameter value.', 400);
             $this->Api->respond($this);
             return;
@@ -269,6 +266,23 @@ class ApiCompetenceGoalsController extends AppController {
         }
 
         $competence_goal_joins = array(
+            array(
+                'table' => 'competence',
+                'alias' => 'Competence',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'Competence.id = CompetenceGoal.competence_id'
+                )
+            ),
+            array(
+                'table' => 'courses',
+                'alias' => 'Course',
+                'type'  => 'INNER',
+                'conditions' => array(
+                    'Course.id = Competence.course_id',
+                    'Course.institution_id' => Environment::institution('id')
+                )
+            ),
             array(
                 'table' => 'competence_criteria',
                 'alias' => 'CompetenceCriterion',

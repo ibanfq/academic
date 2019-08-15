@@ -89,6 +89,7 @@ class ApiFakeDataController extends AppController {
             $initial_hour->setDate(date('Y'), date('n'), date('j'));
             $attendance_register['Event']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
             $attendance_register['AttendanceRegister']['code'] = 9731;
+            $attendance_register['Classroom']['institution_id'] = Environment::institution('id');
             $this->Api->setData($attendance_register);
     
             $this->Api->respond($this);
@@ -106,6 +107,7 @@ class ApiFakeDataController extends AppController {
         $initial_hour = date_create($event['Event']['initial_hour']);
         $initial_hour->setDate(date('Y'), date('n'), date('j'));
         $event['Event']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
+        $event['Classroom']['institution_id'] = Environment::institution('id');
         $this->Api->setData(array($event));
 
         $this->Api->respond($this);
@@ -121,6 +123,7 @@ class ApiFakeDataController extends AppController {
         $initial_hour->setDate(date('Y'), date('n'), date('j'));
         $attendance_register['Event']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
         $attendance_register['AttendanceRegister']['code'] = 9731;
+        $attendance_register['Classroom']['institution_id'] = Environment::institution('id');
         $this->Api->setData($attendance_register);
 
         $this->Api->respond($this);
@@ -136,6 +139,7 @@ class ApiFakeDataController extends AppController {
         $initial_hour->setDate(date('Y'), date('n'), date('j'));
         $attendance_register['Event']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
         $attendance_register['AttendanceRegister']['code'] = 9731;
+        $attendance_register['Classroom']['institution_id'] = Environment::institution('id');
         $this->Api->setData($attendance_register);
 
         $this->Api->respond($this);

@@ -35,7 +35,12 @@ class Group extends AcademicModel {
     );
     
     function _exists($id){
-        $group = $this->findById($id);
+        $group = $this->find('first', array(
+            'conditions' => array(
+                'Group.id' => $id
+            ),
+            'recursive' => -1
+        ));
         
         return ($group != null);
     }

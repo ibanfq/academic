@@ -16,14 +16,25 @@
             <dt><label for="monitor-media-src-upload">Fichero a subir</label></dt>
             <dd><?php echo $form->file('src', array('type'=>'file', 'id' => 'monitor-media-src-upload')); ?></dd>
         </dl>
-        <span class="help-text">
-            Tamaño máximo: <?php echo $uploadMaxSize ?><br>
-            <span id="image-group">
-                Resolución recomendada en pantalla dividida: 640x560<br>
-                Resolución recomendada en pantalla completa: 1280×600<br>
-            </span>
+        <div class="help-text">
+            <div>
+                Tamaño máximo: <?php echo $uploadMaxSize ?><br>
+            </div>
+            <div id="image-group">
+                <br>Dimensiones máximas en pantalla dividida:
+                <ul>
+                    <li>Monitor 1080p: 960x920</li>
+                    <li>Monitor 720p: 640x560</li>
+                </ul>
+
+                <br>Dimensiones máximas en pantalla completa:
+                <ul>
+                    <li>Monitor 1080p: 1920x960</li>
+                    <li>Monitor 720p: 1280×600</li>
+                </ul>
+            </div>
             <span id="video-group">Resolución recomendada: 720x480</span>
-        </span>
+        </div>
     </div>
     <?php echo $form->input('src', array('label' => 'Dirección de Youtube', 'id' => 'monitor-media-src-youtube', 'placeholder' => 'https://youtu.be/EngW7tLk6R8', 'div' => array('id' => 'youtube-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
     <?php echo $form->input('src', array('label' => 'Dirección de Vimeo', 'id' => 'monitor-media-src-vimeo', 'placeholder' => 'https://vimeo.com/253989945', 'div' => array('id' => 'vimeo-group'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>

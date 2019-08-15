@@ -29,7 +29,7 @@
 		<div class="input text">
 			<dl>
 				<dt><label for="coordinator_name">Coordinador*</label></dt>
-				<dd><input type="text" name="coordinator_name" id="coordinator_name" autocomplete="off" value="<?php echo "{$this->data['Coordinator']['first_name']} {$this->data['Coordinator']['last_name']}" ?>"/></dd>
+				<dd><input type="text" name="coordinator_name" id="coordinator_name" autocomplete="off" <?php if (isset($this->data['Coordinator']['first_name'])): ?>value="<?php echo "{$this->data['Coordinator']['first_name']} {$this->data['Coordinator']['last_name']}" ?>"<?php endif ?>/></dd>
 				<?php echo $form->input('coordinator_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 			</dl>
 			<?php echo $form->error('coordinator_id'); ?>
@@ -37,7 +37,7 @@
 		<div class="input text">
 			<dl>
 				<dt><label for="responsible_name">Responsable de prácticas*</label></dt>
-				<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>" /></dd>
+				<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" <?php if (isset($this->data['Responsible']['first_name'])): ?>value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>"<?php endif ?> /></dd>
 				<?php echo $form->input('practice_responsible_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 			</dl>
 			<?php echo $form->error('practice_responsible_id'); ?>

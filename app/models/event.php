@@ -74,16 +74,32 @@ class Event extends AcademicModel {
         )
     );
 
-    function eventDontOverlap($initial_hour){
-        App::import('Sanitize');
+    function eventDontOverlap() {
+        App::import('Core', 'Sanitize');;
+
+        $db = $this->getDataSource();
+
+        $this->booking_id_overlaped = null;
+        $this->event_id_overlaped = null;
 
         $initial_hour = Sanitize::escape($this->data['Event']['initial_hour']);
         $final_hour = Sanitize::escape($this->data['Event']['final_hour']);
         $classroom_id = intval($this->data['Event']['classroom_id']);
 
-        $query = "SELECT Booking.id AS id FROM bookings Booking WHERE ((Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}') OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}') OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')) AND (Booking.classroom_id = {$classroom_id} OR Booking.classroom_id = -1)";
+        $query = "
+            SELECT Booking.id AS id FROM bookings Booking
+            WHERE (
+                (Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}')
+                OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}')
+                OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')
+            ) AND (
+                (Booking.classroom_id = {$classroom_id})
+                OR (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+            )
+        ";
         
         $bookings_count = $this->query($query);
+
         if (count($bookings_count) > 0) {
             $this->booking_id_overlaped = $bookings_count[0]['Booking']['id'];
             return false;
@@ -92,13 +108,25 @@ class Event extends AcademicModel {
         $teacher_id = intval($this->data['Event']['teacher_id']);
         $teacher_2_id = intval($this->data['Event']['teacher_2_id']);
         $teacher_condition = '';
+
         if ($teacher_id) {
             $teacher_condition .= " OR Event.teacher_id = {$teacher_id} OR Event.teacher_2_id = {$teacher_id}";
         }
+
         if ($teacher_2_id) {
             $teacher_condition .= " OR Event.teacher_id = {$teacher_2_id} OR Event.teacher_2_id = {$teacher_2_id}";
         }
-        $query = "SELECT Event.id FROM events Event WHERE ((Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}') OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}') OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')) AND (Event.classroom_id = {$classroom_id} {$teacher_condition})";
+
+        $query = "
+            SELECT Event.id FROM events Event
+            WHERE (
+                (Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}')
+                OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}')
+                OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')
+            ) AND (
+                Event.classroom_id = {$classroom_id} {$teacher_condition}
+            )
+        ";
 
         if ((isset($this->data['Event']['id'])) && ($this->data['Event']['id'] > 0)) {
             $id = intval($this->data['Event']['id']);
@@ -115,7 +143,7 @@ class Event extends AcademicModel {
         }
     }
 
-    function eventDurationDontExceedActivityDuration($initial_hour){
+    function eventDurationDontExceedActivityDuration($initial_hour) {
         $activity = $this->Activity->find('first', array('conditions' => array('Activity.id' => $this->data['Event']['activity_id'])));
         $query = "SELECT activity_id, group_id, sum(duration) as scheduled from events Event WHERE activity_id = {$activity['Activity']['id']}";
     
@@ -137,7 +165,7 @@ class Event extends AcademicModel {
             $duration = 0;
         }
 
-        if ( ($duration + $this->data['Event']['duration']) > $activity['Activity']['duration']) {
+        if (($duration + $this->data['Event']['duration']) > $activity['Activity']['duration']) {
             $this->id = -1;
             return false;
         } else {
@@ -145,7 +173,7 @@ class Event extends AcademicModel {
         }
     }
 
-    function beforeValidate(){
+    function beforeValidate() {
         if (!empty($this->data['Event']['initial_hour'])) {
             $initial_hour = date_create($this->data['Event']['initial_hour']);
             $this->data['Event']['initial_hour'] = $initial_hour->format('Y-m-d H:i:s');
@@ -169,8 +197,8 @@ class Event extends AcademicModel {
         return ($final_timestamp - $initial_timestamp) / 3600.0;
     }
 
-    function _get_timestamp($date){
-        $date_components = split("-", $date->format('Y-m-d-H-i-s'));
+    function _get_timestamp($date) {
+        $date_components = explode('-', $date->format('Y-m-d-H-i-s'));
         return mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
     }
 
@@ -207,6 +235,8 @@ class Event extends AcademicModel {
             return array();
         }
 
+        $db = $this->getDataSource();
+
         $this->Behaviors->attach('Containable');
 
         $this->unbindModel(array(
@@ -224,6 +254,7 @@ class Event extends AcademicModel {
                 )
             )
         ));
+
         return $this->find('all', array(
             'fields' => array(
                 'Event.initial_hour', 'Event.final_hour',
@@ -231,7 +262,11 @@ class Event extends AcademicModel {
                 'Classroom.name', 'Subject.name'
             ),
             'contain' => array('Teacher', 'Classroom', 'Activity', 'Subject'),
-            'conditions' => array('Event.initial_hour >= ' => $date . ' 00:00:00', 'Event.final_hour <=' => $date . ' 23:59:59'),
+            'conditions' => array(
+                'Event.initial_hour >= ' => $date . ' 00:00:00',
+                'Event.final_hour <=' => $date . ' 23:59:59',
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            ),
             'order' => array('Event.initial_hour'),
         ));
     }

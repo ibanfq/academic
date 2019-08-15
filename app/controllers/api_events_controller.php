@@ -22,6 +22,11 @@ class ApiEventsController extends AppController {
         $joins_for_where = '';
         $where = array();
 
+        if (Environment::institution('id')) {
+            $db = $this->Event->getDataSource();
+            $joins_for_where .= " INNER JOIN classrooms_institutions ClassroomInstitution ON ClassroomInstitution.classroom_id = Event.classroom_id AND ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}";
+        }
+
         $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
         $offset = $this->Api->getParameter('offset', array('integer', '>=0'), 0);
 
@@ -51,9 +56,9 @@ class ApiEventsController extends AppController {
             }
             
             if ($type === "Estudiante") {
-                $joins_for_where .= " INNER JOIN registrations Registration ON Registration.activity_id = Event.activity_id AND Registration.student_id = {$user}";
+                $joins_for_where .= " INNER JOIN registrations Registration ON Registration.activity_id = Event.activity_id AND Registration.student_id = {$db->value($user)}";
             } else {
-                $where []= "(Event.teacher_id = {$user} OR Event.teacher_2_id = {$user})";
+                $where []= "(Event.teacher_id = {$db->value($user)} OR Event.teacher_2_id = {$db->value($user)})";
             }
         }
 
@@ -103,7 +108,14 @@ class ApiEventsController extends AppController {
             );
         }
         if ($exists) {
-            $exists = (bool) $event = $this->Event->read(null, $id);
+            $db = $this->Event->getDataSource();
+            $event = $this->Event->find('first', array(
+                'conditions' => array(
+                    'Event.id' => $id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ));
+            $exists = (bool) $event;
         }
         
         if ($exists) {

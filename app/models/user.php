@@ -59,6 +59,31 @@ class User extends AppModel {
             'message' => 'Debe especificar el nombre de pila'
         )
     );
+
+    function __construct() {
+        $db = $this->getDataSource();
+
+        if (Environment::institution('id')) {
+            $this->hasAndBelongsToMany['Subject']['conditions'][] = array("
+                Subject.course_id IN (
+                    SELECT Course.id
+                    FROM courses Course
+                    WHERE Course.institution_id = {$db->value(Environment::institution('id'))}
+                )
+            ");
+
+            $this->hasMany['Registration']['conditions'][] = array("
+                Registration.activity_id IN (
+                    SELECT Activity.id FROM activities Activity
+                    INNER JOIN subjects Subject ON Subject.id = Activity.subject_id
+                    INNER JOIN courses Course ON Course.id = Subject.course_id
+                    WHERE Course.institution_id = {$db->value(Environment::institution('id'))}
+                )
+            ");
+        }
+
+        parent::__construct();
+    }
     
     function getTypeOptions() {
         return array("Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario");
@@ -93,46 +118,105 @@ class User extends AppModel {
             return false;
         }
         return $this->find('first', array(
-            'recursive' => 0,
+            'joins' => array(
+                array(
+                    'table' => 'institutions_users',
+                    'alias' => 'InstitutionUser',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'InstitutionUser.user_id = User.id',
+                        'InstitutionUser.institution_id' => Environment::institution('id'),
+                        'InstitutionUser.active'
+                    )
+                )
+            ),
             'conditions' => array(
                 'User.id' => $id,
                 'OR' => array(
                     'User.username' => $field2,
                     'User.created' => $field2
                 )
-            )
+            ),
+            'recursive' => 0,
         ));
     }
     
-    function getEvents() {
+    function getEvents($from_timestamp = null, $to_timestamp = null) {
         $id = intval($this->id);
+
+        $db = $this->getDataSource();
+
+        $select = 'DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.coordinator_id, Subject.practice_responsible_id, Subject.acronym';
+        $from = 'events Event';
+        $conditions = [
+            "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+        ];
+
         switch($this->data['User']['type']){
             case "Estudiante":
-                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Subject.id, Subject.acronym, Activity.name, Activity.type FROM registrations Registration INNER JOIN activities Activity ON Activity.id = Registration.activity_id INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Registration.student_id = {$id} AND Registration.group_id <> -1");
+                $from = 'registrations Registration';
+                $joins = array(
+                    'INNER JOIN activities Activity ON Activity.id = Registration.activity_id',
+                    'INNER JOIN events Event ON Event.group_id = Registration.group_id AND Event.activity_id = Registration.activity_id',
+                    "INNER JOIN subjects Subject ON Subject.id = Activity.subject_id",
+                    'INNER JOIN groups `Group` ON `Group`.id = Event.group_id'
+                );
+                $conditions[] = "Registration.student_id = {$db->value($id)} AND Registration.group_id <> -1";
                 break;
             case "Profesor":
             case "Administrador":
-                $events = $this->query("SELECT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Subject.id, Subject.acronym, Activity.name, Activity.type FROM events Event INNER JOIN activities Activity ON Activity.id = Event.activity_id INNER JOIN subjects Subject ON Subject.id = Activity.subject_id WHERE Event.teacher_id = {$id} OR Event.teacher_2_id = {$id}");
+                $joins = array(
+                    'INNER JOIN activities Activity ON Activity.id = Event.activity_id',
+                    'INNER JOIN subjects Subject ON Subject.id = Activity.subject_id',
+                    'INNER JOIN groups `Group` ON `Group`.id = Event.group_id'
+                );
+                $conditions[] = "Event.teacher_id = {$db->value($id)} OR Event.teacher_2_id = {$db->value($id)}";
                 break;
             default:
-                $events = array();
+                return array();
         }
-        return $events;
+        
+        if ($from_timestamp) {
+            $from_date = date('Y-m-d H:i:s', $from_timestamp);
+            $conditions[] = "Event.initial_hour >= '$from_date'";
+        }
+
+        if ($to_timestamp) {
+            $to_date = date('Y-m-d H:i:s', $to_timestamp);
+            $conditions[] = "Event.initial_hour <= '$to_date'";
+        }
+
+        $with_joins = implode(' ', $joins);
+        $where = implode(' AND ', $conditions);
+
+        return $this->query("SELECT $select FROM $from $with_joins WHERE $where");
     }
   
     function getBookings() {
         $id = intval($this->id);
         $userType = $this->data['User']['type'];
+
+        $db = $this->getDataSource();
+
         switch($userType) {
             case "Estudiante":
                 $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'Estudiante')";
                 break;
             default:
-                App::import('Sanitize');
+                App::import('Core', 'Sanitize');;
                 $userType = Sanitize::escape($userType);
                 $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'No-estudiante' OR Booking.user_type = '$userType')";
         }
-        return $this->query("SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason FROM bookings Booking LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id WHERE $whereUserType OR UserBooking.user_id = {$id}");
+        return $this->query("
+            SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
+            FROM bookings Booking
+            LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id
+            WHERE
+            (
+                (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
+            ) AND ($whereUserType OR UserBooking.user_id = {$id})
+        ");
     }
         
     function can_send_alerts($user_id, $activity_id, $group_id) {

@@ -113,7 +113,7 @@ class AttendanceRegister extends AcademicModel {
             
             $set_secret_code = '';
             if (empty($event['AttendanceRegister']['secret_code']) && !empty($secret_code)) {
-                App::import('Sanitize');
+                App::import('Core', 'Sanitize');;
                 $set_secret_code = ', secret_code = "' . Sanitize::escape($secret_code) . '"';
                 $event['AttendanceRegister']['secret_code'] = $secret_code;
             }
@@ -356,7 +356,7 @@ class AttendanceRegister extends AcademicModel {
     }
 
     function _get_timestamp($date){
-        $date_components = split("-", $date->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $date->format('Y-m-d-H-i-s'));
         return mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2], $date_components[0]);
     }
 }

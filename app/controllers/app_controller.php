@@ -1,9 +1,12 @@
 <?php
+
+App::import('Lib', 'Environment');
+
 class AppController extends Controller {
 	/**
 	 * Application wide controllers
 	 */
-	var $components = array('Security', 'Session', 'Auth', 'Acl', 'RequestHandler', 'Email', 'Api');
+	var $components = array('Security', 'Session', 'Auth', 'Acl', 'RequestHandler', 'Email', 'Form', 'Api');
   
 	/**
 	 * Application wide helpers
@@ -27,6 +30,14 @@ class AppController extends Controller {
     
     if (Configure::read('debug') > 0) {
       $this->Email->delivery = 'debug';
+    }
+
+    if (Environment::institution('id')) {
+      $authModel = ClassRegistry::init($this->Auth->userModel);
+      $db = $authModel->getDataSource();
+      $this->Auth->userScope = array(
+        "EXISTS (SELECT '' FROM institutions_users InstitutionUser WHERE InstitutionUser.user_id = {$authModel->escapeField()} AND InstitutionUser.institution_id = {$db->value(Environment::institution('id'))} AND InstitutionUser.active)"
+      );
     }
 
     $this->_updateAppBetaOptions();
@@ -163,8 +174,8 @@ class AppController extends Controller {
     return false;
 	}
 
-	function _parse_date($date, $separator = "/") {
-		$date_components = split($separator, $date);
+	function _parse_date($date, $separator = '/') {
+		$date_components = explode($separator, $date);
 		return count($date_components) != 3 ? false : date("Y-m-d", mktime(0,0,0, $date_components[1], $date_components[0], $date_components[2]));
   }
   

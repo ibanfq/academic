@@ -19,6 +19,8 @@ class ApiLogController extends AppController {
             $clientDate = null;
         }
         $data = array(
+            'institution_id'
+                => Environment::institution('id') ?: 0,
             'channel'
                 => trim($this->Api->getParameter('channel', [], 'default')),
             'description'
@@ -49,7 +51,7 @@ class ApiLogController extends AppController {
                 $data['content'] = null;
             }
             
-            App::import('Sanitize');
+            App::import('Core', 'Sanitize');;
             $ip = Sanitize::escape($data['ip']);
             $desc = Sanitize::escape($data['description']);
             $from1 = date('Y-m-d H:i:s', strtotime('- 10 min'));

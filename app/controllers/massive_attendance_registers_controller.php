@@ -10,13 +10,31 @@ class MassiveAttendanceRegistersController extends AppController {
         } else {
             $course_id = intval($course_id);
         }
-        $course = $this->MassiveAttendanceRegister->Subject->Course->findById($course_id);
 
-        $classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array('order' => 'name', 'recursive' => 0));
-        $classrooms_mapped = array();
-        foreach($classrooms as $cl) {
-            $classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
+        $course = $this->MassiveAttendanceRegister->Subject->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (! $course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
+
+        $classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array(
+            'conditions' => array(
+                'Classroom.institution_id' => Environment::institution('id'),
+            ),
+            'order' => "name ASC",
+            'recursive' => 0
+        ));
+
+        $classrooms_mapped = array();
+        foreach($classrooms as $cl):
+            $classrooms_mapped[$cl['Classroom']['id']] = $cl['Classroom']['name'];
+        endforeach;
 
         $this->set('course', $course);
         $this->set('classrooms', $classrooms_mapped);
@@ -39,7 +57,7 @@ class MassiveAttendanceRegistersController extends AppController {
                 }
                 $event_id = intval($data['event_id']);
                 $duration = is_numeric($data['duration']) ? $data['duration'] : floatval($data['duration']);
-                $activity_id = inval($data['activity_id']);
+                $activity_id = intval($data['activity_id']);
                 $group_id = intval($data['group_id']);
                 $this->MassiveAttendanceRegister->query("UPDATE attendance_registers SET"
                     . " teacher_id = {$teacher_id},"
@@ -125,7 +143,7 @@ class MassiveAttendanceRegistersController extends AppController {
     }
 
     function _add_days(&$date, $ndays, $nminutes = 0){
-        $date_components = split("-", $date->format('Y-m-d-H-i-s'));
+        $date_components = explode('-', $date->format('Y-m-d-H-i-s'));
         $timestamp = mktime($date_components[3],$date_components[4],$date_components[5], $date_components[1], $date_components[2] + $ndays, $date_components[0]);
         $timestamp += ($nminutes * 60);
         $date_string = date('Y-m-d H:i:s', $timestamp);

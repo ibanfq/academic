@@ -85,9 +85,15 @@ class ApiUsersController extends AppController {
     
     function index()
     {
-        App::import('Sanitize');
-            
+        App::import('Core', 'Sanitize');;
+        
+        $joins_for_where = '';
         $where = array();
+
+        if (Environment::institution('id')) {
+            $db = $this->User->getDataSource();
+            $joins_for_where .= " INNER JOIN institutions_users InstitutionUser ON InstitutionUser.user_id = User.id AND InstitutionUser.institution_id = {$db->value(Environment::institution('id'))} AND InstitutionUser.active";
+        }
 
         $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
         $offset = $this->Api->getParameter('offset', array('integer', '>=0'), 0);
@@ -116,7 +122,7 @@ class ApiUsersController extends AppController {
         if ($this->Api->getStatus() === 'success') {
             $where = empty($where)? '' : 'WHERE ' . implode(' AND ', $where);
             $users = $this->User->query(
-                "SELECT User.* FROM users User $where ORDER BY User.last_name ASC, User.first_name ASC LIMIT $limit OFFSET $offset"
+                "SELECT User.* FROM users User $joins_for_where $where ORDER BY User.last_name ASC, User.first_name ASC LIMIT $limit OFFSET $offset"
             );
             $this->Api->setData($users);
         }

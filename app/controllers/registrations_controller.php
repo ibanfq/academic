@@ -6,6 +6,7 @@ class RegistrationsController extends AppController {
     function add($activity_id, $group_id){
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $group_id = $group_id === null ? null : intval($group_id);
+
         if ($this->_add($this->Auth->user('id'), $activity_id, $group_id)) {
             $this->set('success', true);
         } else {
@@ -17,9 +18,52 @@ class RegistrationsController extends AppController {
         $user_id = $user_id === null ? null : intval($user_id);
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $group_id = $group_id === null ? null : intval($group_id);
-        $is_accepting_request = boolval($is_accepting_request);
+        $is_accepting_request = (bool) $is_accepting_request;
         $this->set('success', false);
+
+        if (! isset($user_id, $activity_id, $group_id)) {
+            return false;
+        }
         
+        $activity = $this->Registration->Activity->find('first', array(
+            'fields' => array('Activity.*'),
+            'joins' => array(
+                array(
+                    'table' => 'subjects',
+                    'alias' => 'Subject',
+                    'type' => 'INNER',
+                    'conditions' => 'Subject.id = Activity.subject_id'
+                ),
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type' => 'INNER',
+                    'conditions' => 'Course.id = Subject.course_id'
+                )
+            ),
+            'conditions' => array(
+                'Activity.id' => $activity_id,
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'recursive' => -1
+        ));
+        
+        if (! $activity) {
+            return false;
+        }
+
+        $group = $this->Registration->Group->find('first', array(
+            'conditions' => array(
+                'Group.id' => $group_id,
+                'Group.subject_id' => $activity['Activity']['subject_id'],
+            ),
+            'recursive' => -1
+        ));
+
+        if (! $group) {
+            return false;
+        }
+
         $this->Registration->id = null;
         
         $actual_group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
@@ -78,9 +122,23 @@ class RegistrationsController extends AppController {
         return false;
     }
     
-    function get_subject_free_seats($subject_id){
+    function get_subject_free_seats($subject_id) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
-        $free_seats = $this->Registration->query("SELECT `Group`.id, Activity.id, `Group`.capacity - IFNULL(count(Registration.id), 0) AS free_seats FROM groups `Group` INNER JOIN activities Activity ON Activity.subject_id = `Group`.subject_id AND Activity.type = `Group`.type LEFT JOIN registrations Registration ON `Group`.id = Registration.group_id AND Activity.id = Registration.activity_id WHERE `Group`.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id");
+
+        $free_seats = 0;
+
+        if ($subject_id) {
+            $subject = $this->Registration->Activity->Subject->find('first', array(
+                'conditions' => array(
+                    'Subject.id' => $subject_id,
+                    'Course.institution_id' => Environment::institution('id')
+                )
+            ));
+
+            if ($subject) {
+                $free_seats = $this->Registration->query("SELECT `Group`.id, Activity.id, `Group`.capacity - IFNULL(count(Registration.id), 0) AS free_seats FROM groups `Group` INNER JOIN activities Activity ON Activity.subject_id = `Group`.subject_id AND Activity.type = `Group`.type LEFT JOIN registrations Registration ON `Group`.id = Registration.group_id AND Activity.id = Registration.activity_id WHERE `Group`.subject_id = {$subject_id} GROUP BY Activity.id, `Group`.id");
+            }
+        }
         
         $this->set('free_seats', $free_seats);
     }
@@ -88,6 +146,53 @@ class RegistrationsController extends AppController {
     function view_students_registered($activity_id = null, $group_id = null) {
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $group_id = $group_id === null ? null : intval($group_id);
+
+        if (! isset($activity_id, $group_id)) {
+            $this->Session->setFlash('No se ha podido acceder al grupo.');
+            $this->redirect($this->referer());
+        }
+        
+        $activity = $this->Registration->Activity->find('first', array(
+            'fields' => array('Activity.*'),
+            'joins' => array(
+                array(
+                    'table' => 'subjects',
+                    'alias' => 'Subject',
+                    'type' => 'INNER',
+                    'conditions' => 'Subject.id = Activity.subject_id'
+                ),
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type' => 'INNER',
+                    'conditions' => 'Course.id = Subject.course_id'
+                )
+            ),
+            'conditions' => array(
+                'Activity.id' => $activity_id,
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'recursive' => -1
+        ));
+        
+        if (! $activity) {
+            $this->Session->setFlash('No se ha podido acceder a la actividad.');
+            $this->redirect($this->referer());
+        }
+
+        $group = $this->Registration->Group->find('first', array(
+            'conditions' => array(
+                'Group.id' => $group_id,
+                'Group.subject_id' => $activity['Activity']['subject_id'],
+            ),
+            'recursive' => -1
+        ));
+
+        if (! $group) {
+            $this->Session->setFlash('No se ha podido acceder al grupo.');
+            $this->redirect($this->referer());
+        }
+
         $registrations = $this->Registration->query("SELECT `Registration`.`group_id`, `Registration`.`activity_id`, `Registration`.`student_id`, `Registration`.`id`, `User`.`id`, `User`.`type`, `User`.`dni`, `User`.`first_name`, `User`.`last_name`, `User`.`username`, `User`.`phone`, `User`.`password` FROM `registrations` AS `Registration` LEFT JOIN `users` AS `User` ON (`User`.`id` = `Registration`.`student_id`) WHERE `activity_id` = {$activity_id} AND `group_id` = {$group_id} ORDER BY `User`.`last_name`, `User`.`first_name`");
         
         $auth_user_id = $this->Auth->user('id');
@@ -117,54 +222,83 @@ class RegistrationsController extends AppController {
         $this->set('changes_requests', $changes_requests);
     }
     
-    function request_add($activity_id, $user_id){
+    function request_add($activity_id, $user_id) {
         $activity_id = $activity_id === null ? null : intval($activity_id);
         $user_id = $user_id === null ? null : intval($user_id);
         $this->set('success', false);
-        
-        $auth_user_id = intval($this->Auth->user('id'));
-        
-        $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
-        $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
-        
-        if (!$actual_group_id || !$group_id) {
-            $this->set('error', "notRegistered");
-        } else if ($actual_group_id === $group_id) {
-            $this->set('error', "sameGroup");
-        } else {
-            $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
-            $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
-            
-            $this->loadModel('GroupRequest');
-            $group_requests = $group_opened? $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id, $group_id) : array();
 
-            if (!$group_opened) {
-                $this->set('error', "groupClosed");
-            } else if (count($group_requests)) {
-                $this->set('error', "groupWithRequests");
+        $activity = null;
+
+        if (isset($activity_id, $user_id)) {
+            $activity = $this->Registration->Activity->find('first', array(
+                'fields' => array('Activity.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'subjects',
+                        'alias' => 'Subject',
+                        'type' => 'INNER',
+                        'conditions' => 'Subject.id = Activity.subject_id'
+                    ),
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    )
+                ),
+                'conditions' => array(
+                    'Activity.id' => $activity_id,
+                    'Course.institution_id' => Environment::institution('id'),
+                ),
+                'recursive' => -1
+            ));
+        }
+        
+        if ($activity) {
+            $auth_user_id = intval($this->Auth->user('id'));
+            
+            $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
+            $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
+            
+            if (!$actual_group_id || !$group_id) {
+                $this->set('error', "notRegistered");
+            } else if ($actual_group_id === $group_id) {
+                $this->set('error', "sameGroup");
             } else {
+                $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
+                $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+                
                 $this->loadModel('GroupRequest');
-                $data = array(
-                    'activity_id' => $activity_id,
-                    'student_id' => $auth_user_id,
-                    'group_id' => $actual_group_id,
-                    'student_2_id' => $user_id,
-                    'group_2_id' => $group_id
-                );
-                
-                $email_models = $this->Registration->query(
-                    "SELECT users.id, users.username, users.first_name, users.last_name, activities.id, activities.name, subjects.id, subjects.name, groups.id, groups.name, groups_2.id, groups_2.name FROM users"
-                    . " LEFT JOIN activities on activities.id = $activity_id"
-                    . " LEFT JOIN subjects on subjects.id = activities.subject_id"
-                    . " LEFT JOIN groups on groups.id = $group_id"
-                    . " LEFT JOIN groups groups_2 on groups_2.id = $actual_group_id"
-                    . " WHERE users.id = $user_id"
-                );
-                
-                if (!empty($email_models) && $this->GroupRequest->save($data)){
-                    $user_2 = $this->Auth->user();
-                    $this->_notifyRequestAdded($email_models[0]['users'], $email_models[0]['activities'], $email_models[0]['subjects'], $user_2['User'], $email_models[0]['groups'], $email_models[0]['groups_2']);
-                    $this->set('success', true);
+                $group_requests = $group_opened? $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id, $group_id) : array();
+
+                if (!$group_opened) {
+                    $this->set('error', "groupClosed");
+                } else if (count($group_requests)) {
+                    $this->set('error', "groupWithRequests");
+                } else {
+                    $this->loadModel('GroupRequest');
+                    $data = array(
+                        'activity_id' => $activity_id,
+                        'student_id' => $auth_user_id,
+                        'group_id' => $actual_group_id,
+                        'student_2_id' => $user_id,
+                        'group_2_id' => $group_id
+                    );
+                    
+                    $email_models = $this->Registration->query(
+                        "SELECT users.id, users.username, users.first_name, users.last_name, activities.id, activities.name, subjects.id, subjects.name, groups.id, groups.name, groups_2.id, groups_2.name FROM users"
+                        . " LEFT JOIN activities on activities.id = $activity_id"
+                        . " LEFT JOIN subjects on subjects.id = activities.subject_id"
+                        . " LEFT JOIN groups on groups.id = $group_id"
+                        . " LEFT JOIN groups groups_2 on groups_2.id = $actual_group_id"
+                        . " WHERE users.id = $user_id"
+                    );
+                    
+                    if (!empty($email_models) && $this->GroupRequest->save($data)){
+                        $user_2 = $this->Auth->user();
+                        $this->_notifyRequestAdded($email_models[0]['users'], $email_models[0]['activities'], $email_models[0]['subjects'], $user_2['User'], $email_models[0]['groups'], $email_models[0]['groups_2']);
+                        $this->set('success', true);
+                    }
                 }
             }
         }
@@ -175,91 +309,120 @@ class RegistrationsController extends AppController {
         $user_id = $user_id === null ? null : intval($user_id);
         $this->set('success', false);
         
-        $auth_user_id = $this->Auth->user('id');
-        
-        $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
-        $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
-        
-        if (!$actual_group_id || !$group_id) {
-            $this->set('error', "notRegistered");
-        } else if ($actual_group_id === $group_id) {
-            $this->set('error', "sameGroup");
-        } else {
-            $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
-            $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
-            
-            $this->loadModel('GroupRequest');
-            $request = null;
-            
-            if ($group_opened) {
-                $group_requests = $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id);
-                foreach ($group_requests as $user_request) {
-                    if ($user_request['group_requests']['student_id'] == $user_id) {
-                        $request = $user_request;
-                        break;
-                    }
-                }
-            }
-            
-            if (!$request) {
-                $this->set('error', "requestNotExists");
-            } else {
-                $request_id = $request['group_requests']['id'];
-                $requests_ids = array();
-                $requests_canceled = array();
-                $users_to_load = array();
-                $group_requests += $this->GroupRequest->getUserRequests($user_id, null, $activity_id);
-                foreach ($group_requests as $user_request) {
-                    $id = $user_request['group_requests']['id'];
-                    if (!isset($requests_ids[$id])) {
-                        $requests_ids[$id]= $id;
-                        if ($id !== $request_id) {
-                            $requests_canceled[] = $user_request;
-                        }
-                        $student_id = $user_request['group_requests']['student_id'];
-                        $student_2_id = $user_request['group_requests']['student_2_id'];
-                        if ($student_id != $auth_user_id) {
-                            $users_to_load[$student_id] = $student_id;
-                        }
-                        if ($student_2_id != $auth_user_id) {
-                            $users_to_load[$student_2_id] = $student_2_id;
-                        }
-                    }
-                }
-                
-                $email_models = $this->Registration->query(
-                    "SELECT activities.id, activities.name, subjects.id, subjects.name FROM activities"
-                    . " LEFT JOIN subjects on subjects.id = activities.subject_id"
-                    . " WHERE activities.id = $activity_id"
-                );
-                
-                $users = $this->Registration->User->find("all", array(
-                    'fields' => array('User.id, User.username, User.first_name, User.last_name'),
-                    'conditions' => array('User.id' => $users_to_load),
-                    'recursive' => -1
-                ));
-                
-                if (!empty($email_models) && !empty($users) && $this->_add($auth_user_id, $activity_id, $group_id, true)) {
-                    $success = $this->_add($user_id, $activity_id, $actual_group_id, true);
-                    $success = $success & $this->GroupRequest->deleteAll(array('GroupRequest.id' => $requests_ids));
-                    
-                    $users = set::combine($users, '{n}.User.id', '{n}');
-                    $users[$this->Auth->user('id')] = $this->Auth->user();
-                    $auth_user = $this->Auth->user();
-                    
-                    $this->_notifyRequestAccepted($users[$request['group_requests']['student_id']]['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $auth_user['User']);
-                    foreach ($requests_canceled as $request_canceled) {
-                        if (in_array($request_canceled['group_requests']['student_id'], array($auth_user_id, $user_id))) {
-                            $user = $users[$request_canceled['group_requests']['student_2_id']];
-                            $user_2 = $users[$request_canceled['group_requests']['student_id']];
-                        } else {
-                            $user = $users[$request_canceled['group_requests']['student_id']];
-                            $user_2 = $users[$request_canceled['group_requests']['student_2_id']];
-                        }
-                        $this->_notifyRequestCanceled($user['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $user_2['User']);
-                    }
+        $activity = null;
 
-                    $this->set('success', $success);
+        if (isset($activity_id, $user_id)) {
+            $activity = $this->Registration->Activity->find('first', array(
+                'fields' => array('Activity.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'subjects',
+                        'alias' => 'Subject',
+                        'type' => 'INNER',
+                        'conditions' => 'Subject.id = Activity.subject_id'
+                    ),
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    )
+                ),
+                'conditions' => array(
+                    'Activity.id' => $activity_id,
+                    'Course.institution_id' => Environment::institution('id'),
+                ),
+                'recursive' => -1
+            ));
+        }
+
+        if ($activity) {
+            $auth_user_id = $this->Auth->user('id');
+            
+            $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
+            $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
+            
+            if (!$actual_group_id || !$group_id) {
+                $this->set('error', "notRegistered");
+            } else if ($actual_group_id === $group_id) {
+                $this->set('error', "sameGroup");
+            } else {
+                $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
+                $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+                
+                $this->loadModel('GroupRequest');
+                $request = null;
+                
+                if ($group_opened) {
+                    $group_requests = $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id);
+                    foreach ($group_requests as $user_request) {
+                        if ($user_request['group_requests']['student_id'] == $user_id) {
+                            $request = $user_request;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$request) {
+                    $this->set('error', "requestNotExists");
+                } else {
+                    $request_id = $request['group_requests']['id'];
+                    $requests_ids = array();
+                    $requests_canceled = array();
+                    $users_to_load = array();
+                    $group_requests += $this->GroupRequest->getUserRequests($user_id, null, $activity_id);
+                    foreach ($group_requests as $user_request) {
+                        $id = $user_request['group_requests']['id'];
+                        if (!isset($requests_ids[$id])) {
+                            $requests_ids[$id]= $id;
+                            if ($id !== $request_id) {
+                                $requests_canceled[] = $user_request;
+                            }
+                            $student_id = $user_request['group_requests']['student_id'];
+                            $student_2_id = $user_request['group_requests']['student_2_id'];
+                            if ($student_id != $auth_user_id) {
+                                $users_to_load[$student_id] = $student_id;
+                            }
+                            if ($student_2_id != $auth_user_id) {
+                                $users_to_load[$student_2_id] = $student_2_id;
+                            }
+                        }
+                    }
+                    
+                    $email_models = $this->Registration->query(
+                        "SELECT activities.id, activities.name, subjects.id, subjects.name FROM activities"
+                        . " LEFT JOIN subjects on subjects.id = activities.subject_id"
+                        . " WHERE activities.id = $activity_id"
+                    );
+                    
+                    $users = $this->Registration->User->find("all", array(
+                        'fields' => array('User.id, User.username, User.first_name, User.last_name'),
+                        'conditions' => array('User.id' => $users_to_load),
+                        'recursive' => -1
+                    ));
+                    
+                    if (!empty($email_models) && !empty($users) && $this->_add($auth_user_id, $activity_id, $group_id, true)) {
+                        $success = $this->_add($user_id, $activity_id, $actual_group_id, true);
+                        $success = $success & $this->GroupRequest->deleteAll(array('GroupRequest.id' => $requests_ids));
+                        
+                        $users = set::combine($users, '{n}.User.id', '{n}');
+                        $users[$this->Auth->user('id')] = $this->Auth->user();
+                        $auth_user = $this->Auth->user();
+                        
+                        $this->_notifyRequestAccepted($users[$request['group_requests']['student_id']]['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $auth_user['User']);
+                        foreach ($requests_canceled as $request_canceled) {
+                            if (in_array($request_canceled['group_requests']['student_id'], array($auth_user_id, $user_id))) {
+                                $user = $users[$request_canceled['group_requests']['student_2_id']];
+                                $user_2 = $users[$request_canceled['group_requests']['student_id']];
+                            } else {
+                                $user = $users[$request_canceled['group_requests']['student_id']];
+                                $user_2 = $users[$request_canceled['group_requests']['student_2_id']];
+                            }
+                            $this->_notifyRequestCanceled($user['User'], $email_models[0]['subjects'], $email_models[0]['activities'], $user_2['User']);
+                        }
+
+                        $this->set('success', $success);
+                    }
                 }
             }
         }
@@ -270,50 +433,79 @@ class RegistrationsController extends AppController {
         $user_id = $user_id === null ? null : intval($user_id);
         $this->set('success', false);
         
-        $auth_user_id = $this->Auth->user('id');
-        
-        $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
-        $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
-        
-        if (!$actual_group_id || !$group_id) {
-            $this->set('error', "notRegistered");
-        } else if ($actual_group_id === $group_id) {
-            $this->set('error', "sameGroup");
-        } else {
-            $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
-            $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+        $activity = null;
+
+        if (isset($activity_id, $user_id)) {
+            $activity = $this->Registration->Activity->find('first', array(
+                'fields' => array('Activity.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'subjects',
+                        'alias' => 'Subject',
+                        'type' => 'INNER',
+                        'conditions' => 'Subject.id = Activity.subject_id'
+                    ),
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    )
+                ),
+                'conditions' => array(
+                    'Activity.id' => $activity_id,
+                    'Course.institution_id' => Environment::institution('id'),
+                ),
+                'recursive' => -1
+            ));
+        }
+
+        if ($activity) {
+            $auth_user_id = $this->Auth->user('id');
             
-            $request = null;
+            $actual_group_id = $this->Registration->studentGroupRegistered($auth_user_id, $activity_id);
+            $group_id = $this->Registration->studentGroupRegistered($user_id, $activity_id);
             
-            if ($group_opened) {
-                $this->loadModel('GroupRequest');
-                $group_requests = $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id, $group_id);
-                foreach ($group_requests as $user_request) {
-                    if ($user_request['group_requests']['student_id'] ==  $user_id) {
-                        $request = $user_request;
-                        break;
-                    }
-                    if ($user_request['group_requests']['student_2_id'] ==  $user_id) {
-                        $request = $user_request;
-                        break;
+            if (!$actual_group_id || !$group_id) {
+                $this->set('error', "notRegistered");
+            } else if ($actual_group_id === $group_id) {
+                $this->set('error', "sameGroup");
+            } else {
+                $group_opened = $this->Registration->Activity->_existsAndGroupOpened($activity_id, $actual_group_id);
+                $group_opened = $group_opened && $this->Registration->Activity->_existsAndGroupOpened($activity_id, $group_id);
+                
+                $request = null;
+                
+                if ($group_opened) {
+                    $this->loadModel('GroupRequest');
+                    $group_requests = $this->GroupRequest->getUserRequests($auth_user_id, null, $activity_id, $group_id);
+                    foreach ($group_requests as $user_request) {
+                        if ($user_request['group_requests']['student_id'] ==  $user_id) {
+                            $request = $user_request;
+                            break;
+                        }
+                        if ($user_request['group_requests']['student_2_id'] ==  $user_id) {
+                            $request = $user_request;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!$request) {
-                $this->set('error', "requestNotExists");
-            } else {
-                $email_models = $this->Registration->query(
-                    "SELECT users.id, users.username, users.first_name, users.last_name, activities.id, activities.name, subjects.id, subjects.name FROM users"
-                    . " LEFT JOIN activities on activities.id = $activity_id"
-                    . " LEFT JOIN subjects on subjects.id = activities.subject_id"
-                    . " WHERE users.id = $user_id"
-                );
-                
-                if (!empty($email_models) && $this->GroupRequest->delete($request['group_requests']['id'])){
-                    $user_2 = $this->Auth->user();
-                    $this->_notifyRequestCanceled($email_models[0]['users'], $email_models[0]['activities'], $email_models[0]['subjects'], $user_2['User']);
-                    $this->set('success', true);
+                if (!$request) {
+                    $this->set('error', "requestNotExists");
+                } else {
+                    $email_models = $this->Registration->query(
+                        "SELECT users.id, users.username, users.first_name, users.last_name, activities.id, activities.name, subjects.id, subjects.name FROM users"
+                        . " LEFT JOIN activities on activities.id = $activity_id"
+                        . " LEFT JOIN subjects on subjects.id = activities.subject_id"
+                        . " WHERE users.id = $user_id"
+                    );
+                    
+                    if (!empty($email_models) && $this->GroupRequest->delete($request['group_requests']['id'])){
+                        $user_2 = $this->Auth->user();
+                        $this->_notifyRequestCanceled($email_models[0]['users'], $email_models[0]['activities'], $email_models[0]['subjects'], $user_2['User']);
+                        $this->set('success', true);
+                    }
                 }
             }
         }

@@ -63,7 +63,13 @@ class ApiUsersAttendanceRegisterController extends AppController {
         $secret_code = $this->Api->getParameter('AttendanceRegister.secret_code', ($is_anonymous || $is_student? array('required') : array()));
         
         if ($attendance_id) {
-            $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->read(null, $attendance_id);
+            $db = $this->UserAttendanceRegister->getDataSource();
+            $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->find('first', array(
+                'conditions' => array(
+                    'AttendanceRegister.id' => $attendance_id,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ));
             if ($attendanceRegister && $is_teacher) {
                 if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {
                     $attendanceRegister = false;
@@ -80,7 +86,13 @@ class ApiUsersAttendanceRegisterController extends AppController {
                 }
             }
         } else if (strlen($secret_code)) {
-            $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->findBySecretCode($secret_code);
+            $db = $this->UserAttendanceRegister->getDataSource();
+            $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->find('first', array(
+                'conditions' => array(
+                    'AttendanceRegister.secret_code' => $secret_code,
+                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                )
+            ));
             if (!$attendanceRegister) {
                 $this->Api->setError('No existe ningún evento con ese código.', 404);
             }
@@ -209,7 +221,13 @@ class ApiUsersAttendanceRegisterController extends AppController {
                 'conditions' => array('Classroom.id = Event.classroom_id')
             )
         )));
-        $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->read(null, $attendance_id);
+        $db = $this->UserAttendanceRegister->getDataSource();
+        $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->find('first', array(
+            'conditions' => array(
+                'AttendanceRegister.id' => $attendance_id,
+                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            )
+        ));
         
         if ($attendanceRegister && $this->Auth->user('type') === "Profesor") {
             if ($attendanceRegister['AttendanceRegister']['teacher_id'] !== $this->Auth->user('id') && $attendanceRegister['AttendanceRegister']['teacher_2_id'] !== $this->Auth->user('id')) {

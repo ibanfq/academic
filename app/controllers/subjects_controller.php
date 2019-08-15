@@ -6,51 +6,144 @@ class SubjectsController extends AppController {
         'limit' => 10,
         'order' => array('Subject.code' => 'asc'),
     );
+    var $fields_fillable = array('Subject');
+    var $fields_guarded = array('Subject' => ['id', 'course_id', 'created', 'modified']);
 
     function add($course_id = null) {
         $course_id = $course_id === null ? null : intval($course_id);
-        if (!empty($this->data)){
-            if ($this->Subject->save($this->data)){
-                $this->Session->setFlash('La asignatura se ha guardado correctamente');
-                $this->redirect(array('controller' => 'courses', 'action' => 'view', $this->data['Subject']['course_id']));
-            } else {
-                if (!empty($this->data['Subject']['coordinator_id'])) {
-                    $alias = $this->Subject->Coordinator->alias;
-                    $primaryKey = $this->Subject->Coordinator->primaryKey;
-                    $coordinator = $this->Subject->Coordinator->find('first', array(
-                        'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['coordinator_id'])
-                    ));
-                    if ($coordinator) {
-                        $this->data['Coordinator'] = $coordinator['Coordinator'];
-                    }
+
+        if (is_null($course_id) && !empty($this->data['Subject']['course_id'])) {
+            $course_id = intval($this->data['Subject']['course_id']);
+        }
+
+        if (! $course_id) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $course = $this->Subject->Course->find('first', array(
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        if (!empty($this->data)) {
+            $is_valid = true;
+            $coordinator = null;
+            $responsible = null;
+
+            if (!empty($this->data['Subject']['coordinator_id'])) {
+                $coordinator = $this->Subject->Coordinator->find('first', array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions_users',
+                            'alias' => 'InstitutionUser',
+                            'type' => 'INNER',
+                            'conditions' => array(
+                                'InstitutionUser.user_id = Coordinator.id',
+                                'InstitutionUser.institution_id' => Environment::institution('id'),
+                                'InstitutionUser.active'
+                            )
+                        )
+                    ),
+                    'conditions' => array(
+                        'Coordinator.id' => $this->data['Subject']['coordinator_id'],
+                        'OR' => array(
+                            array('Coordinator.type' => 'Profesor'),
+                            array('Coordinator.type' => 'Administrador')
+                        ),
+                    ),
+                    'recursive' => -1, 
+                ));
+
+                if (!$coordinator) {
+                    unset($this->data['Subject']['coordinator_id']);
+                    $this->Session->setFlash('No se ha podido acceder al coordinador.');
+                    $is_valid = false;
                 }
-                if (!empty($this->data['Subject']['practice_responsible_id'])) {
-                    $alias = $this->Subject->Responsible->alias;
-                    $primaryKey = $this->Subject->Responsible->primaryKey;
-                    $responsible = $this->Subject->Responsible->find('first', array(
-                        'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['practice_responsible_id'])
-                    ));
-                    if ($responsible) {
-                        $this->data['Responsible'] = $responsible['Responsible'];
-                    }
-                }
-                $this->set('course_id', $this->data['Subject']['course_id']);
-                $this->set('course', $this->Subject->Course->find('first', array('conditions' => array('Course.id' => $this->data['Subject']['course_id']))));
             }
-        } else {
-            if (is_null($course_id)) {
-                $this->redirect(array('controller' => 'courses', 'action' => 'index'));
-            } else {
-                $this->set('course', $this->Subject->Course->find('first', array('conditions' => array('Course.id' => $course_id))));
-                $this->set('course_id', $course_id);
+            
+            if (!empty($this->data['Subject']['practice_responsible_id'])) {
+                $responsible = $this->Subject->Responsible->find('first', array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions_users',
+                            'alias' => 'InstitutionUser',
+                            'type' => 'INNER',
+                            'conditions' => array(
+                                'InstitutionUser.user_id = Responsible.id',
+                                'InstitutionUser.institution_id' => Environment::institution('id'),
+                                'InstitutionUser.active'
+                            )
+                        )
+                    ),
+                    'conditions' => array(
+                        'Responsible.id' => $this->data['Subject']['practice_responsible_id'],
+                        'OR' => array(
+                            array('Responsible.type' => 'Profesor'),
+                            array('Responsible.type' => 'Administrador')
+                        ),
+                    ),
+                    'recursive' => -1, 
+                ));
+                if (!$responsible) {
+                    unset($this->data['Subject']['practice_responsible_id']);
+                    if ($is_valid) {
+                        $this->Session->setFlash('No se ha podido acceder al responsable de prácticas.');
+                        $is_valid = false;
+                    }
+                }
+            }
+
+            if ($is_valid) {
+                $this->data = $this->Form->filter($this->data);
+                $this->data['Subject']['course_id'] = $course_id;
+                
+                if ($this->Subject->save($this->data)) {
+                    $this->Session->setFlash('La asignatura se ha guardado correctamente');
+                    $this->redirect(array('controller' => 'courses', 'action' => 'view', $this->data['Subject']['course_id']));
+                }
+            }
+
+            if ($coordinator) {
+                $this->data['Coordinator'] = $coordinator['Coordinator'];
+            }
+
+            if ($responsible) {
+                $this->data['Responsible'] = $responsible['Responsible'];
             }
         }
+
+        $this->set('course', $course);
+        $this->set('course_id', $course_id);
     }
 
     function view($id = null) {
         $id = $id === null ? null : intval($id);
-        $this->Subject->id = $id;
-        $subject = $this->Subject->read();
+
+        if (! $id) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+        
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
 
         $activities = $this->Subject->Activity->query("
             SELECT Activity.*, SUM(Event.duration) / `Group`.total AS duration, IFNULL(Registration.total / `Group`.total, 0) as students, Registration.total AS activity_total
@@ -74,48 +167,130 @@ class SubjectsController extends AppController {
 
     function edit($id = null){
         $id = $id === null ? null : intval($id);
-        $this->Subject->id = $id;
+
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->Subject->set($subject);
+        
         if (empty($this->data)) {
-            $this->data = $this->Subject->read();
-            $this->set('subject', $this->data);
-            $this->set('course', array('Course' =>$this->data['Course']));
+            $this->data = $subject;
         } else {
-            if ($this->Subject->save($this->data)) {
-                $this->Session->setFlash('La asignatura se ha modificado correctamente.');
-                $this->redirect(array('action' => 'view', $id));
-            }    else {
-                if (!empty($this->data['Subject']['coordinator_id'])) {
-                    $alias = $this->Subject->Coordinator->alias;
-                    $primaryKey = $this->Subject->Coordinator->primaryKey;
-                    $coordinator = $this->Subject->Coordinator->find('first', array(
-                        'recursive' => -1, 'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['coordinator_id'])
-                    ));
-                    if ($coordinator) {
-                        $this->data['Coordinator'] = $coordinator['Coordinator'];
+            $is_valid = true;
+            $coordinator = null;
+            $responsible = null;
+
+            if (!empty($this->data['Subject']['coordinator_id'])) {
+                $coordinator = $this->Subject->Coordinator->find('first', array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions_users',
+                            'alias' => 'InstitutionUser',
+                            'type' => 'INNER',
+                            'conditions' => array(
+                                'InstitutionUser.user_id = Coordinator.id',
+                                'InstitutionUser.institution_id' => Environment::institution('id'),
+                                'InstitutionUser.active'
+                            )
+                        )
+                    ),
+                    'conditions' => array(
+                        'Coordinator.id' => $this->data['Subject']['coordinator_id'],
+                        'OR' => array(
+                            array('Coordinator.type' => 'Profesor'),
+                            array('Coordinator.type' => 'Administrador')
+                        ),
+                    ),
+                    'recursive' => -1, 
+                ));
+
+                if (!$coordinator) {
+                    unset($this->data['Subject']['coordinator_id']);
+                    $this->Session->setFlash('No se ha podido acceder al coordinador.');
+                    $is_valid = false;
+                }
+            }
+            
+            if (!empty($this->data['Subject']['practice_responsible_id'])) {
+                $responsible = $this->Subject->Responsible->find('first', array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions_users',
+                            'alias' => 'InstitutionUser',
+                            'type' => 'INNER',
+                            'conditions' => array(
+                                'InstitutionUser.user_id = Responsible.id',
+                                'InstitutionUser.institution_id' => Environment::institution('id'),
+                                'InstitutionUser.active'
+                            )
+                        )
+                    ),
+                    'conditions' => array(
+                        'Responsible.id' => $this->data['Subject']['practice_responsible_id'],
+                        'OR' => array(
+                            array('Responsible.type' => 'Profesor'),
+                            array('Responsible.type' => 'Administrador')
+                        ),
+                    ),
+                    'recursive' => -1, 
+                ));
+                if (!$responsible) {
+                    unset($this->data['Subject']['practice_responsible_id']);
+                    if ($is_valid) {
+                        $this->Session->setFlash('No se ha podido acceder al responsable de prácticas.');
+                        $is_valid = false;
                     }
                 }
-                if (!empty($this->data['Subject']['practice_responsible_id'])) {
-                    $alias = $this->Subject->Responsible->alias;
-                    $primaryKey = $this->Subject->Responsible->primaryKey;
-                    $responsible = $this->Subject->Responsible->find('first', array(
-                        'recursive' => -1,
-                        'conditions' => array($alias . '.' . $primaryKey => $this->data['Subject']['practice_responsible_id'])
-                    ));
-                    if ($responsible) {
-                        $this->data['Responsible'] = $responsible['Responsible'];
-                    }
+            }
+
+            if ($is_valid) {
+                $this->data = $this->Form->filter($this->data);
+                $this->data['Subject']['id'] = $subject['Subject']['id'];
+                $this->data['Subject']['modified'] = null;
+                
+                if ($this->Subject->save($this->data)) {
+                    $this->Session->setFlash('La asignatura se ha modificado correctamente');
+                    $this->redirect(array('action' => 'view', $id));
                 }
-                $this->set('subject', $this->data);
-                $this->set('course', $this->Subject->Course->find('first', array(
-                    'recursive' => -1,
-                    'conditions' => array('Course.id' => $this->data['Subject']['course_id'])
-                )));
+            }
+
+            if ($coordinator) {
+                $this->data['Coordinator'] = $coordinator['Coordinator'];
+            }
+
+            if ($responsible) {
+                $this->data['Responsible'] = $responsible['Responsible'];
             }
         }
+
+        $this->set('subject', $subject);
+        $this->set('course', array('Course' => $subject['Course']));
     }
 
     function getScheduledInfo($id = null) {
         $id = $id === null ? null : intval($id);
+
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $activities = $this->Subject->query("
             SELECT `Group`.name AS group_name, Activity.name AS activity_name, Activity.duration, Activity.type, IFNULL(SUM(Event.duration), 0) AS scheduled
             FROM activities Activity
@@ -124,19 +299,28 @@ class SubjectsController extends AppController {
             WHERE Activity.subject_id = {$id}
             GROUP BY Activity.id, Group.id
             ORDER BY type, activity_name, group_name
-            ");
+        ");
         $this->set('activities', $activities);
 
-        $this->Subject->id = $id;
-        $this->set('subject', $this->Subject->read());
+        $this->set('subject', $subject);
     }
 
     function send_alert_students_without_group($id = null) {
         $id = $id === null ? null : intval($id);
-        $this->Subject->id = $id;
-        $subject = $this->Subject->read();
+        
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
 
-        if (($subject != null) && (($this->Auth->user('type') == "Administrador") || ($this->Auth->user('id') == $subject['Subject']['coordinator_id']) || ($this->Auth->user('id') == $subject['Subject']['practice_responsible_id']))) {
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        if ((($this->Auth->user('type') == "Administrador") || ($this->Auth->user('id') == $subject['Subject']['coordinator_id']) || ($this->Auth->user('id') == $subject['Subject']['practice_responsible_id']))) {
             $activities = $this->Subject->Activity->query("
                 SELECT DISTINCT User.id, User.username, Activity.name
                 FROM users User
@@ -186,18 +370,28 @@ class SubjectsController extends AppController {
         }
     }
 
-    function find_subjects_by_name(){
-        App::import('Sanitize');
+    function find_subjects_by_name() {
+        App::import('Core', 'Sanitize');;
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
 
         if (isset($this->params['url']['course_id'])) {
             $course_id = intval($this->params['url']['course_id']);
+
+            $course = $this->Subject->Course->find('first', array(
+                'conditions' => array(
+                    'Course.id' => $course_id,
+                    'Course.institution_id' => Environment::institution('id')
+                ),
+                'recursive' => -1
+            ));
         } else{
             $course = $this->Subject->Course->current();
             $course_id = $course["id"];
         }
 
-        if (isset($this->params['url']['user_id'])) {
+        if (!$course) {
+            $subjects = array();
+        } elseif (isset($this->params['url']['user_id'])) {
             $student_id = intval($this->params['url']['user_id']);
             $subjects = $this->Subject->query("SELECT Subject.* FROM subjects Subject WHERE Subject.id NOT IN (SELECT subject_id AS id FROM subjects_users WHERE user_id = {$student_id}) AND Subject.name LIKE '{$q}' AND Subject.course_id = {$course_id}");
         } else {
@@ -208,25 +402,54 @@ class SubjectsController extends AppController {
     }
 
     function students_stats($subject_id = null) {
+        $db = $this->Subject->getDataSource();
         $subject_id = $subject_id === null ? null : intval($subject_id);
-        $teorical_types = "'Clase magistral', 'Seminario'";
-        $practice_types = "'Práctica en aula', 'Práctica de problemas', 'Práctica de informática', 'Práctica de microscopía', 'Práctica de laboratorio', 'Práctica clínica', 'Práctica externa', 'Taller/trabajo en grupo'";
-        $other_types = "'Tutoría', 'Evaluación', 'Otra presencial'";
 
-        $students = $this->Subject->query("SELECT Student.*, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others FROM users Student INNER JOIN subjects_users SU ON SU.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$teorical_types}) GROUP BY user_id) teorical ON teorical.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$practice_types}) GROUP BY user_id) practice ON practice.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$other_types}) GROUP BY user_id) others ON others.user_id = Student.id WHERE SU.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $subject_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $theoretical_types = implode(', ', $db->value(Configure::read('app.activity.theoretical_types')));
+        $practice_types = implode(', ', $db->value(Configure::read('app.activity.practice_types')));
+        $other_types = implode(', ', $db->value(Configure::read('app.activity.other_types')));
+
+        $students = $this->Subject->query("SELECT Student.*, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others FROM users Student INNER JOIN subjects_users SU ON SU.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$theoretical_types}) GROUP BY user_id) teorical ON teorical.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$practice_types}) GROUP BY user_id) practice ON practice.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$other_types}) GROUP BY user_id) others ON others.user_id = Student.id WHERE SU.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
 
         $this->set('students', $students);
         $this->Subject->id = $subject_id;
-        $this->set('subject', $this->Subject->read());
+        $this->set('subject', $subject);
     }
     
     function students_edit($subject_id = null) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
-        $this->Subject->id = $subject_id;
+        
         $this->Subject->unbindModel(array('belongsTo' => array('Coordinator', 'Responsible'), 'hasMany' => array('Group')));
-        $subject = $this->Subject->read();
+        
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $subject_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $this->Subject->set($subject);
+
         $students = $this->Subject->query("SELECT Student.*, SubjectStudent.* FROM users Student INNER JOIN subjects_users SubjectStudent ON SubjectStudent.user_id = Student.id WHERE SubjectStudent.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
         $subject['Students'] = &$students;
+
         if (empty($this->data)) {
             $this->data = $subject;
         } else {
@@ -329,14 +552,21 @@ class SubjectsController extends AppController {
 
     function statistics($subject_id = null) {
         $subject_id = $subject_id === null ? null : intval($subject_id);
-        $this->Subject->id = $subject_id;
-        if (!$this->Subject->exists()) {
-            $this->Session->setFlash('La asignatura no existe.');
-            $this->redirect($this->referer());
+
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $subject_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
         $this->set(array(
-            'subject' => $this->Subject->findById($subject_id),
+            'subject' => $subject,
             'activities' => $this->Subject->activityHoursSummary($subject_id),
             'registers' => $this->Subject->teachingHoursSummary($subject_id),
         ));
@@ -344,8 +574,24 @@ class SubjectsController extends AppController {
 
     function delete($id = null){
         $id = $id === null ? null : intval($id);
-        $this->Subject->id = $id;
-        $subject = $this->Subject->read();
+        
+        if (!$id) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
+        $subject = $this->Subject->find('first', array(
+            'conditions' => array(
+                'Subject.id' => $id,
+                'Course.institution_id' => Environment::institution('id')
+            )
+        ));
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+        }
+
         $course_id = $subject['Subject']['course_id'];
         $this->Subject->query("DELETE FROM `competence_criterion_subjects` WHERE subject_id = {$id}");
         $this->Subject->delete($id);
@@ -383,11 +629,22 @@ class SubjectsController extends AppController {
   
     function _get_subject(){
         if (!empty($this->data) && isset($this->data['Subject']['id'])) {
-            return $this->Subject->find('first', array('conditions' => array("Subject.id" => $this->data['Subject']['id'])));
+            $subject_id = $this->data['Subject']['id'];
         } else {
-            return $this->Subject->find('first', array('conditions' => array("Subject.id" => $this->params['pass']['0'])));
+            $subject_id = $this->params['pass']['0'];
         }
-            return null;
+        
+        if ($subject_id) {
+            return $this->Subject->find('first', array(
+                'conditions' => array(
+                    'Subject.id' => $subject_id,
+                    'Course.institution_id' => Environment::institution('id')
+                ),
+                'recursive' => -1
+            ));
+        }
+
+        return false;
     }
 
     function _authorize() {

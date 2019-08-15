@@ -30,8 +30,8 @@
 			<li><?php echo $html->link('Modificar matrícula', array('action' => 'edit_registration', $user['User']['id'])) ?></li>
 		<?php endif; ?>
 		
-		<?php if (($auth->user('type') == "Administrador") ||  ($auth->user('type') == "Administrativo")): ?>
-		  <li><?php echo $html->link('Eliminar usuario', array('action' => 'delete', $user['User']['id']), null, '¿Está seguro que desea eliminar este usuario?') ?></li>
+		<?php if (($auth->user('type') == "Administrador")): ?>
+		  	<li><?php echo $html->link('Eliminar usuario', array('action' => 'delete', $user['User']['id']), null, '¿Está seguro que desea eliminar este usuario?') ?></li>
 		<?php endif; ?>
 	</ul>
 </div>
@@ -58,6 +58,10 @@
 		<dl>
 			<dt>Teléfono</dt>
 			<dd><?php echo $user['User']['phone']?></dd>
+		</dl>
+		<dl>
+			<dt>Usuario activo</dt>
+			<dd><?php echo $user['InstitutionUser']['active'] ? 'Si' : 'No' ?></dd>
 		</dl>
 	</fieldset>
 </div>

@@ -136,7 +136,8 @@ $(document).ready(function() {
 					}
 			}).result(
 				function(event, item){ 
-				current_teacher = item[1];
+					current_teacher = item[1];
+					$('#calendar').fullCalendar('removeEvents');
 				
 					$.ajax({
 						type: "GET",
@@ -158,7 +159,7 @@ $(document).ready(function() {
 <div id="legend" style="">
     <div id="legend_left">
         <ul>
-            <?php foreach(Configure::read('app.color_legend.legend_left') as $id => $description): ?>
+            <?php foreach(Configure::read('app.activities.calendar_legend.legend_left') as $id => $description): ?>
                 <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
             <?php endforeach; ?>
         </ul>
@@ -166,7 +167,7 @@ $(document).ready(function() {
 
     <div id="legend_right">
         <ul>
-            <?php foreach(Configure::read('app.color_legend.legend_right') as $id => $description): ?>
+            <?php foreach(Configure::read('app.activities.calendar_legend.legend_right') as $id => $description): ?>
                 <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
             <?php endforeach; ?>
         </ul>

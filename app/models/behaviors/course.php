@@ -1,8 +1,8 @@
 <?php
 
 class CourseBehavior extends ModelBehavior {
-	function friendly_name(&$Model){
-		return "{$Model->data[$Model->alias]['name']} ({$Model->data[$Model->alias]['initial_date']} - {$Model->data[$Model->alias]['final_date']})";
+	function friendly_name(&$model){
+		return "{$model->data[$model->alias]['name']} ({$model->data[$model->alias]['initial_date']} - {$model->data[$model->alias]['final_date']})";
 	}
 }
 ?>

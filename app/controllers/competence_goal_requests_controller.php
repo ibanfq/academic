@@ -13,7 +13,7 @@ class CompetenceGoalRequestsController extends AppController {
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
 
         if (!$course) {
-            $this->Session->setFlash('No hay ningún curso activo actualmente.');
+            $this->Session->setFlash('No se ha podido acceder al curso actual.');
             $this->redirect(array('controller' => 'users', 'action' => 'home'));
         }
 
@@ -40,10 +40,14 @@ class CompetenceGoalRequestsController extends AppController {
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
-            'conditions' => array('Course.id' => $course_id)
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
         ));
 
         if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -127,10 +131,14 @@ class CompetenceGoalRequestsController extends AppController {
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
-            'conditions' => array('Course.id' => $course_id)
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
         ));
 
         if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 
@@ -226,10 +234,14 @@ class CompetenceGoalRequestsController extends AppController {
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
             'recursive' => -1,
-            'conditions' => array('Course.id' => $course_id)
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            )
         ));
 
         if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'courses', 'action' => 'index'));
         }
 

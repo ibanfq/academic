@@ -752,7 +752,7 @@
     <div id="legend" style="">
         <div id="legend_left">
             <ul>
-                <?php foreach(Configure::read('app.color_legend.legend_left') as $id => $description): ?>
+                <?php foreach(Configure::read('app.activities.calendar_legend.legend_left') as $id => $description): ?>
                     <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
                 <?php endforeach; ?>
             </ul>
@@ -760,7 +760,7 @@
 
         <div id="legend_right">
             <ul>
-                <?php foreach(Configure::read('app.color_legend.legend_right') as $id => $description): ?>
+                <?php foreach(Configure::read('app.activities.calendar_legend.legend_right') as $id => $description): ?>
                     <li id="<?php echo $id ?>"><?php echo h($description) ?></li>
                 <?php endforeach; ?>
             </ul>
