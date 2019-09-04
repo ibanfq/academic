@@ -3,6 +3,7 @@
 /app/config/core.php
 /app/config/**/app.php
 /app/config/**/app.options.php
+!/app/config/app.php
 /app/config/db.sql
 /app/webroot/img/barcode
 /app/webroot/files/*/*
