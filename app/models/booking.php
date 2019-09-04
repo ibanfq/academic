@@ -62,67 +62,94 @@ class Booking extends AcademicModel {
         $initial_hour = Sanitize::escape($this->data['Booking']['initial_hour']);
         $final_hour = Sanitize::escape($this->data['Booking']['final_hour']);
         $classroom_id = intval($this->data['Booking']['classroom_id']);
-                        
-        $query = "
-            SELECT Booking.id AS id FROM bookings Booking
-            WHERE
-            (
-                (Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}')
-                OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}')
-                OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')
-            )
+
+        $users = array_map(
+            array($db, 'value'),
+            (array) Set::extract("Attendee.{n}.UserBooking.user_id", $this->data)
+        );
+
+        $user_list = empty($users) ? false : implode(',', $users);
+
+        $conditions = array();
+        $conditions[] = "
+            (Booking.initial_hour <= '{$initial_hour}' AND Booking.final_hour > '{$initial_hour}')
+            OR (Booking.initial_hour < '{$final_hour}' AND Booking.final_hour >= '{$final_hour}')
+            OR (Booking.initial_hour >= '{$initial_hour}' AND Booking.final_hour <= '{$final_hour}')
         ";
-        
+
+        if ($user_list) {
+            $user_list_condition = "OR EXISTS (SELECT '' FROM users_booking UserBooking WHERE UserBooking.booking_id = Booking.id AND UserBooking.user_id IN ($user_list))";
+        } else {
+            $user_list_condition = '';
+        }
+
         if ($classroom_id == -1) {
-            $query .= "
-                AND (
-                    (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
-                    OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
-                )
+            $conditions[] = "
+                (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
+                $user_list_condition
             ";
         } else {
-            $query .= "
-                AND (
-                    (Booking.classroom_id = {$classroom_id})
-                    OR (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
-                )
+            $conditions[]= "
+                (Booking.classroom_id = {$classroom_id})
+                OR (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                $user_list_condition
             ";
-
         }
+
         if ((isset($this->data['Booking']['id'])) && ($this->data['Booking']['id'] > 0)) {
             $id = intval($this->data['Booking']['id']);
-            $query .= " AND Booking.id <> {$id}";
+            $conditions[] = "Booking.id <> {$id}";
         }
+
+        $where = '(' . implode(') AND (', $conditions) . ')';
         
+        $query = "SELECT Booking.id AS id FROM bookings Booking WHERE $where LIMIT 1";
+
         $bookings_count = $this->query($query);
+
         if (count($bookings_count) > 0) {
             $this->booking_id_overlaped = $bookings_count[0]['Booking']['id'];
             return false;
         }
 
-        $query = "
-            SELECT Event.id AS id FROM events Event
-            WHERE
-            (
-                (Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}')
-                OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}')
-                OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')
-            )
+        $conditions = array();
+        $conditions[] = "
+            (Event.initial_hour <= '{$initial_hour}' AND Event.final_hour > '{$initial_hour}')
+            OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}')
+            OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')
         ";
 
-        if ($classroom_id == -1) {
-            $query .= "  AND (Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))";
+        if ($user_list) {
+            $user_list_condition = "OR Event.teacher_id IN ($user_list) OR Event.teacher_2_id IN ($user_list)";
         } else {
-            $query .= " AND Event.classroom_id = {$classroom_id}";
+            $user_list_condition = '';
         }
+
+        if ($classroom_id == -1) {
+            $conditions[] = "
+                (Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
+                $user_list_condition
+            ";
+        } else {
+            $conditions[] = "
+                Event.classroom_id = {$classroom_id}
+                $user_list_condition
+            ";
+        }
+
+        $where = '(' . implode(') AND (', $conditions) . ')';
+        
+        $query = "SELECT Event.id AS id FROM events Event WHERE $where LIMIT 1";
         
         $events_count = $this->query($query);
+
         if (count($events_count) > 0) {
             $this->event_id_overlaped= $events_count[0]['Event']['id'];
             return false;
-        } else {
-            return true;
         }
+        
+        return true;
     } 
     
     function beforeValidate(){

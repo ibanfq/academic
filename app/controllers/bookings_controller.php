@@ -132,7 +132,7 @@ class BookingsController extends AppController {
                     "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
                 )
             ),
-            'recursive' => -1
+            'recursive' => 1
         ));
 
         if (!$booking) {
@@ -178,19 +178,38 @@ class BookingsController extends AppController {
 
             $duration = $this->_getDuration($booking_initial_hour, new DateTime($booking['Booking']['final_hour']));
             $final_hour = $this->_addDuration($initial_hour, $duration);
+
+            $this->Booking->create();
+
             $this->data = array(
-                'id'           => null,
-                'institution_id' => Environment::institution('id'),
-                'user_id'      => $this->Auth->user('id'),
-                'user_type'    => $booking['Booking']['user_type'],
-                'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
-                'classroom_id' => $classroom_id,
-                'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
-                'reason'    => $booking['Booking']['reason'],
-                'required_equipment'    => $booking['Booking']['required_equipment'],
-                'show_tv'      => $booking['Booking']['show_tv']
+                'Booking' => array(
+                    'id'           => null,
+                    'institution_id' => Environment::institution('id'),
+                    'user_id'      => $this->Auth->user('id'),
+                    'user_type'    => $booking['Booking']['user_type'],
+                    'initial_hour' => $initial_hour->format('Y-m-d H:i:s'),
+                    'classroom_id' => $classroom_id,
+                    'final_hour'   => $final_hour->format('Y-m-d H:i:s'),
+                    'reason'    => $booking['Booking']['reason'],
+                    'required_equipment'    => $booking['Booking']['required_equipment'],
+                    'show_tv'      => $booking['Booking']['show_tv']
+                )
             );
-            if ($this->Booking->save($this->data)){
+
+            if (!empty($booking['Attendee'])) {
+                $this->data['Attendee'] = array();
+
+                foreach ($booking['Attendee'] as $attendee) {
+                    $this->data['Attendee'][] = array(
+                        'UserBooking' => array(
+                            'booking_id' => $this->Booking->id,
+                            'user_id' => $attendee['UserBooking']['user_id']
+                        )
+                    );
+                }
+            }
+
+            if ($this->Booking->saveAll($this->data)) {
                 array_push($bookings, $this->Booking->read());
                 $this->set('success', true);
                 $this->set('bookings', $bookings);
@@ -441,7 +460,7 @@ class BookingsController extends AppController {
                     "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
                 )
             ),
-            'recursive' => 0
+            'recursive' => 1
         ));
 
         if (!$this->_authorizeEdit($booking)) {

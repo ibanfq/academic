@@ -85,6 +85,27 @@ class Event extends AcademicModel {
         $initial_hour = Sanitize::escape($this->data['Event']['initial_hour']);
         $final_hour = Sanitize::escape($this->data['Event']['final_hour']);
         $classroom_id = intval($this->data['Event']['classroom_id']);
+        $classroom_id = intval($this->data['Event']['classroom_id']);
+        $teacher_id = intval($this->data['Event']['teacher_id']);
+        $teacher_2_id = intval($this->data['Event']['teacher_2_id']);
+
+        $teachers = array();
+
+        if ($teacher_id) {
+            $teachers[]= $teacher_id;
+        }
+
+        if ($teacher_2_id) {
+            $teachers[]= $teacher_2_id;
+        }
+
+        $teacher_list = empty($teachers) ? false : implode(',', $teachers);
+
+        if ($teacher_list) {
+            $teacher_condition = "OR EXISTS (SELECT '' FROM users_booking UserBooking WHERE UserBooking.booking_id = Booking.id AND UserBooking.user_id IN ($teacher_list))";
+        } else {
+            $teacher_condition = '';
+        }
 
         $query = "
             SELECT Booking.id AS id FROM bookings Booking
@@ -95,6 +116,7 @@ class Event extends AcademicModel {
             ) AND (
                 (Booking.classroom_id = {$classroom_id})
                 OR (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                $teacher_condition
             )
         ";
         
@@ -105,16 +127,10 @@ class Event extends AcademicModel {
             return false;
         }
 
-        $teacher_id = intval($this->data['Event']['teacher_id']);
-        $teacher_2_id = intval($this->data['Event']['teacher_2_id']);
-        $teacher_condition = '';
-
-        if ($teacher_id) {
-            $teacher_condition .= " OR Event.teacher_id = {$teacher_id} OR Event.teacher_2_id = {$teacher_id}";
-        }
-
-        if ($teacher_2_id) {
-            $teacher_condition .= " OR Event.teacher_id = {$teacher_2_id} OR Event.teacher_2_id = {$teacher_2_id}";
+        if ($teacher_list) {
+            $teacher_condition = " OR Event.teacher_id IN ($teacher_list) OR Event.teacher_2_id IN ($teacher_list)";
+        } else {
+            $teacher_condition = '';
         }
 
         $query = "
@@ -124,7 +140,8 @@ class Event extends AcademicModel {
                 OR (Event.initial_hour < '{$final_hour}' AND Event.final_hour >= '{$final_hour}')
                 OR (Event.initial_hour >= '{$initial_hour}' AND Event.final_hour <= '{$final_hour}')
             ) AND (
-                Event.classroom_id = {$classroom_id} {$teacher_condition}
+                Event.classroom_id = {$classroom_id}
+                {$teacher_condition}
             )
         ";
 
