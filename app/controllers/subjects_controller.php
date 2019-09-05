@@ -120,9 +120,9 @@ class SubjectsController extends AppController {
         $activities = $this->Subject->query("
             SELECT `Group`.name AS group_name, Activity.name AS activity_name, Activity.duration, Activity.type, IFNULL(SUM(Event.duration), 0) AS scheduled
             FROM activities Activity
-            INNER JOIN `groups` `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
+            INNER JOIN `groups` `Group` ON `Group`.subject_id = Activity.subject_id
             LEFT JOIN events Event ON Event.activity_id = Activity.id AND Event.group_id = `Group`.id
-            WHERE Activity.subject_id = {$id}
+            WHERE Activity.subject_id = {$id} AND (`Group`.type = Activity.type OR Event.id IS NOT NULL)
             GROUP BY Activity.id, Group.id
             ORDER BY type, activity_name, group_name
             ");
