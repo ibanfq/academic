@@ -11,10 +11,17 @@ class Activity extends AcademicModel {
 
     var $validate = array(
         'name' => array(
-            'rule' => 'notEmpty',
-            'required' => true,
-            'message' => 'Debe especificar un nombre para la actividad'
+            'notEmpty' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'Debe especificar un nombre para la actividad'
             ),
+            'unique' => array(
+                'rule' => array('nameMustBeUnique'),
+                'on' => 'create',
+                'message' => 'Ya existe una actividad con este nombre en la asignatura'
+            )
+        ),
         'type' => array(
             'rule' => 'notEmpty',
             'required' => true,
@@ -73,6 +80,17 @@ class Activity extends AcademicModel {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Validates that a combination of name, subject is unique
+     */
+    function nameMustBeUnique($name){
+        $activity = $this->data[$this->alias];
+        return $this->find('count', array('conditions' => array(
+            'Activity.name' => $name,
+            'Activity.subject_id' => $activity['subject_id'],
+        ))) == 0;
     }
     
     function afterSave($created) {

@@ -1028,6 +1028,8 @@ class UsersController extends AppController {
             $has_error = false;
             
             if (($file = file($this->data['User']['file']['tmp_name']))) {
+                set_time_limit(0);
+
                 foreach ($file as $line):
                     $values = array_map('trim', str_getcsv($line, ',', '"', '"'));
                     $args = array(
