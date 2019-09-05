@@ -598,8 +598,11 @@ class UsersController extends AppController {
             $saved_students = 0;
             
             if (($file = file($this->data['User']['file']['tmp_name']))) {
+                set_time_limit(0);
+
                 $subjects = $this->_get_subjects();
                 $imported_subjects = array();
+
                 foreach ($file as $line):
                     $is = $this->_save_student(split("(,[ ]*)", $line), $subjects, $saved_students);
                     $imported_subjects = array_merge($imported_subjects, array_diff($is, $imported_subjects));

@@ -59,7 +59,8 @@ class SubjectsController extends AppController {
             LEFT JOIN (SELECT `groups`.subject_id, `groups`.type, count(id) as total FROM `groups` where `groups`.name NOT LIKE '%no me presento%' GROUP BY `groups`.subject_id, `groups`.type) `Group` ON `Group`.subject_id = Activity.subject_id AND `Group`.type = Activity.type
             LEFT JOIN (SELECT registrations.activity_id, count(registrations.student_id) as total FROM registrations WHERE registrations.group_id <> -1 GROUP BY registrations.activity_id) Registration ON Registration.activity_id = Activity.id
             WHERE Activity.subject_id = {$id}
-            GROUP BY Activity.type ASC, Activity.name ASC
+            GROUP BY Activity.type, Activity.id
+            ORDER BY Activity.type ASC, Activity.name ASC
             ");
 
         $this->set('students_registered_on_subject', $this->Subject->query("
