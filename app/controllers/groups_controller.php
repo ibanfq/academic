@@ -194,7 +194,7 @@ class GroupsController extends AppController {
             ));
 
             if ($activity) {
-                $groups = $this->Group->query("SELECT DISTINCT `Group`.*, scheduled FROM `groups` `Group` LEFT JOIN (SELECT group_id, sum(duration) as scheduled from events WHERE activity_id = {$activity_id} group by group_id) Event ON `Group`.id = Event.group_id WHERE `Group`.subject_id = {$activity['Activity']['subject_id']} AND `Group`.type = '{$activity['Activity']['type']}' AND scheduled IS NULL or scheduled < {$activity['Activity']['duration']} ORDER BY `Group`.name");
+                $groups = $this->Group->query("SELECT DISTINCT `Group`.*, scheduled FROM `groups` `Group` LEFT JOIN (SELECT group_id, sum(duration) as scheduled from events WHERE activity_id = {$activity_id} group by group_id) Event ON `Group`.id = Event.group_id WHERE `Group`.subject_id = {$activity['Activity']['subject_id']} AND `Group`.type = '{$activity['Activity']['type']}' AND (scheduled IS NULL or scheduled < {$activity['Activity']['duration']}) ORDER BY `Group`.name");
 
                 $duration = floatval($activity['Activity']['duration']);
                 foreach ($groups as $key => $group) {
