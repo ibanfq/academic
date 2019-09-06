@@ -49,7 +49,7 @@
 		</dl>
 		<dl>
 			<dt>DNI (sin letra)</dt>
-			<dd><?php echo $user['User']['dni']?></dd>
+			<dd><?php echo TextUtils::maskdni($user['User']['dni'])?></dd>
 		</dl>
 		<dl>
 			<dt>Correo electrónico</dt>

@@ -1,4 +1,7 @@
 <?php
+
+App::import('Lib', 'TextUtils');
+
 class AppController extends Controller {
 	/**
 	 * Application wide controllers
