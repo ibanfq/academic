@@ -861,7 +861,7 @@
                 </div>
                 <?php if (Configure::read('app.event.show_tv')): ?>
                     <div class="input checkbox">
-                        <input type="checkbox" id="ShowTV" name="ShowTV" value="1">
+                        <input type="checkbox" id="ShowTV" name="ShowTV" value="1" checked>
                         <label for="ShowTV">Mostrar en TV</label>
                         <input type="hidden" id="ShowTVDefault" name="ShowTV" value="0">
                     </div>
