@@ -96,7 +96,7 @@
 								<?php for($j = 0;($i < count($students)) && ($j < $max_per_page);$i++, $j++) { ?>
 									<tr style="padding-top:0.1em;height:2.5em">
 										<td style="text-align:center; border:1px #000 solid">
-											<?php echo "{$students[$i]['Student']['dni']} "?>
+											<?php echo TextUtils::maskdni($students[$i]['Student']['dni']); ?>
 										</td>
 										<td style="padding-left:0.2em; border:1px #000 solid">
 											<?php echo "{$students[$i]['Student']['first_name']} {$students[$i]['Student']['last_name']}"?>

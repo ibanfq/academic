@@ -1066,7 +1066,7 @@ class CompetenceController extends AppController {
         foreach ($stats as $row):
             $response .= '"' . str_replace('"', '""', $row['Subject']['code']) . '"';
             $response .= ';"' . str_replace('"', '""', $row['Subject']['name']) . '"';
-            $response .= ';"' . str_replace('"', '""', $row['Student']['dni']) . '"';
+            $response .= ';"' . str_replace('"', '""', TextUtils::maskdni($row['Student']['dni'])) . '"';
             $response .= ';"' . str_replace('"', '""', "{$row['Student']['first_name']} {$row['Student']['last_name']}") . '"';
             $response .= ';"' . number_format($row[0]['total'], 2, ',', '') . '"';
             $response .= "\n";

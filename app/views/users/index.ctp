@@ -85,7 +85,7 @@
 						}
 					?></td>
 					<td><?php echo $user['User']['type'] ?></td>
-					<td><?php echo $user['User']['dni'] ?></td>
+					<td><?php echo TextUtils::maskdni($user['User']['dni']) ?></td>
 					<td><?php echo $user['User']['username'] ?></td>
 				</tr>
 				<?php endforeach; ?>

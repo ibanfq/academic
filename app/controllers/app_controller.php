@@ -1,6 +1,7 @@
 <?php
 
 App::import('Lib', 'Environment');
+App::import('Lib', 'TextUtils');
 
 class AppController extends Controller {
 	/**
