@@ -13,7 +13,7 @@ class CompetenceCriteriaController extends AppController {
         $goal_id = $goal_id === null ? null : intval($goal_id);
 
         if (is_null($goal_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
@@ -23,7 +23,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_goal) {
             $this->Session->setFlash('No se ha podido acceder al objetivo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
@@ -33,7 +33,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceCriterion->CompetenceGoal->Competence->Course->find('first', array(
@@ -46,7 +46,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $auth_is_admin = $this->Auth->user('type') === 'Administrador';
@@ -87,7 +87,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->CompetenceCriterion->Behaviors->attach('Containable');
@@ -104,7 +104,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_criterion) {
             $this->Session->setFlash('No se ha podido acceder al criterio de evaluación.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
@@ -114,7 +114,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_goal) {
             $this->Session->setFlash('No se ha podido acceder al objetivo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
@@ -124,7 +124,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceCriterion->CompetenceGoal->Competence->Course->find('first', array(
@@ -137,7 +137,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $user_id = $this->Auth->user('id');
@@ -167,7 +167,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$auth_is_admin && !$auth_is_coordinator && !$auth_is_teacher && !$auth_is_student) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         // Sort subjects
@@ -204,7 +204,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($subject_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
@@ -233,7 +233,7 @@ class CompetenceCriteriaController extends AppController {
                 $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
             }
 
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('subject', $subject);
@@ -245,7 +245,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->CompetenceCriterion->Behaviors->attach('Containable');
@@ -262,7 +262,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_criterion) {
             $this->Session->setFlash('No se ha podido acceder al criterio de evaluación.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
@@ -272,7 +272,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_goal) {
             $this->Session->setFlash('No se ha podido acceder al objetivo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
@@ -282,7 +282,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceCriterion->CompetenceGoal->Competence->Course->find('first', array(
@@ -295,7 +295,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $coordinator_ids = array_merge(
@@ -307,7 +307,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$auth_is_admin && !$auth_is_coordinator) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         // Sort subjects
@@ -356,7 +356,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($subject_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
@@ -385,7 +385,7 @@ class CompetenceCriteriaController extends AppController {
                 $this->redirect(array('controller' => 'competence', 'action' => 'by_subject', $subject_id));
             }
 
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('subject', $subject);
@@ -403,7 +403,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->CompetenceCriterion->Behaviors->attach('Containable');
@@ -419,7 +419,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_criterion) {
             $this->Session->setFlash('No se ha podido acceder al criterio de evaluación.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
@@ -429,7 +429,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_goal) {
             $this->Session->setFlash('No se ha podido acceder al objetivo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
@@ -439,7 +439,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceCriterion->CompetenceGoal->Competence->Course->find('first', array(
@@ -452,7 +452,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $coordinator_ids = array_merge(
@@ -468,7 +468,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$auth_is_admin && !$auth_is_coordinator && !$auth_is_teacher) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_criterion_rubrics_values = Set::combine(
@@ -608,13 +608,13 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($subject_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
 
         if (!$subject) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('subject', $subject);
@@ -643,7 +643,7 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_criterion = $this->CompetenceCriterion->find('first', array(
@@ -653,7 +653,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_criterion) {
             $this->Session->setFlash('No se ha podido acceder al criterio de evaluación.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_goal = $this->CompetenceCriterion->CompetenceGoal->find('first', array(
@@ -663,7 +663,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence_goal) {
             $this->Session->setFlash('No se ha podido acceder al objetivo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->CompetenceCriterion->CompetenceGoal->Competence->find('first', array(
@@ -673,7 +673,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceCriterion->CompetenceGoal->Competence->Course->find('first', array(
@@ -686,7 +686,7 @@ class CompetenceCriteriaController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->CompetenceCriterion->delete($id);
@@ -700,14 +700,14 @@ class CompetenceCriteriaController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($subject_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->_getSubjectByCriterion($subject_id, $id);
 
         if (!$subject) {
             $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_criterion = $this->CompetenceCriterion->find('first', array(

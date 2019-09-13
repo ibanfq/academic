@@ -3,10 +3,10 @@
         <?php if ($media['visible']): ?>
             <div class="media-item" data-media-type="<?php echo htmlspecialchars($media['type']) ?>" data-media-duration="<?php echo $media['duration'] ?: '' ?>">
                 <?php if ($media['type'] === 'Imagen'): ?>
-                    <img src="<?php echo htmlspecialchars(PATH.'/'.$media['src']) ?>">
+                    <img src="<?php echo htmlspecialchars('/'.$media['src']) ?>">
                 <?php elseif ($media['type'] === 'Video'): ?>
                     <video muted>
-                        <source class="video-source" src="<?php echo htmlspecialchars(PATH.'/'.$media['src']) ?>" type="<?php echo htmlspecialchars($media['mime_type']) ?>" />
+                        <source class="video-source" src="<?php echo htmlspecialchars('/'.$media['src']) ?>" type="<?php echo htmlspecialchars($media['mime_type']) ?>" />
                         Tu navegador no soporta la visualización de videos.
                     </video>
                 <?php elseif ($media['type'] === 'Youtube'): ?>

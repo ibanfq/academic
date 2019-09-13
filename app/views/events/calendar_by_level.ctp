@@ -1,6 +1,3 @@
-<?php $degrees = Configure::read('app.degrees') ?>
-<?php $degreeEnabled = !empty($degrees); ?>
-
 <div id="mobile-query" class="visible-block-phone-portrait"></div>
 
 <script type="text/javascript">
@@ -47,7 +44,7 @@ $(document).ready(function() {
 		    eventClick: function(event, jsEvent, view) {
 				if (event.className != 'booking') {
 					if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?')) {
-						window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+						window.open('<?php echo Environment::getBaseUrl() ?>/attendance_registers/print_attendance_file/' + event.id);
 					}
 				}
 		    },
@@ -60,9 +57,9 @@ $(document).ready(function() {
 					var id = event.id.match(/\d+/);
 					var url;
 					if (event.className == 'booking')
-						url = "<?php echo PATH ?>/bookings/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
 					else
-						url = "<?php echo PATH ?>/events/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
 					
 					var eventDetails = $('#EventDetails');
 					if (eventDetails.data('eventId') !== event.id) {
@@ -120,25 +117,23 @@ $(document).ready(function() {
 					else
 						$selected = "";
 				?>
-				<option value="<?php echo h($course['Course']['id']) ?>" <?php echo $selected ?>><?php echo h($course['Course']['name']) ?></option>
+				<option value="<?php echo h($course['Course']['id']) ?>" <?php echo $selected ?>><?php echo h($course['Degree']['name']) ?></option>
 			<?php endforeach; ?>
 		</select>
 	</dd>
 </dl>
-<?php if ($degreeEnabled): ?>
-	<dl>
-		<dt>Titulación</dt>
-		<dd>
-			<select id="degree" name="degree">
-				<option value="" selected>Seleccione una titulación</option>
-				<?php foreach ($degrees as $degree => $degreeName) : ?>
-					<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
-				<?php endforeach; ?>
-				<option value="all" selected>Todas las titulaciones</option>
-			</select>
-		</dd>
-	</dl>
-<?php endif; ?>
+<dl>
+	<dt>Titulación</dt>
+	<dd>
+		<select id="degree" name="degree">
+			<option value="" selected>Seleccione una titulación</option>
+			<?php foreach ($degrees as $degree => $degreeName) : ?>
+				<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
+			<?php endforeach; ?>
+			<option value="all" selected>Todas las titulaciones</option>
+		</select>
+	</dd>
+</dl>
 <dl>
 	<dt>Curso</dt>
 	<dd>
@@ -231,8 +226,8 @@ $(document).ready(function() {
 			var level = $('#level');
 			if (level.val()) {
 				var url = degree.length
-					? "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
-					: "<?php echo PATH ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/booking:" + encodeURIComponent(booking.val())
+					? "<?php echo Environment::getBaseUrl() ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
+					: "<?php echo Environment::getBaseUrl() ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/booking:" + encodeURIComponent(booking.val())
 				;
 				$.ajax({
 					cache: false,

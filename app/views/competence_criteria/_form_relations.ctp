@@ -87,7 +87,7 @@
             </thead>
             <tfoot>
                 <?php if ($auth_is_admin): ?>
-                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteSubjectRow('<?php echo PATH ?>/subjects/find_subjects_by_name?course_id=<?php echo urlencode($competence['Competence']['course_id']) ?>')" title="Haga click para añadir una asignatura">Añadir asignatura</a></td></tr>
+                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteSubjectRow('<?php echo Environment::getBaseUrl() ?>/subjects/find_subjects_by_name?course_id=<?php echo urlencode($competence['Competence']['course_id']) ?>')" title="Haga click para añadir una asignatura">Añadir asignatura</a></td></tr>
                 <?php endif; ?>
             </tfoot>
             <tbody id="subjects">
@@ -133,7 +133,7 @@
             </thead>
             <tfoot>
                 <?php if ($auth_is_admin || $auth_is_coordinator): ?>
-                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteTeacherRow('<?php echo PATH ?>/users/find_teachers_by_name')" title="Haga click para añadir una asignatura">Añadir profesor</a></td></tr>
+                    <tr><td colspan="2"><a href="javascript:;" onclick="addAutocompleteTeacherRow('<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name')" title="Haga click para añadir una asignatura">Añadir profesor</a></td></tr>
                 <?php endif; ?>
             </tfoot>
             <tbody id="teachers">

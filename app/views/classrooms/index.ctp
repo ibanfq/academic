@@ -1,22 +1,25 @@
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
 
 <h1>Aulas</h1>
 
-<div class="actions">
-	<ul>
-		<?php if ($auth->user('type') == "Administrador") {?>
-			<li><?php echo $html->link('Crear aula', array('action' => 'add')) ?></li>
-		<?php } ?>
-		
-		<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")): ?>
-			<li><?php echo $html->link('Imprimir hoja de firmas', array('action' => 'get_sign_file')) ?></li>
-			<li><?php echo $html->link('Imprimir agenda diaria', array('action' => 'get_bookings')) ?></li>
-			<li><?php echo $html->link('Monitores TV', array('controller' => 'monitors', 'action' => 'index')) ?></li>
-		<?php endif; ?>
-	</ul>
-</div>
+<?php if ($auth->user('type') == "Administrador" || ($auth->user('type') != "Estudiante" && $auth->user('type') != "Profesor")): ?>
+	<div class="actions">
+		<ul>
+			<?php if ($auth->user('type') == "Administrador"): ?>
+				<li><?php echo $html->link('Crear aula', array('action' => 'add')) ?></li>
+			<?php endif; ?>
+			
+			<?php if (($auth->user('type') != "Estudiante") && ($auth->user('type') != "Profesor")): ?>
+				<li><?php echo $html->link('Imprimir hoja de firmas', array('action' => 'get_sign_file')) ?></li>
+				<li><?php echo $html->link('Imprimir agenda diaria', array('action' => 'get_bookings')) ?></li>
+				<li><?php echo $html->link('Monitores TV', array('controller' => 'monitors', 'action' => 'index')) ?></li>
+			<?php endif; ?>
+		</ul>
+	</div>
+<?php endif; ?>
 
-<div class="view">
+<div class="<?php if ($auth->user('type') == "Administrador" || ($auth->user('type') != "Estudiante" && $auth->user('type') != "Profesor")): ?>view<?php endif; ?>">
 	<?php
 		echo $form->create('Classroom', array('action' => 'index', 'type' => 'get'))
 	?>

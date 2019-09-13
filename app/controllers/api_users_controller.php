@@ -34,6 +34,12 @@ class ApiUsersController extends AppController {
     
     function me()
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $responseData = $this->Auth->user();
         $username = $responseData['User']['username'];
         $beta_testers = (array) Configure::read('app.beta.testers');
@@ -47,6 +53,12 @@ class ApiUsersController extends AppController {
 
     function login()
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $issuer    = Configure::read('app.issuer');
         $issuedAt  = time();
         $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
@@ -85,15 +97,19 @@ class ApiUsersController extends AppController {
     
     function index()
     {
-        App::import('Core', 'Sanitize');;
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
+        App::import('Core', 'Sanitize');
+        $db = $this->User->getDataSource();
         
         $joins_for_where = '';
         $where = array();
 
-        if (Environment::institution('id')) {
-            $db = $this->User->getDataSource();
-            $joins_for_where .= " INNER JOIN institutions_users InstitutionUser ON InstitutionUser.user_id = User.id AND InstitutionUser.institution_id = {$db->value(Environment::institution('id'))} AND InstitutionUser.active";
-        }
+        $joins_for_where .= " INNER JOIN users_institutions UserInstitution ON UserInstitution.user_id = User.id AND UserInstitution.institution_id = {$db->value(Environment::institution('id'))} AND UserInstitution.active";
 
         $limit = $this->Api->getParameter('limit', array('integer', '>0', '<=100'), 100);
         $offset = $this->Api->getParameter('offset', array('integer', '>=0'), 0);
@@ -129,5 +145,4 @@ class ApiUsersController extends AppController {
 
         $this->Api->respond($this);
     }
-    
 }

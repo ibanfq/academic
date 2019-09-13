@@ -52,7 +52,7 @@ class Booking extends AcademicModel {
         );
     
     function bookingDontOverlap($initial_hour) {
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
 
         $db = $this->getDataSource();
 

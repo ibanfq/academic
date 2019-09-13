@@ -21,7 +21,13 @@ class ApiAttendanceRegistersController extends AppController {
         return true;
     }
     
-    function view($id){
+    function view($id) {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+        
         $id = $id === null ? null : intval($id);
         $this->_view($id);
         
@@ -29,6 +35,12 @@ class ApiAttendanceRegistersController extends AppController {
     }
     
     function add(){
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $event_id = $this->Api->getParameter('Event.id', array('integer'));
         $event_id = $this->Api->getParameter('AttendanceRegister.event_id', array('required', 'integer'), $event_id);
         
@@ -40,6 +52,12 @@ class ApiAttendanceRegistersController extends AppController {
     }
     
     function edit($id){
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $id = $id === null ? null : intval($id);
         $status = $this->Api->getParameter('AttendanceRegister.status', array('required'));
         

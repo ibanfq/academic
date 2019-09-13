@@ -1,8 +1,9 @@
 <!-- File: /app/views/monitors/new.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Monitores', '/monitors'); ?>
-<?php $html->addCrumb($monitor['Monitor']['name'], "/monitors/view/{$monitor['Monitor']['id']}"); ?>
-<?php $html->addCrumb('Añadir contenido multimedia', "/monitors/add_media/{$monitor['Monitor']['id']}"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('controller' => 'classrooms', 'action' => 'index')); ?>
+<?php $html->addCrumb('Monitores', array('action' => 'index')); ?>
+<?php $html->addCrumb($monitor['Monitor']['name'], array('action' => 'view', $monitor['Monitor']['id'])); ?>
+<?php $html->addCrumb('Añadir contenido multimedia', array('action' => 'add_media', $monitor['Monitor']['id'])); ?>
 
 <h1>Añadir contenido multimedia</h1>
 <?php

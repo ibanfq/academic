@@ -123,12 +123,12 @@
 			}
 		}
 
-		//$('#AttendanceRegisterId').autocomplete("<?php echo PATH ?>/attendance_registers/find_by_code", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterId").val(item[1]); });
+		//$('#AttendanceRegisterId').autocomplete("<?php echo Environment::getBaseUrl() ?>/attendance_registers/find_by_code", {formatItem: formatItem}).result(function(event, item){ $("#AttendanceRegisterId").val(item[1]); });
 
-		$('#activity_name').autocomplete("<?php echo PATH ?>/activities/find_activities_by_name", {formatItem: makeFormatItem('No existe ninguna actividad con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterActivityId").val(item[1]); });
+		$('#activity_name').autocomplete("<?php echo Environment::getBaseUrl() ?>/activities/find_activities_by_name", {formatItem: makeFormatItem('No existe ninguna actividad con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterActivityId").val(item[1]); });
 
-	  $("#teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: makeFormatItem('No existe ningún profesor con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterTeacherId").val(item[1]); });
+	  $("#teacher_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: makeFormatItem('No existe ningún profesor con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterTeacherId").val(item[1]); });
 
-		//$("#student_name").autocomplete("<?php echo PATH ?>/users/find_students_by_name", {formatItem: makeFormatItem('No existe ningún alumno con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterStudentId").val(item[1]); });
+		//$("#student_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_students_by_name", {formatItem: makeFormatItem('No existe ningún alumno con este nombre.')}).result(function(event, item){ $("#AttendanceRegisterStudentId").val(item[1]); });
 	});
 </script>

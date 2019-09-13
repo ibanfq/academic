@@ -64,7 +64,7 @@
         }
 
         $("input#teacher")
-            .autocomplete("<?php echo PATH ?>/users/find_teachers_by_competence_goal_and_name/<?php echo rawurlencode($competence_goal['CompetenceGoal']['id']) ?>", {formatItem: formatItem})
+            .autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_competence_goal_and_name/<?php echo rawurlencode($competence_goal['CompetenceGoal']['id']) ?>", {formatItem: formatItem})
             .result(function(event, item) {
                 var teacher_id = item[1];
                 $("input#CompetenceGoalRequestTeacherId").val(teacher_id);

@@ -4,13 +4,23 @@ App::import('model', 'academicModel');
 
 class Course extends AcademicModel {
     var $name = 'Course';
-    var $actsAs = array('Course');
     var $hasMany = array(
         'Subject' => array(
             'className' => 'Subject',
             'order' => 'Subject.code ASC',
             'dependent' => true
         )
+    );
+    var $belongsTo = array(
+        'AcademicYear' => array(
+            'className' => 'AcademicYear'
+        ),
+        'Institution' => array(
+            'className' => 'Institution'
+        ),
+        'Degree' => array(
+            'className' => 'Degree'
+        ),
     );
     var $validate = array(
         'institution_id' => array(
@@ -48,7 +58,7 @@ class Course extends AcademicModel {
     );
     
     function courseOverlap($initial_date) {
-    	App::import('Core', 'Sanitize');;
+    	App::import('Core', 'Sanitize');
         $institution_id = Sanitize::escape($this->data[$this->alias]['institution_id']);
         $initial_date = Sanitize::escape($this->data[$this->alias]['initial_date']);
         $final_date = Sanitize::escape($this->data[$this->alias]['final_date']);
@@ -80,7 +90,7 @@ class Course extends AcademicModel {
      */
     function latestFinalDate() {
         App::import('Lib', 'Environment');
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         $institution_id = Sanitize::escape(Environment::institution('id'));
         $course = $this->query(
             sprintf(
@@ -142,32 +152,44 @@ class Course extends AcademicModel {
             $this->data['Course']['initial_date'] = $thist->dateFormatInternal($this->data['Course']['initial_date']);
     }
     
-    function current() {
+    function current($options = array()) {
         App::import('Lib', 'Environment');
         $today = date("Y-m-d");
         
-        $course = $this->find(
-            'first',
-            array(
+        $joins = array();
+        $conditions = array();
+
+        if (Environment::institution('id')) {
+            $conditions['Course.institution_id'] = Environment::institution('id');
+        }
+        $conditions['Course.initial_date <='] = $today;
+        $conditions['Course.final_date >='] = $today;
+
+        if (! empty($options['user_id'])) {
+            $joins[] = array(
+                'table' => 'users_institutions',
+                'alias' => 'UserInstitution',
+                'type' => 'INNER',
                 'conditions' => array(
-                    'Course.institution_id' => Environment::institution('id'),
-                    'Course.initial_date <=' => $today,
-                    'Course.final_date >=' => $today,
-                ),
+                    'UserInstitution.user_id' =>  $options['user_id'],
+                    'UserInstitution.institution_id = Course.institution_id'
+                )
+            );
+        }
+
+        $course = $this->find(
+            'all',
+            array(
+                'joins' => $joins,
+                'conditions' => $conditions,
                 'recursive' => -1
             )
         );
 
         if ($course == null) {
-            $course = $this->find(
-                'first',
-                array(
-                    'conditions' => array('Course.institution_id' => Environment::institution('id')),
-                    'order' => array('Course.initial_date desc')
-                )
-            );
+            return array();
         }
         
-        return $course['Course'];
+        return Set::extract($course, '{n}.Course');
     }
 }

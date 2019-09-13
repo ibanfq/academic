@@ -1,10 +1,7 @@
 <!-- File: /app/views/courses/view.ctp -->
 
-<?php $degrees = Configure::read('app.degrees') ?>
-<?php $degreeEnabled = !empty($degrees); ?>
-
 <?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb("{$course['Course']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
 <?php if ($subject): ?>
     <?php $html->addCrumb('Asignaturas', "/courses/view/{$course['Course']['id']}/ref:competence"); ?>

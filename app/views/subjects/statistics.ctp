@@ -1,11 +1,11 @@
-<?php
-	$this->Html->addCrumb('Cursos', '/courses');
-	$this->Html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}");
-	$this->Html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}");
-	$this->Html->addCrumb("Estadísticas asignatura", "/subjects/statistics/{$subject['Subject']['id']}");
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$degree['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Course']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas asignatura", Environment::getBaseUrl() . "/subjects/statistics/{$subject['Subject']['id']}"); ?>
 
-	echo $this->Html->css('subjects', null, array('inline' => false));
-?>
+<?php echo $this->Html->css('subjects', null, array('inline' => false)); ?>
 
 <h1>Estadísticas asignatura</h1>
 <div class="view">

@@ -9,7 +9,7 @@
       $('#stats').html("");
     else {
       $.ajax({
-        url: "<?php echo PATH ?>/users/teacher_stats_details/<?php echo $user['User']['id']?>", 
+        url: "<?php echo Environment::getBaseUrl() ?>/users/teacher_stats_details/<?php echo $user['User']['id']?>", 
         data: "course_id=" + $('#course_id').val(), 
         success: function(html){
           $('#stats').html(html);
@@ -36,7 +36,7 @@
         <select id="course_id">
           <option value='' selected>Seleccione un curso</option>
           <?php foreach($courses as $course): ?>
-            <option value="<?php echo $course["Course"]["id"] ?>"><?php echo $course['Course']['name'] ?></option>
+            <option value="<?php echo $course["Course"]["id"] ?>"><?php echo $course['Degree']['name'] ?></option>
           <?php endforeach; ?>
         </select>
       </dd>

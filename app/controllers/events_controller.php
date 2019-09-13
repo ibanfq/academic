@@ -5,7 +5,7 @@ App::import('lib', 'Environment');
 class EventsController extends AppController {
     var $name = 'Events';
     var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
-    var $helpers = array('Ajax', 'activityHelper', 'Text');
+    var $helpers = array('Ajax', 'ModelHelper', 'activityHelper', 'Text');
     
     function schedule($course_id) {
         $course_id = $course_id === null ? null : intval($course_id);
@@ -19,7 +19,7 @@ class EventsController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('section', 'courses');
@@ -196,13 +196,13 @@ class EventsController extends AppController {
         $teacher = $this->User->find('first', array(
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),
@@ -620,13 +620,13 @@ class EventsController extends AppController {
                 $teacher = $this->User->find('first', array(
                     'joins' => array(
                         array(
-                            'table' => 'institutions_users',
-                            'alias' => 'InstitutionUser',
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
                             'type' => 'INNER',
                             'conditions' => array(
-                                'InstitutionUser.user_id = User.id',
-                                'InstitutionUser.institution_id' => Environment::institution('id'),
-                                'InstitutionUser.active'
+                                'UserInstitution.user_id = User.id',
+                                'UserInstitution.institution_id' => Environment::institution('id'),
+                                'UserInstitution.active'
                             )
                         )
                     ),
@@ -649,13 +649,13 @@ class EventsController extends AppController {
             $teacher2 = $this->User->find('first', array(
                 'joins' => array(
                     array(
-                        'table' => 'institutions_users',
-                        'alias' => 'InstitutionUser',
+                        'table' => 'users_institutions',
+                        'alias' => 'UserInstitution',
                         'type' => 'INNER',
                         'conditions' => array(
-                            'InstitutionUser.user_id = User.id',
-                            'InstitutionUser.institution_id' => Environment::institution('id'),
-                            'InstitutionUser.active'
+                            'UserInstitution.user_id = User.id',
+                            'UserInstitution.institution_id' => Environment::institution('id'),
+                            'UserInstitution.active'
                         )
                     )
                 ),
@@ -930,7 +930,7 @@ class EventsController extends AppController {
             )
         );
         $this->set('courses', $courses);
-        $this->set('current_course', $this->Event->Activity->Subject->Course->current());
+        $this->set('current_academic_year', $this->Event->Activity->Subject->Course->AcademicYear->current());
     }
     
     function calendar_by_level() {
@@ -943,18 +943,23 @@ class EventsController extends AppController {
             )
         );
         $this->set('courses', $courses);
-        $this->set('current_course', $this->Event->Activity->Subject->Course->current());
+        $this->set('current_academic_year', $this->Event->Activity->Subject->Course->AcademicYear->current());
     }
 
     function calendar_by_teacher($id = null) {
         $id = $id === null ? null : intval($id);
-        $teacher = $this->Event->Teacher->find(
-            'first',
-            array(
-                'conditions' => array('Teacher.id' => $id),
-                'recursive' => -1
-            )
-        );
+        $teacher = null;
+
+        if ($id) {
+            $teacher = $this->Event->Teacher->find(
+                'first',
+                array(
+                    'conditions' => array('Teacher.id' => $id),
+                    'recursive' => -1
+                )
+            );
+        }
+
         $this->set('teacher', $teacher);
         $this->layout = 'public';
     }

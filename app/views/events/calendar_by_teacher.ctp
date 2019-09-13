@@ -50,7 +50,7 @@ $(document).ready(function() {
 		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
 		    eventClick: function(event, jsEvent, view) {
 			    if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
-				  window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+				  window.open('<?php echo Environment::getBaseUrl() ?>/attendance_registers/print_attendance_file/' + event.id);
 		    },
 		<?php }} ?>
 		eventRender: function(event, element) {
@@ -61,9 +61,9 @@ $(document).ready(function() {
 					var id = event.id.match(/\d+/);
 					var url;
 					if (event.className == 'booking')
-						url = "<?php echo PATH ?>/bookings/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
 					else
-						url = "<?php echo PATH ?>/events/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
 					
 					var eventDetails = $('#EventDetails');
 					if (eventDetails.data('eventId') !== event.id) {
@@ -105,7 +105,7 @@ $(document).ready(function() {
 		<?php if ($teacher): ?>
 			$.ajax({
 				type: "GET",
-				url: "<?php echo PATH ?>/events/get_by_teacher/" + <?php echo intval($teacher['Teacher']['id']); ?>,
+				url: "<?php echo Environment::getBaseUrl() ?>/events/get_by_teacher/" + <?php echo intval($teacher['Teacher']['id']); ?>,
 				dataType: "script"
 			});
 		<?php endif; ?>
@@ -124,7 +124,7 @@ $(document).ready(function() {
 		<dt>Profesor</dt>
 		<dd><input type="text" id="teacher_name" name="TeacherName" onchange="$('#teacher_name').flushCache()"/></dd>
 		<script type='text/javascript'>
-			$('#teacher_name').autocomplete('<?php echo PATH ?>/users/find_teachers_by_name/',
+			$('#teacher_name').autocomplete('<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name/',
 			{
 				formatItem: function (row)
 					{
@@ -141,7 +141,7 @@ $(document).ready(function() {
 				
 					$.ajax({
 						type: "GET",
-						url: "<?php echo PATH ?>/events/get_by_teacher/" + item[1],
+						url: "<?php echo Environment::getBaseUrl() ?>/events/get_by_teacher/" + item[1],
 						dataType: "script"
 					})
 				}

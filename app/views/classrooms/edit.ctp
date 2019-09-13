@@ -1,7 +1,8 @@
 <!-- File: /app/views/classrooms/new.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb($classroom['Classroom']['name'], "/classrooms/view/{$classroom['Classroom']['id']}"); ?>
-<?php $html->addCrumb('Modificar aula', "/classrooms/edit/{$classroom['Classroom']['id']}"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
+<?php $html->addCrumb($classroom['Classroom']['name'], array('action' => 'view', $classroom['Classroom']['id'])); ?>
+<?php $html->addCrumb('Modificar aula', array('action' => 'edit', $classroom['Classroom']['id'])); ?>
 
 <h1>Modificar aula</h1>
 <?php

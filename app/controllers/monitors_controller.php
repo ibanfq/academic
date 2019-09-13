@@ -2,7 +2,7 @@
 class MonitorsController extends AppController {
     var $name = 'Monitors';
     var $paginate = array('limit' => 10, 'order' => array('Monitor.name' => 'asc'), 'recursive' => 0);
-    var $helpers = array('activityHelper', 'Text');
+    var $helpers = array('ModelHelper', 'activityHelper', 'Text');
     var $fields_fillable = array('Monitor', 'Classroom', 'MonitorMedia');
     var $fields_guarded = array(
         'Monitor' => ['id', 'institution_id', 'created', 'modified'],
@@ -10,7 +10,7 @@ class MonitorsController extends AppController {
     );
     
     function index(){
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         if (isset($this->params['url']['q'])) {
             $q = Sanitize::escape($this->params['url']['q']);
         } elseif (isset($this->passedArgs['q'])) {

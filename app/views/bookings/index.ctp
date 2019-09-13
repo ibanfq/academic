@@ -1,4 +1,6 @@
-<?php $html->addCrumb('Reservas', '/bookings'); ?>
+<?php $html->addCrumb('Reservas', '/institutions/ref:bookings'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
+
 <?php $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking'); ?>
 <?php $isTeacher = $auth->user('type') == 'Profesor'; ?>
 
@@ -19,7 +21,7 @@
         $.ajax({
             cache: false,
             type: "POST",
-            url: "<?php echo PATH ?>/bookings/copy/" + id + "/initial_hour:" + toEventDateString(start, '-') + "/classroom:" + $('#classrooms').val(),
+            url: "<?php echo Environment::getBaseUrl() ?>/bookings/copy/" + id + "/initial_hour:" + toEventDateString(start, '-') + "/classroom:" + $('#classrooms').val(),
             dataType: 'script'
         });
     }
@@ -34,7 +36,7 @@
             $.ajax({
                 cache: false,
                 type: "POST",
-                url: "<?php echo PATH?>/bookings/delete/" + id,
+                url: "<?php echo Environment::getBaseUrl() ?>/bookings/delete/" + id,
                 dataType: 'script'
             });
             return true;
@@ -84,7 +86,7 @@
             cache: false,
             type: "POST",
             data: {'data[Booking][reason]': $('#BookingReason').val(), 'data[Booking][required_equipment]': $('#BookingRequiredEquipment').val(), 'data[Booking][initial_hour]': initial_date, 'data[Booking][final_hour]': final_date, 'data[Booking][user_type]': $('#BookingUserType').val(), 'data[Booking][classroom_id]': $('#AllClassrooms').attr('checked')? -1 : $('#classrooms').val()<?php if (Configure::read('app.booking.show_tv')): ?>, 'data[Booking][show_tv]': $('#ShowTV').attr('checked')? '1' : '0'<?php endif; ?>},
-            url: "<?php echo PATH ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
+            url: "<?php echo Environment::getBaseUrl() ?>/bookings/add/" + $('#BookingFinishedAt').val() + "/" + $('#Frequency').val(),
             asynchronous: false,
             dataType: 'script',
             success: function(data){
@@ -100,7 +102,7 @@
         $.ajax({
             cache: false,
             type: "GET",
-            url: "<?php echo PATH ?>/" + model + "/" + action + "/" + id, 
+            url: "<?php echo Environment::getBaseUrl() ?>/" + model + "/" + action + "/" + id, 
             success: function(data) {
                 if (data == "false")
                     alert("Usted no tiene permisos para editar esta reserva");
@@ -344,7 +346,7 @@
                     $.ajax({
                         cache: false,
                         type: "GET",
-                        url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
+                        url: "<?php echo Environment::getBaseUrl() ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta + "/1",
                         success: function(data) {
                             if (data == "notAllowed") {
                                 revertFunc();
@@ -414,7 +416,7 @@
                     $.ajax({
                         cache: false,
                         type: "GET",
-                        url: "<?php echo PATH ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta,
+                        url: "<?php echo Environment::getBaseUrl() ?>/bookings/update/" + id + "/" + dayDelta + "/" + minuteDelta,
                         success: function(data) {
                             if (data == "notAllowed") {
                                 revertFunc();
@@ -483,9 +485,9 @@
                         var id = event.id.match(/\d+/);
                         var url;
                         if (event.className == 'booking') {
-                            url = "<?php echo PATH ?>/bookings/view/";
+                            url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
                         } else {
-                            url = "<?php echo PATH ?>/events/view/";
+                            url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
                         }
 
                         var eventDetails = $('#EventDetails');
@@ -769,14 +771,14 @@
         $.ajax({
             cache: false,
             type: "GET",
-            url: "<?php echo PATH ?>/events/get/" + $('#classrooms').val(),
+            url: "<?php echo Environment::getBaseUrl() ?>/events/get/" + $('#classrooms').val(),
             dataType: "script"
         });
 
         $.ajax({
             cache: false,
             type: "GET",
-            url: "<?php echo PATH ?>/bookings/get/" + $('#classrooms').val(),
+            url: "<?php echo Environment::getBaseUrl() ?>/bookings/get/" + $('#classrooms').val(),
             dataType: "script"
         });
     });

@@ -60,7 +60,7 @@ class User extends AppModel {
         )
     );
 
-    function __construct() {
+    function __construct($id = false, $table = null, $ds = null) {
         $db = $this->getDataSource();
 
         if (Environment::institution('id')) {
@@ -82,7 +82,7 @@ class User extends AppModel {
             ");
         }
 
-        parent::__construct();
+        parent::__construct($id, $table, $ds);
     }
     
     function getTypeOptions() {
@@ -120,13 +120,13 @@ class User extends AppModel {
         return $this->find('first', array(
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),
@@ -148,9 +148,11 @@ class User extends AppModel {
 
         $select = 'DISTINCT Event.id, Event.parent_id, Event.initial_hour, Event.final_hour, Event.owner_id, Event.activity_id, Activity.name, Activity.type, Event.group_id, `Group`.name, Subject.id, Subject.coordinator_id, Subject.practice_responsible_id, Subject.acronym';
         $from = 'events Event';
-        $conditions = [
-            "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
-        ];
+        $conditions = array();
+        
+        if (Environment::institution('id')) {
+            $conditions[] = "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})";
+        }
 
         switch($this->data['User']['type']){
             case "Estudiante":
@@ -202,21 +204,36 @@ class User extends AppModel {
             case "Estudiante":
                 $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'Estudiante')";
                 break;
+            case "Administrador":
+            $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'No-estudiante' OR Booking.user_type = 'Administrador' OR Booking.user_type = 'Profesor')";
+                break;
             default:
-                App::import('Core', 'Sanitize');;
+                App::import('Core', 'Sanitize');
                 $userType = Sanitize::escape($userType);
                 $whereUserType = "(Booking.user_type = 'Todos' OR Booking.user_type = 'No-estudiante' OR Booking.user_type = '$userType')";
         }
-        return $this->query("
-            SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
-            FROM bookings Booking
-            LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id
-            WHERE
-            (
-                (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
-                OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
-            ) AND ($whereUserType OR UserBooking.user_id = {$id})
-        ");
+
+        if (Environment::institution('id')) {
+            $bookings = $this->query("
+                SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
+                FROM bookings Booking
+                LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id
+                WHERE
+                (
+                    (Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))})
+                    OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}))
+                ) AND ($whereUserType OR UserBooking.user_id = {$id})
+            ");
+        } else {
+            $bookings = $this->query("
+                SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
+                FROM bookings Booking
+                LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id
+                WHERE $whereUserType OR UserBooking.user_id = {$id}
+            ");
+        }
+
+        return $bookings;
     }
         
     function can_send_alerts($user_id, $activity_id, $group_id) {

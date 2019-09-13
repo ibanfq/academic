@@ -39,10 +39,10 @@
   <?php if (isset($auth) && (($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje") || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking']))): ?>
   <p class="actions">
     <?php if ($numAttendees): ?>
-      <a class="button button-action" href="<?php echo PATH ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
+      <a class="button button-action" href="<?php echo Environment::getBaseUrl() ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
     <?php endif ?>
     <?php if ($editable): ?>
-      <a class="button button-action" href="<?php echo PATH ?>/bookings/edit/<?php echo $booking['Booking']['id'] ?>">Editar</a>
+      <a class="button button-action" href="<?php echo Environment::getBaseUrl() ?>/bookings/edit/<?php echo $booking['Booking']['id'] ?>">Editar</a>
     <?php endif ?>
     <?php if ($deletable): ?>
       <?php if ($editable): ?>o<?php endif ?>

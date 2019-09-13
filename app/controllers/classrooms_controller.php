@@ -4,7 +4,7 @@ class ClassroomsController extends AppController {
     var $paginate = array('limit' => 10, 'order' => array('Classroom.name' => 'asc'), 'recursive' => 0);
     
     function index(){
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         if (isset($this->params['url']['q']))
             $q = Sanitize::escape($this->params['url']['q']);
         else {
@@ -82,7 +82,7 @@ class ClassroomsController extends AppController {
     }
 
     function find_by_name() {
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
 
         $db = $this->Classroom->getDataSource();
 
@@ -184,14 +184,35 @@ class ClassroomsController extends AppController {
         } else {
             $course_id = intval($course_id);
         }
+        
+        if (! $course_id) {
+            $this->Session->setFlash('No se ha podido acceder al curso.');
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
 
         $db = $this->Classroom->getDataSource();
+        $this->loadModel('Course');
 
-        $course = $this->Classroom->query("SELECT Course.* FROM courses Course where Course.id = {$course_id} AND Course.institution_id = {$db->value(Environment::institution('id'))}");
+        $course = $this->Course->find('first', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
 
-        if (!$course) {
+        if (! $course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect($this->referer());
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('course', $course);
@@ -263,6 +284,10 @@ class ClassroomsController extends AppController {
     
     function _authorize() {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
         
         $administrator_actions = array('add', 'edit', 'delete');
         $student_actions = array('index', 'view');

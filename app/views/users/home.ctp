@@ -1,3 +1,14 @@
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php
+	if (! empty($academic_year)) {
+		$html->addCrumb($modelHelper->academic_year_name($academic_year), "/academic_years/view/{$academic_year['id']}");
+	}
+  if (Environment::institution('id')) {
+    $html->addCrumb($modelHelper->format_acronym(Environment::institution('acronym')), $html->url());
+  }
+?>
+<?php $html->addCrumb('Mi agenda', array('controller' => 'users', 'action' => 'home')); ?>
+
 <div id="mobile-query" class="visible-block-phone-portrait"></div>
 
 <script type="text/javascript">
@@ -61,9 +72,9 @@ $(document).ready(function() {
       var id = event.id.match(/\d+/);
       var url;
       if (event.className == 'booking')
-        url = "<?php echo PATH ?>/bookings/view/";
+        url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
       else
-        url = "<?php echo PATH ?>/events/view/";
+        url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
       $.ajax({
         cache: false,
         type: "GET",
@@ -94,9 +105,9 @@ $(document).ready(function() {
 					var id = event.id.match(/\d+/);
           var url;
           if (event.className == 'booking')
-            url = "<?php echo PATH ?>/bookings/view/";
+            url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
           else
-            url = "<?php echo PATH ?>/events/view/";
+            url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
 
           var eventDetails = $('#EventDetails');
 					if (eventDetails.data('eventId') !== event.id) {

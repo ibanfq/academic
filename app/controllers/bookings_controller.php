@@ -2,7 +2,7 @@
 class BookingsController extends AppController {
     var $name = 'Bookings';
     var $paginate = array('limit' => 10, 'order' => array('Bookings.initial_hour' => 'asc'));
-    var $helpers = array('Ajax', 'activityHelper');
+    var $helpers = array('Ajax', 'ModelHelper', 'activityHelper');
     
     function index() {
         $this->set('bookings_schedule', true);

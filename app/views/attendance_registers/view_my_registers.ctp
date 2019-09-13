@@ -1,6 +1,6 @@
 <?php 
   $html->addCrumb('Cursos', '/courses');
-  $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}");
+  $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}");
   if ($subject) {
     $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}");
     $html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers/$course_id/{$subject['Subject']['id']}");

@@ -1,8 +1,10 @@
 <!-- File: /app/views/courses/view.ctp -->
 
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb("{$course['Course']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb("Estadísticas por asignatura", "/courses/stats_by_subject/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas por asignatura", Environment::getBaseUrl() . "/courses/stats_by_subject/{$course['Course']['id']}"); ?>
 
 <h1>Estadísticas por asignatura</h1>
 <div class="actions">

@@ -150,7 +150,7 @@
   function refresh() {
     $.ajax({
       type: "GET",
-      url: "<?php echo PATH ?>/api/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
+      url: "<?php echo Environment::getBaseUrl() ?>/api/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
       dataType: "json",
       success: function (response) {
         var index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
@@ -195,7 +195,7 @@
   
   function addRow(){
     var index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
-    $('#students').append("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo PATH ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ addStudent(" + index + ", item[1]); });<\/script></tr>");
+    $('#students').append("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo Environment::getBaseUrl() ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ addStudent(" + index + ", item[1]); });<\/script></tr>");
     $('#row_'+index+' input').focus();
   }
   
@@ -207,7 +207,7 @@
       row.find('td:last').html('Añadiendo...');
       $.ajax({
         type: "POST", 
-        url: "<?php echo PATH ?>/api/users_attendance_register/",
+        url: "<?php echo Environment::getBaseUrl() ?>/api/users_attendance_register/",
         data: {'User[id]': id, 'AttendanceRegister[id]': <?php echo $ar['AttendanceRegister']['id'] ?>},
         dataType: "json",
         success: function (response) {
@@ -242,7 +242,7 @@
         link = row.find('td:last a').addClass('disabled').text('Eliminando...');
         $.ajax({
           type: "DELETE", 
-          url: "<?php echo PATH ?>/api/users/" + id + "/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
+          url: "<?php echo Environment::getBaseUrl() ?>/api/users/" + id + "/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
           dataType: 'json',
           success: function (response) {
             var total = response.data.Students.length;

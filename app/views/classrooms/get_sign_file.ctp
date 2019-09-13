@@ -15,8 +15,9 @@
 	  }
 </script>
 <!-- File: /app/views/classrooms/new.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Imprimir hoja de firmas', "/classrooms/get_sign_file"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
+<?php $html->addCrumb('Imprimir hoja de firmas', array('acion' => 'get_sign_file')) ?>
 
 
 <h1>Imprimir hoja de firmas</h1>

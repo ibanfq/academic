@@ -24,16 +24,6 @@ $config['app']['booking']['show_tv'] = true;
 $config['app']['classroom']['show_tv'] = false;
 $config['app']['classroom']['teachers_can_booking'] = true;
 $config['app']['competence']['enable'] = false;
-$config['app']['degrees'] = array(
-    'GITT'        => 'GITT (Grado en Ingeniería en Tecnologías de la Telecomunicación)',
-    'DG-GITT-ADE' => 'DG-GITT+ADE (Doble Grado en GITT y ADE)',
-    'MUIT'        => 'MUIT (Máster en Ingeniería de Telecomunicación)'
-);
-$config['app']['subject']['degree_levels'] = array(
-    'GITT'        => array('Primero', 'Segundo', 'Tercero', 'Cuarto'),
-    'DG-GITT-ADE' => array('Primero', 'Segundo', 'Tercero', 'Cuarto', 'Quinto', 'Sexto'),
-    'MUIT'        => array('Formación', 'Primero', 'Segundo')
-);
 $config['app']['subject']['levels'] = array(
     'Curso de Formación' => 'Curso de Formación',
     'Primero'   => 'Primero',

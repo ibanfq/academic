@@ -1,5 +1,5 @@
 <?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('Crear registro de impartición masivo', '/massive_attendance_registers/add'); ?>
 
 <h1>Crear registro de impartición masivo</h1>
@@ -97,11 +97,11 @@
 										});
 
 
-										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {	formatItem: formatItem }).result(function(event, item){
+										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {	formatItem: formatItem }).result(function(event, item){
 											$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_id").val(item[1]);
 										});
 
-										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name_2").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", { formatItem: formatItem }).result(function(event, item){
+										$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_name_2").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", { formatItem: formatItem }).result(function(event, item){
 											$("input#register_<?php echo $register['AttendanceRegister']['id'] ?>_teacher_2_id").val(item[1]);
 										});
                 	});
@@ -130,7 +130,7 @@
       firstDay: 1,
       yearRange: '-10:+10',
       showOn: 'button',
-      buttonImage: '<?php echo PATH ?>/img/ico/calendar.png',
+      buttonImage: '/img/ico/calendar.png',
       buttonImageOnly: true,
       buttonText: '%s' });
     

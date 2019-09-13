@@ -41,7 +41,7 @@
 			<table width="95%" border="0" align="center">
 				<tr>
 					<td>
-						<img src="<?php echo PATH . Configure::read('app.logo_ulpgc_white') ?>">
+						<img src="<?php echo Configure::read('app.logo_ulpgc_white') ?>">
 					</td>
 					<td style="text-align:right;">
 						<?php echo $html->image('barcode/code_'.$random.'.png') ?>

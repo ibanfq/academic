@@ -1,10 +1,10 @@
-<?php 
-	$html->addCrumb('Cursos', '/courses'); 
-	$html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); 
-	$html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); 
-	$html->addCrumb($activity['Activity']['name'], "/activities/view/{$activity['Activity']['id']}");
-	$html->addCrumb("Examinar estudiantes {$group['Group']['name']}", "/activities/view_students/{$activity['Activity']['id']}/{{$group['Group']['id']}}");
-?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$subject['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Degree']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb($activity['Activity']['name'], Environment::getBaseUrl() . "/activities/view/{$activity['Activity']['id']}"); ?>
+<?php $html->addCrumb("Examinar estudiantes {$group['Group']['name']}", Environment::getBaseUrl() . "/activities/view_students/{$activity['Activity']['id']}/{$group['Group']['id']}"); ?>
 
 <h1><?php echo $activity['Activity']['name'] ?> - Grupo <?php echo $group['Group']['name'] ?></h1>
 
@@ -15,7 +15,7 @@
         if (confirm('¿Está seguro de que desea eliminar al estudiante de este grupo? Después no podrá deshacer el cambio.')) {
           $.ajax({
             type: "GET", 
-            url: "<?php echo PATH ?>/activities/delete_student/" + activity_id + "/" + group_id + "/" + student_id,
+            url: "<?php echo Environment::getBaseUrl() ?>/activities/delete_student/" + activity_id + "/" + group_id + "/" + student_id,
             dataType: 'script'
           });
         }
@@ -38,7 +38,7 @@
         if (confirm('¿Está seguro de que desea enviar esta alerta?')) {
           $.ajax({
             type: "POST", 
-            url: "<?php echo PATH ?>/activities/send_alert/" + activity_id + "/" + group_id,
+            url: "<?php echo Environment::getBaseUrl() ?>/activities/send_alert/" + activity_id + "/" + group_id,
                                     data: $('#message').val(),
             dataType: 'script'
           });

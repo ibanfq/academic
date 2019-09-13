@@ -113,7 +113,7 @@ class AttendanceRegister extends AcademicModel {
             
             $set_secret_code = '';
             if (empty($event['AttendanceRegister']['secret_code']) && !empty($secret_code)) {
-                App::import('Core', 'Sanitize');;
+                App::import('Core', 'Sanitize');
                 $set_secret_code = ', secret_code = "' . Sanitize::escape($secret_code) . '"';
                 $event['AttendanceRegister']['secret_code'] = $secret_code;
             }

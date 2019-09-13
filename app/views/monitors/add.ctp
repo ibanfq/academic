@@ -1,7 +1,8 @@
 <!-- File: /app/views/monitors/new.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Monitores', '/monitors'); ?>
-<?php $html->addCrumb('Crear monitor', "/monitors/add"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('controller' => 'classrooms', 'action' => 'index')); ?>
+<?php $html->addCrumb('Monitores', array('action' => 'index')); ?>
+<?php $html->addCrumb('Crear monitor',  array('action' => 'add')); ?>
 
 <h1>Crear monitor</h1>
 <?php

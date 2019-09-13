@@ -50,7 +50,7 @@ $(document).ready(function() {
 		  <?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo") || ($auth->user('type') == "Becario")) { ?>
 		    eventClick: function(event, jsEvent, view) {
 			    if (confirm('¿Desea imprimir la hoja de asistencia de esta actividad?'))
-				  window.open('<?php echo PATH ?>/attendance_registers/print_attendance_file/' + event.id);
+				  window.open('<?php echo Environment::getBaseUrl() ?>/attendance_registers/print_attendance_file/' + event.id);
 		    },
 		<?php }} ?>
 		eventRender: function(event, element) {
@@ -61,9 +61,9 @@ $(document).ready(function() {
 					var id = event.id.match(/\d+/);
 					var url;
 					if (event.className == 'booking')
-						url = "<?php echo PATH ?>/bookings/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
 					else
-						url = "<?php echo PATH ?>/events/view/";
+						url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
 					
 					var eventDetails = $('#EventDetails');
 					if (eventDetails.data('eventId') !== event.id) {
@@ -131,7 +131,7 @@ $(document).ready(function() {
 	<dt>Asignatura</dt>
 	<dd><input type="text" id="subject_name" name="SubjectName" onchange="$('#subject_name').flushCache()"/></dd>
 	<script type='text/javascript'>
-		$('#subject_name').autocomplete('<?php echo PATH ?>/subjects/find_subjects_by_name/',
+		$('#subject_name').autocomplete('<?php echo Environment::getBaseUrl() ?>/subjects/find_subjects_by_name/',
 		 {
 		  extraParams: {
 		    course_id: function() { return $('#course_id').val(); }
@@ -152,7 +152,7 @@ $(document).ready(function() {
 			  
 				$.ajax({
 					type: "GET",
-					url: "<?php echo PATH ?>/events/get_by_subject/" + item[1],
+					url: "<?php echo Environment::getBaseUrl() ?>/events/get_by_subject/" + item[1],
 					dataType: "script"
 				})
 			}

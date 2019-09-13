@@ -40,15 +40,21 @@ class ApiCompetenceGoalRequestsController extends AppController {
     
     function index()
     {
-        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
 
-        if (!$course) {
+        $courses = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
+
+        if (!$courses) {
             $this->Api->setError('No hay ningún curso activo actualmente.', 404);
             $this->Api->respond($this);
             return;
         }
 
-        $competence_goal_requests = $this->_get_from($course['id']);
+        $competence_goal_requests = $this->_get_from(Set::extract($courses, '{n}.id'));
 
         $this->Api->setData($competence_goal_requests);
         $this->Api->respond($this);
@@ -56,6 +62,12 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function by_goal($goal_id)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $goal_id = intval($goal_id);
 
         $goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
@@ -101,6 +113,12 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function by_course($course_id)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $course_id = intval($course_id);
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
@@ -122,6 +140,12 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function add()
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $goal_id = $this->Api->getParameter('CompetenceGoalRequest.goal_id', array('required', 'integer'));
         $teacher_id = $this->Api->getParameter('CompetenceGoalRequest.teacher_id', array('required', 'integer'));
 
@@ -169,7 +193,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
         $response = $this->Api->call(
             'GET',
-            '/api/competence_goals/by_teacher/'.urlencode($teacher_id),
+            '/api/institutions/'.Environment::institution('id').'/competence_goals/by_teacher/'.urlencode($teacher_id),
             array('goal_id' => $goal_id, 'contain' => '')
         );
 
@@ -217,6 +241,12 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function delete($id)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
@@ -298,7 +328,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
         $this->Api->respond($this);
     }
 
-    function _get_from($course_id = null, $goal_id = null)
+    function _get_from($courses_id = null, $goal_id = null)
     {
         $user_id = $this->Auth->user('id');
 
@@ -331,10 +361,10 @@ class ApiCompetenceGoalRequestsController extends AppController {
                 'table' => 'competence',
                 'alias' => 'Competence',
                 'type'  => 'INNER',
-                'conditions' => isset($course_id)
+                'conditions' => isset($courses_id)
                     ? array(
                         'Competence.id = CompetenceGoal.competence_id',
-                        'Competence.course_id' => $course_id
+                        'Competence.course_id' => $courses_id
                     )
                     : array(
                         'Competence.id = CompetenceGoal.competence_id',

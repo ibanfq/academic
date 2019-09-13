@@ -5,8 +5,8 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <title>Academic</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<link rel="icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
-<link rel="shortcut icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 <?php echo $this->element('scripts', array(
     'scripts_for_layout' => $scripts_for_layout,
     'forms_type' => isset($events_schedule) || isset($bookings_schedule)? 'events' : 'generic'
@@ -19,16 +19,16 @@
 			<div class="left">
 				<ul class="logo">
 					<li class="hidden-phone">
-						<a href="<?php echo PATH?>/calendar_by_classroom">
-							<img src="<?php echo PATH . Configure::read('app.logo') ?>">
+						<a href="<?php echo Environment::getBaseUrl() ?>/calendar_by_classroom">
+							<img src="<?php echo Configure::read('app.logo') ?>">
 						</a>
 					</li>
 					<li class="hidden-phone">
-						<img src="<?php echo PATH?>/img/divider.jpg">
+						<img src="/img/divider.jpg">
 					</li>
 					<li>
 						<a href="<?php echo h(Configure::read('app.logo_ulpgc_link')) ?>">
-							<img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
+							<img src="<?php echo Configure::read('app.logo_ulpgc') ?>">
 						</a>
 					</li>
 				</ul>
@@ -41,10 +41,11 @@
 
 	<div id="footer">
     <p class="logo visible-block-phone">
-      <a href="<?php echo PATH?>/calendar_by_classroom">
-        <img src="<?php echo PATH . Configure::read('app.logo') ?>">
+      <a href="<?php echo Environment::getBaseUrl() ?>/calendar_by_classroom">
+        <img src="<?php echo Configure::read('app.logo') ?>">
       </a>
-    </p>
+	</p>
+	<?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
 	</div>
 </div>
 </body>

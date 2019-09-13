@@ -9,7 +9,7 @@
       $('#schedule').html("");
     else {
       $.ajax({
-        url: "<?php echo PATH ?>/users/teacher_schedule_details/<?php echo $user['User']['id']?>", 
+        url: "<?php echo Environment::getBaseUrl() ?>/users/teacher_schedule_details/<?php echo $user['User']['id']?>", 
         data: "course_id=" + $('#course_id').val(), 
         success: function(html){
           $('#schedule').html(html);
@@ -21,7 +21,7 @@
     $('#course_id').change(update_events).change();
     $('#schedule').delegate(".event", "click", function() {
       var btn = $(this);
-      var url = "<?php echo PATH ?>/events/view/" + btn.attr('data-id');
+      var url = "<?php echo Environment::getBaseUrl() ?>/events/view/" + btn.attr('data-id');
       $.ajax({
         cache: false,
         type: "GET",
@@ -65,7 +65,7 @@
         <select id="course_id">
           <option value='' selected>Seleccione un curso</option>
           <?php foreach($courses as $course): ?>
-            <option value="<?php echo $course["Course"]["id"] ?>"><?php echo $course['Course']['name'] ?></option>
+            <option value="<?php echo $course["Course"]["id"] ?>"><?php echo $course['Degree']['name'] ?></option>
           <?php endforeach; ?>
         </select>
       </dd>

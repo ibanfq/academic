@@ -10,24 +10,19 @@ class CompetenceGoalRequestsController extends AppController {
 
     function index()
     {
-        $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
-
-        if (!$course) {
-            $this->Session->setFlash('No se ha podido acceder al curso actual.');
-            $this->redirect(array('controller' => 'users', 'action' => 'home'));
-        }
-
-        $response = $this->Api->call('GET', '/api/competence_goal_requests/by_course/' . urlencode($course['id']));
+        $response = $this->Api->call(
+            'GET',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests/'
+        );
 
         if ($response['status'] === 'error') {
             if ($response['code'] !== 404) {
                 $this->Session->setFlash($response['message']);
             }
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('competence_goal_requests', $response['data']);
-        $this->set('course', array('Course' => $course));
     }
 
     function by_course($course_id = null)
@@ -35,7 +30,7 @@ class CompetenceGoalRequestsController extends AppController {
         $course_id = $course_id === null ? null : intval($course_id);
 
         if (is_null($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
@@ -48,16 +43,19 @@ class CompetenceGoalRequestsController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $response = $this->Api->call('GET', '/api/competence_goal_requests/by_course/' . urlencode($course_id));
+        $response = $this->Api->call(
+            'GET',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests/by_course/' . urlencode($course_id)
+        );
 
         if ($response['status'] === 'error') {
             if ($response['code'] !== 404) {
                 $this->Session->setFlash($response['message']);
             }
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('competence_goal_requests', $response['data']);
@@ -97,7 +95,11 @@ class CompetenceGoalRequestsController extends AppController {
             }
         }
 
-        $response = $this->Api->call('POST', '/api/competence_goal_requests', $this->data);
+        $response = $this->Api->call(
+            'POST',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests',
+            $this->data
+        );
 
         switch ($response['status']) {
             case 'fail':
@@ -120,7 +122,7 @@ class CompetenceGoalRequestsController extends AppController {
         $course_id = $course_id === null ? null : intval($course_id);
         
         if (!isset($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $redirect = array('action' => 'by_course', $course_id);
@@ -139,10 +141,14 @@ class CompetenceGoalRequestsController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $response = $this->Api->call('POST', '/api/competence_goal_requests', $this->data);
+        $response = $this->Api->call(
+            'POST',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests',
+            $this->data
+        );
 
         switch ($response['status']) {
             case 'fail':
@@ -204,7 +210,10 @@ class CompetenceGoalRequestsController extends AppController {
             }
         }
 
-        $response = $this->Api->call('DELETE', '/api/competence_goal_requests/'.urlencode($id));
+        $response = $this->Api->call(
+            'DELETE',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests/'.urlencode($id)
+        );
 
         switch ($response['status']) {
             case 'error':
@@ -229,7 +238,7 @@ class CompetenceGoalRequestsController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($course_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
@@ -242,10 +251,13 @@ class CompetenceGoalRequestsController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $response = $this->Api->call('DELETE', '/api/competence_goal_requests/'.urlencode($id));
+        $response = $this->Api->call(
+            'DELETE',
+            '/api/institutions/'.Environment::institution('id').'/competence_goal_requests/'.urlencode($id)
+        );
 
         switch ($response['status']) {
             case 'error':

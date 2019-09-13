@@ -1,5 +1,6 @@
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Monitores', '/monitors'); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('controller' => 'classrooms', 'action' => 'index')); ?>
+<?php $html->addCrumb('Monitores', array('action' => 'index')); ?>
 
 <h1>Monitores</h1>
 

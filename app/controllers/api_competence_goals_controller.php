@@ -33,6 +33,12 @@ class ApiCompetenceGoalsController extends AppController {
 
     function by_teacher($teacher_id = null)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $db = $this->CompetenceGoal->getDataSource();
         $this->loadModel('User');
 
@@ -63,15 +69,15 @@ class ApiCompetenceGoalsController extends AppController {
         }
 
         if (isset($this->params['url']['course_id'])) {
-            $course_id = intval($this->params['url']['course_id']);
+            $courses_id = intval($this->params['url']['course_id']);
         } else {
-            $course = $this->CompetenceGoal->Competence->Course->current();
-            if (!$course) {
+            $courses = $this->CompetenceGoal->Competence->Course->current();
+            if (!$courses) {
                 $this->Api->setError('No hay ningún curso activo actualmente.', 404);
                 $this->Api->respond($this);
                 return;
             }
-            $course_id = $course["id"];
+            $courses_id = Set::extract($courses, '{n}.id');
         }
         
         if ($this->Auth->user('type') === 'Estudiante') {
@@ -207,7 +213,7 @@ class ApiCompetenceGoalsController extends AppController {
 
         $conditions = array(
             'AND' => array(
-                'Competence.course_id' => $course_id,
+                'Competence.course_id' => $courses_id,
                 'OR' => array(
                     array('Subject.coordinator_id' => $teacher_id),
                     array('Subject.practice_responsible_id' => $teacher_id),
@@ -256,6 +262,12 @@ class ApiCompetenceGoalsController extends AppController {
 
     function by_student($student_id = null, $id = null)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $student_id = $student_id === null ? null : intval($student_id);
         $id = $id === null ? null : intval($id);
 
@@ -396,6 +408,12 @@ class ApiCompetenceGoalsController extends AppController {
 
     function grade_by_student($student_id = null, $id = null)
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $student_id = $student_id === null ? null : intval($student_id);
         $id = $id === null ? null : intval($id);
         $data = array('CompetenceCriterionGrade' => $this->Api->getParameter('CompetenceCriterionGrade'));
@@ -408,7 +426,10 @@ class ApiCompetenceGoalsController extends AppController {
             return;
         }
 
-        $response = $this->Api->call('GET', '/api/competence_goals/by_student/' . urlencode($student_id) . '/' . urlencode($id));
+        $response = $this->Api->call(
+            'GET',
+            '/api/institutions/'.Environment::institution('id').'/competence_goals/by_student/' . urlencode($student_id) . '/' . urlencode($id)
+        );
         if ($response['status'] === 'error') {
             $this->Api->setError($response['message'], $response['status']);
             $this->Api->respond($this);

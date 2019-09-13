@@ -1,7 +1,7 @@
 <?php
 class RegistrationsController extends AppController {
     var $name = 'Registrations';
-    var $helpers = array('Ajax');
+    var $helpers = array('Ajax', 'ModelHelper');
     
     function add($activity_id, $group_id){
         $activity_id = $activity_id === null ? null : intval($activity_id);

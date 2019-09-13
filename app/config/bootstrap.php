@@ -50,15 +50,15 @@ require_once ROOT . '/vendors/plugins/autoload.php';
  * Inflector::rules('plural', array('rules' => array(), 'irregular' => array(), 'uninflected' => array()));
  *
  */
-Inflector::rules('singular', array('irregular' => array('institutions_users' => 'institution_user')));
-Inflector::rules('singular', array('irregular' => array('institutionsusers'  => 'InstitutionUser')));
-Inflector::rules('plural',   array('irregular' => array('institution_user'   => 'institutions_users')));
-Inflector::rules('plural',   array('irregular' => array('institution_user'   => 'institutions_users')));
+Inflector::rules('singular', array('irregular' => array('users_institutions' => 'user_institution')));
+Inflector::rules('singular', array('irregular' => array('usersinstitutions'  => 'UserInstitution')));
+Inflector::rules('plural',   array('irregular' => array('user_institution'   => 'users_institutions')));
+Inflector::rules('plural',   array('irregular' => array('userinstitution'   => 'users_institutions')));
 
 Inflector::rules('singular', array('irregular' => array('subjects_users' => 'subject_user')));
 Inflector::rules('singular', array('irregular' => array('subjectsusers'  => 'SubjectUser')));
 Inflector::rules('plural',   array('irregular' => array('subject_user'   => 'subjects_users')));
-Inflector::rules('plural',   array('irregular' => array('subject_user'   => 'subjects_users')));
+Inflector::rules('plural',   array('irregular' => array('subjectuser'   => 'subjects_users')));
 
 Inflector::rules('singular', array('irregular' => array('users_attendance_register' => 'user_attendance_register')));
 Inflector::rules('singular', array('irregular' => array('usersattendanceregister'   => 'UserAttendanceRegister')));
@@ -85,38 +85,3 @@ Inflector::rules('singular', array('irregular' => array('competence_criteria' =>
 Inflector::rules('singular', array('irregular' => array('competencecriteria'  => 'CompetenceCriterion')));
 Inflector::rules('plural',   array('irregular' => array('competence_criterion'  => 'competence_criteria')));
 Inflector::rules('plural',   array('irregular' => array('competencecriterion'   => 'competence_criteria')));
-
-/**
- *  Load app Configuration
- */
-
-// Institution list
-$hosts = include 'hosts.php';
-
-if (PHP_SAPI === 'cli') {
-    // Cli command. Load default app config
-    Configure::load('app');
-} elseif (array_key_exists($_SERVER['HTTP_HOST'], $hosts)) {
-    // Institution founded
-    $institution = $hosts[$_SERVER['HTTP_HOST']];
-
-    // Set environment
-    Configure::write('Environment.institution', $institution);
-    Configure::write('Session.cookie', 'ACADEMIC_'.strtoupper($institution));
-
-    // Load specific institution app config
-    Configure::load("institutions/$institution/app");
-
-    // Load configurable options values of current institution
-    $appOptions = include "institutions/$institution/app.options.php";
-    foreach ($appOptions as $key => $value) {
-        Configure::write(
-            array(
-                "app.$key" => Set::merge($value, Configure::read("app.$key"))
-            )
-        );
-    }
-} else {
-    // No institution founded. Load default app config
-    Configure::load('app');
-}

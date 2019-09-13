@@ -1,5 +1,5 @@
 <?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb("Competencia {$competence['Competence']['code']}", "/competence/view/{$competence['Competence']['id']}"); ?>
 <?php $html->addCrumb('Modificar objetivo', "/competence_goals/edit/{$competence_goal['CompetenceGoal']['id']}"); ?>

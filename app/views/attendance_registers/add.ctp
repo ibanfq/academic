@@ -158,7 +158,7 @@
 		$.ajax({
 			type: "GET",
 			asynchronous: false,
-			url: "<?php echo PATH ?>/attendance_registers/get_register_info/" + $('#AttendanceRegisterId').val(),
+			url: "<?php echo Environment::getBaseUrl() ?>/attendance_registers/get_register_info/" + $('#AttendanceRegisterId').val(),
 			dataType: 'script'
 		});
 	}
@@ -170,9 +170,9 @@
 	function addRow(){
 		index = $('#students > tr').length;
 		if (index == 0)
-			$('#students').html("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td style='vertical-align:middle'><input type='checkbox' id='new_student_"+ index + "_checkbox' value='1' checked onclick='deleteRow(" + index + ")' /></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo PATH ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ $('#new_student_" + index + "_checkbox').attr('name', 'data[AttendanceRegister][students][' + item[1] + ']'); });<\/script></tr>");
+			$('#students').html("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td style='vertical-align:middle'><input type='checkbox' id='new_student_"+ index + "_checkbox' value='1' checked onclick='deleteRow(" + index + ")' /></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo Environment::getBaseUrl() ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ $('#new_student_" + index + "_checkbox').attr('name', 'data[AttendanceRegister][students][' + item[1] + ']'); });<\/script></tr>");
 		else
-			$('#row_' + (index - 1)).after("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td style='vertical-align:middle'><input type='checkbox' id='new_student_"+ index + "_checkbox' value='1' checked onclick='deleteRow(" + index + ")' /></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo PATH ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ $('#new_student_" + index + "_checkbox').attr('name', 'data[AttendanceRegister][students][' + item[1] + ']'); });<\/script></tr>");
+			$('#row_' + (index - 1)).after("<tr id='row_" + index + "'><td><input type='text' id='new_student_" + index + "' class='student_autocomplete' /></td><td style='vertical-align:middle'><input type='checkbox' id='new_student_"+ index + "_checkbox' value='1' checked onclick='deleteRow(" + index + ")' /></td><script type='text\/javascript'>$('#new_student_" + index + "').autocomplete('<?php echo Environment::getBaseUrl() ?>\/users\/find_students_by_name', {formatItem: 	function (row){if (row[1] != null) return row[0];else return 'No existe ningún estudiante con este nombre.'; }}).result(function(event, item){ $('#new_student_" + index + "_checkbox').attr('name', 'data[AttendanceRegister][students][' + item[1] + ']'); });<\/script></tr>");
 	}
 
 	function deleteRow(index) {
@@ -187,9 +187,9 @@
 				return 'No existe ningún profesor con este nombre.';
 		}
 
-			$("input#teacher").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacherId").val(item[1]); });
+			$("input#teacher").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacherId").val(item[1]); });
 
-	  	$("input#teacher_2").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacher2Id").val(item[1]); });
+	  	$("input#teacher_2").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#AttendanceRegisterTeacher2Id").val(item[1]); });
 
 	});
 </script>

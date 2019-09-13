@@ -21,13 +21,13 @@ $config['app']['booking']['show_tv'] = false;
 $config['app']['classroom']['show_tv'] = true;
 $config['app']['classroom']['teachers_can_booking'] = false;
 $config['app']['competence']['enable'] = false;
-$config['app']['degrees'] = false;
 $config['app']['subject']['levels'] = array(
     'Primero'   => 'Primero',
     'Segundo'   => 'Segundo' ,
     'Tercero'   => 'Tercero',
     'Cuarto'    => 'Cuarto',
     'Quinto'    => 'Quinto',
+    'Sexto'     => 'Sexto',
     'Postgrado' => 'Postgrado'
 );
 $config['app']['subject']['semesters'] = array(

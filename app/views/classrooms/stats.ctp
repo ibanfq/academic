@@ -1,19 +1,21 @@
 <!-- File: /app/views/users/stats.ctp -->
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb("{$course[0]['Course']['name']}", "/courses/view/{$course[0]['Course']['id']}"); ?>
-<?php $html->addCrumb("Estadísticas por aula", "/classrooms/stats/{$course[0]['Course']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas por aula", Environment::getBaseUrl() . "/classrooms/stats/{$course['Course']['id']}"); ?>
 
     
 <?php if (!(isset($classroom))) { ?>
   <h1>Ver estadísticas por aula</h1>
   
-  <form action="<?php echo PATH ?>/classrooms/stats" method="get">
+  <form action="<?php echo Environment::getBaseUrl() ?>/classrooms/stats" method="get">
     <fieldset>
       <dl>
         <dt>Aula</dt>
         <dd><?php echo $form->select('classrooms', $classrooms); ?>
       <dl>
-      <input name="course_id" type="hidden" value="<?php echo $course[0]['Course']['id']?>"/>
+      <input name="course_id" type="hidden" value="<?php echo $course['Course']['id']?>"/>
     </fieldset>
 
     <fieldset class="submit">
@@ -26,7 +28,7 @@
       Estadísticas del <?php echo $classroom['Classroom']['name']?> - <?php echo $classroom['Classroom']['type'] ?>
     </h1>
 
-    <?php echo $html->link('Ver otra aula', array('action' => 'stats', 'controller' => 'classrooms', $course[0]['Course']['id'])) ?>
+    <?php echo $html->link('Ver otra aula', array('action' => 'stats', 'controller' => 'classrooms', $course['Course']['id'])) ?>
     
   </div>
 

@@ -8,7 +8,7 @@ class AttendanceRegistersController extends AppController {
         'contain' => array('Event.Activity.*')
     );
 
-    var $helpers = array('Ajax', 'Barcode');
+    var $helpers = array('Ajax', 'ModelHelper', 'Barcode');
 
     /**
      * Shows a list of attendance registers
@@ -113,7 +113,11 @@ class AttendanceRegistersController extends AppController {
 
         if ($this->data) {
             if (empty($this->data['AttendanceRegister'])) {
-                $response = $this->Api->call('POST', '/api/attendance_registers', array('Event' => array('id' => $event_id)));
+                $response = $this->Api->call(
+                    'POST',
+                    '/api/institutions/'.Environment::institution('id').'/attendance_registers',
+                    array('Event' => array('id' => $event_id))
+                );
                 switch ($response['status']) {
                     case 'fail':
                         $this->Session->setFlash('No se pudo crear el registro de impartición. Por favor, revisa que has introducido todos los datos correctamente.');
@@ -286,7 +290,11 @@ class AttendanceRegistersController extends AppController {
     
     function finalize($id) {
         $id = $id === null ? null : intval($id);
-        $response = $this->Api->call('POST', "/api/attendance_registers/$id", array('AttendanceRegister' => array('status' => 'closed')));
+        $response = $this->Api->call(
+            'POST',
+            '/api/institutions/'.Environment::institution('id').'/attendance_registers/'.$id,
+            array('AttendanceRegister' => array('status' => 'closed'))
+        );
         switch ($response['status']) {
             case 'fail':
                 $this->Session->setFlash('No se pudo crear el registro de impartición. Por favor, revisa que has introducido todos los datos correctamente.');
@@ -303,15 +311,11 @@ class AttendanceRegistersController extends AppController {
     }
     
     function clean_up_day() {
+        set_time_limit(0);
+
         $log_file = dirname(dirname(__FILE__)) . '/tmp/clean_up_day_' . date('l');
         file_put_contents($log_file, 'init: ' . date('c'));
 
-        if (! Environment::institution('id')) {
-            file_put_contents($log_file, "\nERROR!!!! not institution_id set in Environment", FILE_APPEND);
-            file_put_contents($log_file, "\nend: " . date('c'), FILE_APPEND);
-            exit;
-        }
-        
         if (intval(date('H') < 20)) {
             $today_filter = '"' . date('Y-m-d', strtotime('yesterday')) . '" AND "' . date('Y-m-d') . '"';
         } else {
@@ -323,7 +327,6 @@ class AttendanceRegistersController extends AppController {
         $events = $this->AttendanceRegister->query("
             SELECT Event.*, AttendanceRegister.*, Activity.*, Teacher.*, Teacher_2.*, count(UserAttendanceRegister.user_id) as total_students
             FROM events Event
-            INNER JOIN classrooms_institutions ClassroomInstitution ON ClassroomInstitution.classroom_id = Event.classroom_id AND ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))}
             LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.event_id = Event.id
             LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.attendance_register_id = AttendanceRegister.id
                 AND UserAttendanceRegister.user_gone
@@ -411,7 +414,10 @@ class AttendanceRegistersController extends AppController {
      */
     function view($id){
         $id = $id === null ? null : intval($id);
-        $response = $this->Api->call('GET', "/api/attendance_registers/$id");
+        $response = $this->Api->call(
+            'GET',
+            '/api/institutions/'.Environment::institution('id').'/attendance_registers/'.$id
+        );
         switch ($response['status']) {
             case 'fail':
                 $this->Session->setFlash('No se pudo abrir el registro de impartición.');
@@ -483,7 +489,7 @@ class AttendanceRegistersController extends AppController {
      * @version 2012-09-27
      */
     function find_by_barcode() {
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
         $attendanceRegisters = $this->AttendanceRegister->find('all', array(
             'fields' => array('AttendanceRegister.*'),
@@ -619,25 +625,18 @@ class AttendanceRegistersController extends AppController {
         $user_id = $this->Auth->user('id');
         $date = date("Y-m-d");
 
-        if ($course_id) {
-            $course = $this->AttendanceRegister->Activity->Subject->Course->find(
-                'first',
-                array(
-                    'conditions' => array('Course.id' => $course_id, 'Course.institution_id' => Environment::institution('id')),
-                    'recursive' => -1
-                )
-            );
-            if (!$course) {
-                $this->Session->setFlash('El curso no existe.');
-                $this->redirect($this->referer());
-            }
-        } else {
-            $course = $this->AttendanceRegister->Activity->Subject->Course->current();
-            if (!$course) {
-                $this->Session->setFlash('El curso no existe.');
-                $this->redirect($this->referer());    
-            }
+        $course = $this->AttendanceRegister->Activity->Subject->Course->find(
+            'first',
+            array(
+                'conditions' => array('Course.id' => $course_id, 'Course.institution_id' => Environment::institution('id')),
+                'recursive' => -1
+            )
+        );
+        if (!$course) {
+            $this->Session->setFlash('El curso no existe.');
+            $this->redirect($this->referer());
         }
+        
         $course_id = $course['Course']['id'];
         $this->set('course', $course);
 
@@ -688,6 +687,21 @@ class AttendanceRegistersController extends AppController {
      */
     function edit_student_attendance($event_id = null) {
         $event_id = $event_id === null ? null : intval($event_id);
+
+        $event = $this->AttendanceRegister->Event->findById($event_id);
+        
+        if (!$event) {
+            $this->Session->setFlash('No se ha podido acceder al evento.');
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+
+        $subject = $this->AttendanceRegister->Activity->Subject->findById($event["Activity"]["subject_id"]);
+
+        if (!$subject) {
+            $this->Session->setFlash('No se ha podido acceder a la asignatura.');
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+
         // Preload student attendance by saving an attendance register
         if (!empty($this->data)) {
             $this->data = array('AttendanceRegister' => $this->data['AttendanceRegister']); # Sanitize the data
@@ -719,16 +733,14 @@ class AttendanceRegistersController extends AppController {
 
                 if ($this->AttendanceRegister->saveAll($this->data)) {
                     $this->Session->setFlash('El registro de asistencia se ha creado correctamente.');
-                    $course = $this->AttendanceRegister->Activity->Subject->Course->current();
-                    $this->redirect(array('action' => 'view_my_registers', $course['id']));
+                    $this->redirect(array('action' => 'view_my_registers', $subject['Subject']['course_id']));
                 } else {
                     $this->Session->setFlash('No se ha podido crear el registro de asistencia. Por favor, revise que ha introducido todos los datos correctamente.');
                     $this->redirect(array('action' => 'index'));
                 }
             } else {
                 $this->Session->setFlash('No es posible editar el registro de asistencia hasta que el evento haya sido marcado como impartido.');
-                $course = $this->AttendanceRegister->Activity->Subject->Course->current();
-                $this->redirect(array('action' => 'view_my_registers', $course['id']));
+                $this->redirect(array('action' => 'view_my_registers', $subject['Subject']['course_id']));
             }
         } else {
             /**
@@ -736,12 +748,10 @@ class AttendanceRegistersController extends AppController {
              */
             $ar = $this->AttendanceRegister->findByEventId($event_id);
             if (!$ar || ($this->Auth->user('type') === "Profesor" && !floatval($ar['AttendanceRegister']['duration']))) {
-                $event = $this->AttendanceRegister->Event->findById($event_id);
                 $this->set('students', false);
-                $this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($event["Activity"]["subject_id"]));
+                $this->set('subject', $subject);
                 $this->set('event', $event);
             } else {
-                $event = $this->AttendanceRegister->Event->findById($event_id);
                 if (!isset($ar['AttendanceRegister']['id'])) {
                     $this->data['AttendanceRegister'] = array('id' => null,
                         'event_id' => $event['Event']['id'],
@@ -785,25 +795,6 @@ class AttendanceRegistersController extends AppController {
                 $this->set('ar', $ar);
             }
         }
-    }
-
-    function _authorize(){
-        parent::_authorize();
-        $public_actions = array("clean_up_day");
-        $private_actions = array("index", "add", "edit", "get_register_info");
-        
-        if (array_search($this->params['action'], $public_actions) !== false) {
-            return true;
-        }
-
-        if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario"))
-            return false;
-
-        if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Becario") && ($this->Auth->user('type') != "Administrativo") && (array_search($this->params['action'], $private_actions) !== false))
-            return false;
-
-        $this->set('section', 'attendance_registers');
-        return true;
     }
 
     /**
@@ -864,5 +855,30 @@ class AttendanceRegistersController extends AppController {
 
         $this->Session->setFlash('El registro de asistencia no se pudo eliminar. Si el error continúa contacta con el administrador.');
         $this->redirect($this->referer());
+    }
+
+    function _authorize(){
+        parent::_authorize();
+        
+        $no_institution_actions = array("clean_up_day");
+        $public_actions = array("clean_up_day");
+        $private_actions = array("index", "add", "edit", "get_register_info");
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            return false;
+        }
+        
+        if (array_search($this->params['action'], $public_actions) !== false) {
+            return true;
+        }
+
+        if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario"))
+            return false;
+
+        if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Becario") && ($this->Auth->user('type') != "Administrativo") && (array_search($this->params['action'], $private_actions) !== false))
+            return false;
+
+        $this->set('section', 'attendance_registers');
+        return true;
     }
 }

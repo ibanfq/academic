@@ -1,10 +1,14 @@
 <?php 
-	if (count($subjects) == 0)
+	if (count($subjects) == 0) {
 		echo "No existe ninguna asignatura con el nombre especificado";
-	else {
-		foreach ($subjects as $subject):	
-			echo "{$subject['Subject']['name']}|{$subject['Subject']['id']}\n" ;
-		endforeach;
-	} 
+	} else {
+		foreach ($subjects as $subject) {
+			if (count($courses_id) > 1) {
+				echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Degree']['name']})|{$subject['Subject']['id']}\n" ;
+			} else {
+				echo "{$subject['Subject']['code']} - {$subject['Subject']['name']}|{$subject['Subject']['id']}\n" ;
+			}
+		}
+	}
 ?>
 

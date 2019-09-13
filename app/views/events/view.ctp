@@ -33,7 +33,7 @@
         <?php echo $form->input('Event.id', array('type' => 'hidden', 'value' => $event['Event']['id'])); ?>
         <div class="actions">
             <ul>
-                <li><a class="button" target="_blank" href="<?php echo PATH ?>/attendance_registers/print_attendance_file/<?php echo $event['Event']['id'] ?>">Imprimir hoja de asistencia</a></li>
+                <li><a class="button" target="_blank" href="<?php echo Environment::getBaseUrl() ?>/attendance_registers/print_attendance_file/<?php echo $event['Event']['id'] ?>">Imprimir hoja de asistencia</a></li>
                 <?php
                 $today = new DateTime("today");
                 $isToday = $today->format('Ymd') === $initial_date->format('Ymd');

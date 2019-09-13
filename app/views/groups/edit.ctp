@@ -1,9 +1,11 @@
 <!-- File: /app/views/groups/add.ctp -->
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); ?>
-<?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
-<?php $html->addCrumb('Modificar grupo', "/groups/edit/{$group['Group']['id']}"); ?>
-
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$degree['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Course']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb($group['Group']['name'], Environment::getBaseUrl() . "/groups/view/{$group['Group']['id']}"); ?>
+<?php $html->addCrumb('Modificar grupo', Environment::getBaseUrl() . "/groups/edit/{$group['Group']['id']}"); ?>
 
 <h1>Modificar grupo</h1>
 <?php

@@ -19,6 +19,12 @@ class ApiEventsController extends AppController {
 
     function index()
     {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $joins_for_where = '';
         $where = array();
 
@@ -96,6 +102,12 @@ class ApiEventsController extends AppController {
     }
     
     function view($id) {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $id = $id === null ? null : intval($id);
         $exists = true;
         

@@ -18,10 +18,19 @@ class SubjectsController extends AppController {
 
         if (! $course_id) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Subject->Course->find('first', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
@@ -31,7 +40,7 @@ class SubjectsController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if (!empty($this->data)) {
@@ -43,13 +52,13 @@ class SubjectsController extends AppController {
                 $coordinator = $this->Subject->Coordinator->find('first', array(
                     'joins' => array(
                         array(
-                            'table' => 'institutions_users',
-                            'alias' => 'InstitutionUser',
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
                             'type' => 'INNER',
                             'conditions' => array(
-                                'InstitutionUser.user_id = Coordinator.id',
-                                'InstitutionUser.institution_id' => Environment::institution('id'),
-                                'InstitutionUser.active'
+                                'UserInstitution.user_id = Coordinator.id',
+                                'UserInstitution.institution_id' => Environment::institution('id'),
+                                'UserInstitution.active'
                             )
                         )
                     ),
@@ -74,13 +83,13 @@ class SubjectsController extends AppController {
                 $responsible = $this->Subject->Responsible->find('first', array(
                     'joins' => array(
                         array(
-                            'table' => 'institutions_users',
-                            'alias' => 'InstitutionUser',
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
                             'type' => 'INNER',
                             'conditions' => array(
-                                'InstitutionUser.user_id = Responsible.id',
-                                'InstitutionUser.institution_id' => Environment::institution('id'),
-                                'InstitutionUser.active'
+                                'UserInstitution.user_id = Responsible.id',
+                                'UserInstitution.institution_id' => Environment::institution('id'),
+                                'UserInstitution.active'
                             )
                         )
                     ),
@@ -130,7 +139,7 @@ class SubjectsController extends AppController {
 
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $subject = $this->Subject->find('first', array(
@@ -142,9 +151,16 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+    
         $activities = $this->Subject->Activity->query("
             SELECT Activity.*, SUM(Event.duration) / `Group`.total AS duration, IFNULL(Registration.total / `Group`.total, 0) as students, Registration.total AS activity_total
             FROM activities Activity
@@ -163,6 +179,7 @@ class SubjectsController extends AppController {
             "));
 
         $this->set('subject', $subject);
+        $this->set('degree', $degree);
         $this->set('activities', $activities);
     }
 
@@ -178,7 +195,7 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->Subject->set($subject);
@@ -194,13 +211,13 @@ class SubjectsController extends AppController {
                 $coordinator = $this->Subject->Coordinator->find('first', array(
                     'joins' => array(
                         array(
-                            'table' => 'institutions_users',
-                            'alias' => 'InstitutionUser',
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
                             'type' => 'INNER',
                             'conditions' => array(
-                                'InstitutionUser.user_id = Coordinator.id',
-                                'InstitutionUser.institution_id' => Environment::institution('id'),
-                                'InstitutionUser.active'
+                                'UserInstitution.user_id = Coordinator.id',
+                                'UserInstitution.institution_id' => Environment::institution('id'),
+                                'UserInstitution.active'
                             )
                         )
                     ),
@@ -225,13 +242,13 @@ class SubjectsController extends AppController {
                 $responsible = $this->Subject->Responsible->find('first', array(
                     'joins' => array(
                         array(
-                            'table' => 'institutions_users',
-                            'alias' => 'InstitutionUser',
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
                             'type' => 'INNER',
                             'conditions' => array(
-                                'InstitutionUser.user_id = Responsible.id',
-                                'InstitutionUser.institution_id' => Environment::institution('id'),
-                                'InstitutionUser.active'
+                                'UserInstitution.user_id = Responsible.id',
+                                'UserInstitution.institution_id' => Environment::institution('id'),
+                                'UserInstitution.active'
                             )
                         )
                     ),
@@ -273,8 +290,15 @@ class SubjectsController extends AppController {
             }
         }
 
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
         $this->set('subject', $subject);
-        $this->set('course', array('Course' => $subject['Course']));
+        $this->set('degree', $degree);
     }
 
     function getScheduledInfo($id = null) {
@@ -289,8 +313,15 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+        
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
 
         $activities = $this->Subject->query("
             SELECT `Group`.name AS group_name, Activity.name AS activity_name, Activity.duration, Activity.type, IFNULL(SUM(Event.duration), 0) AS scheduled
@@ -301,9 +332,10 @@ class SubjectsController extends AppController {
             GROUP BY Activity.id, Group.id
             ORDER BY type, activity_name, group_name
         ");
+        
         $this->set('activities', $activities);
-
         $this->set('subject', $subject);
+        $this->set('degree', $degree);
     }
 
     function send_alert_students_without_group($id = null) {
@@ -318,7 +350,7 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if ((($this->Auth->user('type') == "Administrador") || ($this->Auth->user('id') == $subject['Subject']['coordinator_id']) || ($this->Auth->user('id') == $subject['Subject']['practice_responsible_id']))) {
@@ -367,12 +399,12 @@ class SubjectsController extends AppController {
 
         } else {
             $this->Session->setFlash('No tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
     }
 
     function find_subjects_by_name() {
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
 
         if (isset($this->params['url']['course_id'])) {
@@ -385,20 +417,72 @@ class SubjectsController extends AppController {
                 ),
                 'recursive' => -1
             ));
-        } else{
-            $course = $this->Subject->Course->current();
-            $course_id = $course["id"];
+
+            $courses_id = $course ? $course_id : null;;
+        } else {
+            $courses = $this->Subject->Course->current();
+            $courses_id = Set::extract($courses, '{n}.id');
         }
 
-        if (!$course) {
+        if (!$courses_id) {
             $subjects = array();
         } elseif (isset($this->params['url']['user_id'])) {
             $student_id = intval($this->params['url']['user_id']);
-            $subjects = $this->Subject->query("SELECT Subject.* FROM subjects Subject WHERE Subject.id NOT IN (SELECT subject_id AS id FROM subjects_users WHERE user_id = {$student_id}) AND Subject.name LIKE '{$q}' AND Subject.course_id = {$course_id}");
+            $subjects = $this->Subject->find('all', array(
+                'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    ),
+                    array(
+                        'table' => 'degrees',
+                        'alias' => 'Degree',
+                        'type' => 'INNER',
+                        'conditions' => 'Degree.id = Course.degree_id'
+                    )
+                ),
+                'conditions' => array(
+                    "Subject.id NOT IN (SELECT subject_id AS id FROM subjects_users WHERE user_id = {$student_id})",
+                    'OR' => array(
+                        'Subject.code LIKE' => $q,
+                        'Subject.name LIKE' => $q
+                    ),
+                    'Subject.course_id' => $courses_id
+                ),
+                'recursive' => -1
+            ));
         } else {
-            $subjects = $this->Subject->find('all', array('conditions' => array('Subject.name LIKE' => $q, 'Subject.course_id =' => $course_id)));
+            $subjects = $this->Subject->find('all', array(
+                'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    ),
+                    array(
+                        'table' => 'degrees',
+                        'alias' => 'Degree',
+                        'type' => 'INNER',
+                        'conditions' => 'Degree.id = Course.degree_id'
+                    )
+                ),
+                'conditions' => array(
+                    'OR' => array(
+                        'Subject.code LIKE' => $q,
+                        'Subject.name LIKE' => $q
+                    ),
+                    'Subject.course_id' => $courses_id
+                ),
+                'recursive' => -1
+            ));
         }
 
+        $this->set('courses_id', $courses_id);
         $this->set('subjects', $subjects);
     }
 
@@ -415,8 +499,15 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
 
         $theoretical_types = implode(', ', $db->value(Configure::read('app.activity.theoretical_types')));
         $practice_types = implode(', ', $db->value(Configure::read('app.activity.practice_types')));
@@ -427,6 +518,7 @@ class SubjectsController extends AppController {
         $this->set('students', $students);
         $this->Subject->id = $subject_id;
         $this->set('subject', $subject);
+        $this->set('degree', $degree);
     }
     
     function students_edit($subject_id = null) {
@@ -443,7 +535,7 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->Subject->set($subject);
@@ -548,7 +640,15 @@ class SubjectsController extends AppController {
             }
         }
         
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
         $this->set('subject', $this->data);
+        $this->set('degree', $degree);
     }
 
     function statistics($subject_id = null) {
@@ -563,11 +663,19 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+
+        $degree = $this->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
 
         $this->set(array(
             'subject' => $subject,
+            'degree' => $degree,
             'activities' => $this->Subject->activityHoursSummary($subject_id),
             'registers' => $this->Subject->teachingHoursSummary($subject_id),
         ));
@@ -578,7 +686,7 @@ class SubjectsController extends AppController {
         
         if (!$id) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Subject->find('first', array(
@@ -590,7 +698,7 @@ class SubjectsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course_id = $subject['Subject']['course_id'];

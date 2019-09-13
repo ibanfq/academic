@@ -98,7 +98,7 @@
 			$('#details').empty();
 			current_group_label_xhr = $.ajax({
 				type: "GET", 
-				url: "<?php echo PATH ?>/events/view_info/" + activity_id + "/" + group_id,
+				url: "<?php echo Environment::getBaseUrl() ?>/events/view_info/" + activity_id + "/" + group_id,
 				asynchronous: false,
 				success: function(data) {
 					$('#tooltip').html(data);
@@ -125,7 +125,7 @@
 		link.attr(d,d).addClass(d);
 		$.ajax({
 			type: "POST", 
-			url: "<?php echo PATH ?>/registrations/add/" + activity_id + "/" + group_id, 
+			url: "<?php echo Environment::getBaseUrl() ?>/registrations/add/" + activity_id + "/" + group_id, 
 			asynchronous: false, 
 			success: function(data){
 				
@@ -160,7 +160,7 @@
 		$.ajax({
 			type: "GET",
 			asynchronous: false, 
-			url: "<?php echo PATH ?>/registrations/get_subject_free_seats/" + <?php echo $subject['Subject']['id'] ?>, 
+			url: "<?php echo Environment::getBaseUrl() ?>/registrations/get_subject_free_seats/" + <?php echo $subject['Subject']['id'] ?>, 
 			dataType: 'script'
 		});
 	}

@@ -1,19 +1,12 @@
 <!-- File: /app/views/subjects/view.ctp -->
 
-<?php $degrees = Configure::read('app.degrees') ?>
-<?php $degreeEnabled = !empty($degrees); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$degree['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Course']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
 
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); ?>
-<?php $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); ?>
-
-<h1><?php
-	if ($degreeEnabled) {
-		echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['degree']} - {$subject['Subject']['level']} - {$subject['Subject']['semester']})";
-	} else {
-		echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['level']} - {$subject['Subject']['semester']})";
-	}
-?></h1>
+<h1><?php echo "{$subject['Subject']['code']} - {$subject['Subject']['name']} ({$subject['Subject']['level']} - {$subject['Subject']['semester']})" ?></h1>
 <div class="actions">
 	<ul>
 	  <?php if ($auth->user('type') != "Administrativo"): ?>

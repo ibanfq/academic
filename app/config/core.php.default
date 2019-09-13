@@ -313,14 +313,6 @@ Configure::write('Acl.database', 'default');
  */
 Cache::config('default', array('engine' => 'File'));
 
-
-/**
- * Define global path to prepend in URL
- *
- * @since 2012-05-17
- */
-define('PATH', "/academic");
-
 /**
  * Define the api testing secret code
  *

@@ -1,8 +1,9 @@
 <!-- File: /app/views/monitors/new.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Monitores', '/monitors'); ?>
-<?php $html->addCrumb($monitor['Monitor']['name'], "/monitors/view/{$monitor['Monitor']['id']}"); ?>
-<?php $html->addCrumb('Modificar monitor', "/monitors/edit/{$monitor['Monitor']['id']}"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('controller' => 'classrooms', 'action' => 'index')); ?>
+<?php $html->addCrumb('Monitores', array('action' => 'index')); ?>
+<?php $html->addCrumb($monitor['Monitor']['name'], array('action' => 'view', $monitor['Monitor']['id'])); ?>
+<?php $html->addCrumb('Modificar monitor', array('action' => 'edit', $monitor['Monitor']['id'])); ?>
 
 <h1>Modificar monitor</h1>
 <?php
@@ -86,9 +87,9 @@
                         <td>
                             <?php
                                 if ($row['type'] === 'Imagen') {
-                                    echo '<img src="'. htmlspecialchars(PATH.'/'.$row['src']). '" width="120"></img>';
+                                    echo '<img src="'. htmlspecialchars('/'.$row['src']). '" width="120"></img>';
                                 } elseif ($row['type'] === 'Video') {
-                                    echo '<a href="#" onclick="openVideo(\'' . htmlspecialchars(PATH.'/'.$row['src']) .'\', \'' . htmlspecialchars($row['mime_type']) .'\'); return false;">Ver video</a>';
+                                    echo '<a href="#" onclick="openVideo(\'' . htmlspecialchars('/'.$row['src']) .'\', \'' . htmlspecialchars($row['mime_type']) .'\'); return false;">Ver video</a>';
                                 } elseif ($row['type'] === 'Youtube') {
                                     echo '<a href="#" onclick="openYoutube(\'' . htmlspecialchars($row['video_id']) .'\'); return false;">Ver video</a>';
                                 } elseif ($row['type'] === 'Vimeo') {
@@ -173,7 +174,7 @@
             actionsCell.find('.media_delete_button').show();
             actionsCell.find('.media_cancel_deletion_button').hide();
             actionsCell.find('.media_delete_input').val(0);
-            actionsCell.prevAll().css('opacity', 1).removeClass('line_through');;
+            actionsCell.prevAll().css('opacity', 1).removeClass('line_through');
         });
 	});
     
@@ -181,7 +182,7 @@
 		var template = document.getElementById('classroom_row').content.cloneNode(true);
         var tr = $('#classrooms').append(template).find('tr:last');
         tr.find('input.classroom_name')
-            .autocomplete('<?php echo PATH ?>\/classrooms\/find_by_name', {
+            .autocomplete('<?php echo Environment::getBaseUrl() ?>\/classrooms\/find_by_name', {
                 formatItem: function (row) {
                     if (row[1] != null) {
                         return row[0];

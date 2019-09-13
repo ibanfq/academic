@@ -2,7 +2,7 @@
 class ActivitiesController extends AppController {
     var $name = 'Activities';
     var $paginate = array('limit' => 10, 'order' => array('activity.initial_date' => 'asc'));
-    var $helpers = array('Ajax');
+    var $helpers = array('Ajax', 'ModelHelper');
     var $fields_fillable = array('Activity');
     var $fields_guarded = array('Activity' => ['id', 'course_id', 'created', 'modified']);
 
@@ -22,7 +22,7 @@ class ActivitiesController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         if (!empty($this->data)) {
@@ -37,8 +37,16 @@ class ActivitiesController extends AppController {
             }
         }
 
+        $degree = $this->Activity->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
         $this->set('subject', $subject);
         $this->set('subject_id', $subject_id);
+        $this->set('degree', $degree);
     }
 
     function view($id = null) {
@@ -46,7 +54,7 @@ class ActivitiesController extends AppController {
 
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $activity = $this->Activity->find('first', array(
@@ -56,7 +64,7 @@ class ActivitiesController extends AppController {
 
         if (!$activity) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Activity->Subject->find('first', array(
@@ -68,13 +76,21 @@ class ActivitiesController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+
+        $degree = $this->Activity->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
 
         $isEvaluation = $activity['Activity']['type'] === 'Evaluación';
         $this->set('activity', $activity);
         $this->set('isEvaluation', $isEvaluation);
-        $this->set('subject', $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $subject['Subject']['id']))));
+        $this->set('subject', $subject);
+        $this->set('degree', $degree);
         $groups = $this->Activity->query("SELECT `Group`.*, count(DISTINCT Registration.id) AS students FROM groups `Group` INNER JOIN registrations Registration ON Registration.group_id = `Group`.id WHERE Registration.activity_id = {$id} GROUP BY `Group`.id ORDER BY `Group`.name");
         $this->set('groups', set::combine($groups, '{n}.Group.id', '{n}'));
         $this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$subject['Subject']['id']} ORDER BY Student.last_name, Student.first_name"));
@@ -88,7 +104,7 @@ class ActivitiesController extends AppController {
         
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $activity = $this->Activity->find('first', array(
@@ -98,7 +114,7 @@ class ActivitiesController extends AppController {
 
         if (!$activity) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Activity->Subject->find('first', array(
@@ -110,7 +126,7 @@ class ActivitiesController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->Activity->set($activity);
@@ -167,11 +183,19 @@ class ActivitiesController extends AppController {
             }
         }
 
+        $degree = $this->Activity->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
         $isEvaluation = $activity['Activity']['type'] === 'Evaluación';
         $subject = $this->Activity->Subject->find('first', array('conditions' => array('Subject.id' => $activity['Activity']['subject_id'])));
         $this->set('activity', $activity);
         $this->set('isEvaluation', $isEvaluation);
         $this->set('subject', $subject);
+        $this->set('degree', $degree);
         $groups = $this->Activity->query("SELECT distinct(`Group`.id), `Group`.name FROM events Event INNER JOIN groups `Group` on `Group`.id = Event.group_id WHERE Event.activity_id = {$id}");
         $this->set('groups', array(-1 => $isEvaluation? 'No se puede presentar' : 'Actividad aprobada') + set::combine($groups, '{n}.Group.id', '{n}.Group.name'));
         $this->set('registrations', $this->Activity->query("SELECT Registration.*, Student.* FROM subjects_users INNER JOIN users Student ON subjects_users.user_id = Student.id LEFT JOIN registrations Registration ON Registration.student_id = subjects_users.user_id AND Registration.activity_id = {$id} WHERE subjects_users.subject_id = {$subject['Subject']['id']} ORDER BY Student.last_name, Student.first_name"));
@@ -209,7 +233,7 @@ class ActivitiesController extends AppController {
         
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $activity = $this->Activity->find('first', array(
@@ -237,7 +261,7 @@ class ActivitiesController extends AppController {
 
         if (!$activity) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject_id = $activity['Subject']['id'];
@@ -249,7 +273,7 @@ class ActivitiesController extends AppController {
     }
     
     function find_activities_by_name(){
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
         $activities = $this->Activity->find(
             'all',
@@ -293,21 +317,36 @@ class ActivitiesController extends AppController {
   
         if (!$activity) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Activity->Subject->find('first', array(
+            'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type' => 'INNER',
+                    'conditions' => 'Course.id = Subject.course_id'
+                ),
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Subject.id' => $activity['Activity']['subject_id'],
                 'Course.institution_id' => Environment::institution('id')
             ),
-            'recursive' => 0
+            'recursive' => -1
         ));
-  
+
         $registers = $this->Activity->query("SELECT Student.id, Student.first_name, Student.last_name, RegistrationGroup.name, UserAttendanceRegister.user_gone, Event.initial_hour, `Group`.name, Teacher.first_name, Teacher.last_name, Teacher2.first_name, Teacher2.last_name FROM activities Activity INNER JOIN subjects_users SubjectUser ON SubjectUser.subject_id = Activity.subject_id INNER JOIN users Student ON Student.id = SubjectUser.user_id LEFT JOIN registrations Registration on Registration.activity_id = Activity.id AND Registration.student_id = Student.id LEFT JOIN groups RegistrationGroup ON RegistrationGroup.id = Registration.group_id LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.activity_id = Activity.id LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.attendance_register_id = AttendanceRegister.id AND UserAttendanceRegister.user_id = Student.id AND UserAttendanceRegister.user_gone LEFT JOIN users Teacher ON Teacher.id = AttendanceRegister.teacher_id LEFT JOIN users Teacher2 ON Teacher2.id = AttendanceRegister.teacher_2_id LEFT JOIN groups `Group` ON `Group`.id = AttendanceRegister.group_id LEFT JOIN events Event ON Event.id = AttendanceRegister.event_id WHERE Activity.id = {$activity['Activity']['id']} GROUP BY Student.id, UserAttendanceRegister.attendance_register_id ORDER BY Student.first_name ASC, Student.last_name ASC, UserAttendanceRegister.user_gone is null, Event.initial_hour DESC");
 
-        $this->set('activity', $activity);
         $this->set('subject', $subject);
+        $this->set('activity', $activity);
         $this->set('registers', $registers);
     }
     
@@ -392,7 +431,7 @@ class ActivitiesController extends AppController {
         }
             
         if ($activity && ($coordinator_id == $this->Auth->user('id') || $responsible_id == $this->Auth->user('id') || $this->Auth->user('type') == "Administrador" || $user_can_send_alerts == true)) {
-            App::import('Core', 'Sanitize');;
+            App::import('Core', 'Sanitize');
             $message = Sanitize::escape(file_get_contents("php://input"));
             $this->Email->from = 'Academic <noreply@ulpgc.es>';
 
@@ -409,7 +448,7 @@ class ActivitiesController extends AppController {
             $this->set('success', $this->Email->send($message));
         } else {
             $this->Session->setFlash('No tiene permisos para realizar esta acción.');
-            $this->redirect(array('controller' => 'courses'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
     }
     
@@ -458,7 +497,7 @@ class ActivitiesController extends AppController {
 
         if (!isset($activity_id, $group_id)) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $activity = $this->Activity->find('first', array(
@@ -486,11 +525,34 @@ class ActivitiesController extends AppController {
 
         if (!$activity) {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
+        $subject = $this->Activity->Subject->find('first', array(
+            'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'courses',
+                    'alias' => 'Course',
+                    'type' => 'INNER',
+                    'conditions' => 'Course.id = Subject.course_id'
+                ),
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
+            'conditions' => array(
+                'Subject.id' => $activity['Activity']['subject_id'],
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
         $this->set('activity', $activity);
-        $this->set('subject', $this->Activity->Subject->findById($activity['Subject']['id']));
+        $this->set('subject', $subject);
         $this->set('group', $this->Activity->Subject->Group->findById($group_id));
         $this->set('students', $this->Activity->query("SELECT Student.* FROM users Student INNER JOIN registrations Registration ON Registration.student_id = Student.id WHERE Registration.activity_id = {$activity_id} AND Registration.group_id = {$group_id}"));
         $this->set('user_can_send_alerts', $this->Activity->Subject->Coordinator->can_send_alerts($this->Auth->user('id'), $activity_id, $group_id));

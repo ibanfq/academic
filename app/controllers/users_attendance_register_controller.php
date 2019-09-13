@@ -39,7 +39,7 @@ class UsersAttendanceRegisterController extends AppController {
             if (!$error && $this->UserAttendanceRegister->validates()) {
                 $response = $this->Api->call(
                     'POST',
-                    '/api/users_attendance_register',
+                    '/api/institutions/'.Environment::institution('id').'/users_attendance_register',
                     $data
                 );
                 if ($response['status'] === 'success') {

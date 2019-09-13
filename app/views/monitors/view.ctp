@@ -1,7 +1,8 @@
 <!-- File: /app/views/users/view.ctp -->
-<?php $html->addCrumb('Aulas', '/classrooms'); ?>
-<?php $html->addCrumb('Monitores', '/monitors'); ?>
-<?php $html->addCrumb($monitor['Monitor']['name'], "/monitors/view/{$monitor['Monitor']['id']}"); ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('controller' => 'classrooms', 'action' => 'index')); ?>
+<?php $html->addCrumb('Monitores', array('action' => 'index')); ?>
+<?php $html->addCrumb($monitor['Monitor']['name'], array('action' => 'view', $monitor['Monitor']['id'])); ?>
 
 <h1><?php echo $monitor['Monitor']['name']?></h1>
 <div class="actions">
@@ -67,9 +68,9 @@
                         <td><?php echo $row['type'] ?></td>
                         <td><?php
                             if ($row['type'] === 'Imagen') {
-                                echo '<img src="'. htmlspecialchars(PATH.'/'.$row['src']). '" width="120" />';
+                                echo '<img src="'. htmlspecialchars('/'.$row['src']). '" width="120" />';
                             } elseif ($row['type'] === 'Video') {
-                                echo '<a href="#" onclick="openVideo(\'' . htmlspecialchars(PATH.'/'.$row['src']) .'\', \'' . htmlspecialchars($row['mime_type']) .'\'); return false;">Ver video</a>';
+                                echo '<a href="#" onclick="openVideo(\'' . htmlspecialchars('/'.$row['src']) .'\', \'' . htmlspecialchars($row['mime_type']) .'\'); return false;">Ver video</a>';
                             } elseif ($row['type'] === 'Youtube') {
                                 echo '<a href="#" onclick="openYoutube(\'' . htmlspecialchars($row['video_id']) .'\'); return false;">Ver video</a>';
                             } elseif ($row['type'] === 'Vimeo') {

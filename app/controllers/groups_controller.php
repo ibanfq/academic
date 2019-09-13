@@ -2,7 +2,7 @@
 class GroupsController extends AppController {
     var $name = 'Groups';
     var $paginate = array('limit' => 10, 'order' => array('group.initial_date' => 'asc'));
-    var $helpers = array('Ajax');
+    var $helpers = array('Ajax', 'ModelHelper');
     var $fields_fillable = array('Group');
     var $fields_guarded = array('Group' => ['id', 'course_id', 'created', 'modified']);
 
@@ -22,7 +22,7 @@ class GroupsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if (!empty($this->data)){
@@ -37,8 +37,16 @@ class GroupsController extends AppController {
             }
         }
 
+        $degree = $this->Group->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
         $this->set('subject', $subject);
         $this->set('subject_id', $subject_id);
+        $this->set('degree', $degree);
     }
 
     function view($id = null) {
@@ -46,7 +54,7 @@ class GroupsController extends AppController {
 
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $group = $this->Group->find('first', array(
@@ -56,7 +64,7 @@ class GroupsController extends AppController {
 
         if (!$group) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Group->Subject->find('first', array(
@@ -68,11 +76,19 @@ class GroupsController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+
+        $degree = $this->Group->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
 
         $this->set('group', $group);
         $this->set('subject', $subject);
+        $this->set('degree', $degree);
     }
 
     function edit($id = null) {
@@ -80,7 +96,7 @@ class GroupsController extends AppController {
 
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $group = $this->Group->find('first', array(
@@ -90,7 +106,7 @@ class GroupsController extends AppController {
 
         if (!$group) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this->Group->Subject->find('first', array(
@@ -114,8 +130,16 @@ class GroupsController extends AppController {
                 $this->redirect(array('action' => 'view', $id));
             }
         }
-        $this->set('subject', $subject);
 
+        $degree = $this->Group->Subject->Course->Degree->find('first', array(
+            'conditions' => array(
+                'Degree.id' => $subject['Course']['degree_id'],
+            ),
+            'recursive' => -1
+        ));
+
+        $this->set('subject', $subject);
+        $this->set('degree', $degree);
         $this->set('group', $this->data);
 }
 
@@ -124,7 +148,7 @@ class GroupsController extends AppController {
 
         if (! $id) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $group = $this->Group->find('first', array(
@@ -152,7 +176,7 @@ class GroupsController extends AppController {
 
         if (!$group) {
             $this->Session->setFlash('No se ha podido acceder al grupo.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject_id = $group['Subject']['id'];

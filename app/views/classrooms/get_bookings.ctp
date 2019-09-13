@@ -11,8 +11,9 @@
 	}
 </script>
 
-<?php $html->addCrumb('Aulas', '/classrooms') ?>
-<?php $html->addCrumb('Imprimir agenda diaria', "/classrooms/get_bookings") ?>
+<?php $html->addCrumb('Aulas', '/institutions/ref:classrooms'); ?>
+<?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
+<?php $html->addCrumb('Imprimir agenda diaria', array('acion' => 'get_bookings')) ?>
 
 <h1>Imprimir agenda diaria</h1>
 <form action="print_bookings" method="get" onsubmit="open_print_file(); return false;" style="width: 45%;">

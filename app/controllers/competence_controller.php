@@ -13,20 +13,29 @@ class CompetenceController extends AppController {
         $course_id = $course_id === null ? null : intval($course_id);
 
         if (is_null($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_joins = array();
@@ -123,7 +132,7 @@ class CompetenceController extends AppController {
         $subject_id = $subject_id === null ? null : intval($subject_id);
 
         if (is_null($subject_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this
@@ -141,20 +150,29 @@ class CompetenceController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $subject['Subject']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_joins = array(
@@ -234,7 +252,7 @@ class CompetenceController extends AppController {
         $student_id = $student_id === null ? null : intval($student_id);
 
         if (is_null($student_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->loadModel('User');
@@ -243,13 +261,13 @@ class CompetenceController extends AppController {
             'recursive' => -1,
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),
@@ -264,14 +282,14 @@ class CompetenceController extends AppController {
             $this->redirect(array('controller' => 'users', 'action' => 'index'));
         }
 
-        $course = $this->Competence->Course->current();
+        $courses = $this->Competence->Course->current();
 
-        if (!$course) {
+        if (!$courses) {
             $this->Session->setFlash('No se ha podido acceder al curso actual.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $course['Course'] = $course;
+        $courses_id = Set::extract($courses, '{n}.id');
 
         $competence_joins = array(
             array(
@@ -311,7 +329,7 @@ class CompetenceController extends AppController {
 
         $competence_conditions = array(
             'AND' => array(
-                'Competence.course_id' => $course['Course']['id']
+                'Competence.course_id' => $courses_id
             )
         );
 
@@ -356,7 +374,6 @@ class CompetenceController extends AppController {
 
         $this->set('student', $student);
         $this->set('competence', $competence);
-        $this->set('course', $course);
     }
 
     function add_to_course($course_id = null)
@@ -364,7 +381,7 @@ class CompetenceController extends AppController {
         $course_id = $course_id === null ? null : intval($course_id);
 
         if (is_null($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -377,7 +394,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if (!empty($this->data)) {
@@ -397,7 +414,7 @@ class CompetenceController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_joins = array(
@@ -487,7 +504,7 @@ class CompetenceController extends AppController {
 
         if (!$competence_result) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = array(
@@ -505,7 +522,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso de la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->set('competence', $competence);
@@ -518,7 +535,7 @@ class CompetenceController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($subject_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $subject = $this
@@ -536,7 +553,7 @@ class CompetenceController extends AppController {
 
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -549,7 +566,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence_joins = array(
@@ -643,7 +660,7 @@ class CompetenceController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($student_id) || is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->loadModel('User');
@@ -652,13 +669,13 @@ class CompetenceController extends AppController {
             'recursive' => -1,
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),
@@ -672,15 +689,6 @@ class CompetenceController extends AppController {
             $this->Session->setFlash('No se ha podido acceder al usuario.');
             $this->redirect(array('controller' => 'users', 'action' => 'index'));
         }
-
-        $course = $this->Competence->Course->current();
-
-        if (!$course) {
-            $this->Session->setFlash('No se ha podido acceder al curso actual.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
-        }
-
-        $course['Course'] = $course;
 
         $competence_joins = array(
             array(
@@ -764,13 +772,37 @@ class CompetenceController extends AppController {
         ));
 
         if (!$competence_result) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = array(
             'Competence' => Set::extract($competence_result, '0.Competence'),
             'CompetenceGoal' => Set::filter(Set::extract($competence_result, '{n}.CompetenceGoal'))
         );
+
+        $course = $this->Competence->Course->find('first', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
+        if (!$course) {
+            $this->Session->setFlash('No se ha podido acceder al curso actual.');
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+
+        $course['Course'] = $course;
 
         $this->set('student', $student);
         $this->set('competence', $competence);
@@ -785,7 +817,7 @@ class CompetenceController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $competence = $this->Competence->find('first', array(
@@ -795,7 +827,7 @@ class CompetenceController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -808,7 +840,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if (empty($this->data)) {
@@ -835,7 +867,7 @@ class CompetenceController extends AppController {
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
         $competence = $this->Competence->find('first', array(
@@ -845,7 +877,7 @@ class CompetenceController extends AppController {
 
         if (!$competence) {
             $this->Session->setFlash('No se ha podido acceder a la competencia.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -858,7 +890,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->Competence->delete($id);
@@ -872,7 +904,7 @@ class CompetenceController extends AppController {
         $subject_id = $subject_id === null ? null : intval($subject_id);
 
         if (is_null($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -885,7 +917,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if ($subject_id) {
@@ -907,7 +939,7 @@ class CompetenceController extends AppController {
 
                 if (!$subject) {
                     $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-                    $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+                    $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
                 }
 
             if ($this->Auth->user('type') === "Profesor") {
@@ -938,7 +970,7 @@ class CompetenceController extends AppController {
         $subject_id = $subject_id === null ? null : intval($subject_id);
 
         if (is_null($course_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -951,7 +983,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         if ($subject_id) {
@@ -973,7 +1005,7 @@ class CompetenceController extends AppController {
 
             if (!$subject) {
                 $this->Session->setFlash('No se ha podido acceder a la asignatura.');
-                $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+                $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
             }
         }
 
@@ -1002,7 +1034,7 @@ class CompetenceController extends AppController {
         $student_id = $student_id === null ? null : intval($student_id);
 
         if (is_null($course_id) || is_null($student_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -1015,7 +1047,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->loadModel('User');
@@ -1024,13 +1056,13 @@ class CompetenceController extends AppController {
             'recursive' => -1,
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),
@@ -1062,7 +1094,7 @@ class CompetenceController extends AppController {
         $student_id = $student_id === null ? null : intval($student_id);
 
         if (is_null($course_id) || is_null($student_id)) {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $course = $this->Competence->Course->find('first', array(
@@ -1075,7 +1107,7 @@ class CompetenceController extends AppController {
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $this->loadModel('User');
@@ -1084,13 +1116,13 @@ class CompetenceController extends AppController {
             'recursive' => -1,
             'joins' => array(
                 array(
-                    'table' => 'institutions_users',
-                    'alias' => 'InstitutionUser',
+                    'table' => 'users_institutions',
+                    'alias' => 'UserInstitution',
                     'type' => 'INNER',
                     'conditions' => array(
-                        'InstitutionUser.user_id = User.id',
-                        'InstitutionUser.institution_id' => Environment::institution('id'),
-                        'InstitutionUser.active'
+                        'UserInstitution.user_id = User.id',
+                        'UserInstitution.institution_id' => Environment::institution('id'),
+                        'UserInstitution.active'
                     )
                 )
             ),

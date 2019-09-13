@@ -1,6 +1,6 @@
 <?php $index_by_course = isset($index_by_course) ? $index_by_course : false ?>
 <?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Course']['name'], "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('Solicitudes de evaluación', "/competence_goal_requests/by_course/{$course['Course']['id']}"); ?>
 
@@ -111,7 +111,7 @@
         }
 
         $("input#teacher")
-            .autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatItem})
+            .autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem})
             .result(function(event, item) {
                 var url = <?php echo
                     str_replace(

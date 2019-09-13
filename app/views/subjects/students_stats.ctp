@@ -1,12 +1,12 @@
-<?php 
-	$html->addCrumb('Cursos', '/courses'); 
-	$html->addCrumb($subject['Course']['name'], "/courses/view/{$subject['Course']['id']}"); 
-	$html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}"); 
-	$html->addCrumb("Estadísticas estudiantes", "/subjects/students_stats/{$subject['Subject']['id']}");
-?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$degree['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Course']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas estudiantes", Environment::getBaseUrl() . "/subjects/students_stats/{$subject['Subject']['id']}"); ?>
 
 <h1>Estadísticas estudiantes (se muestra la duración planificada)</h1>
-<div class="view">
+<div>
   <fieldset>
 	  <legend>Estudiantes</legend>
 		<table>

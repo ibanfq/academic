@@ -2,7 +2,7 @@
 class MassiveAttendanceRegistersController extends AppController {
     var $name = 'MassiveAttendanceRegisters';
 
-    var $helpers = array('Ajax');
+    var $helpers = array('Ajax', 'ModelHelper');
 
     function add($course_id = null) {
         if ($course_id == null) {
@@ -20,7 +20,7 @@ class MassiveAttendanceRegistersController extends AppController {
 
         if (! $course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
         $classrooms = $this->MassiveAttendanceRegister->AttendanceRegister->Event->Classroom->find('all', array(

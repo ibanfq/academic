@@ -6,8 +6,8 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>Academic</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo PATH ?>/favicon.ico"/>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
     <?php 
         echo $scripts_for_layout;
         echo $javascript->link('jquery');
@@ -23,13 +23,13 @@
             <div class="left">
                 <ul class="logo">
                     <li>
-                        <img src="<?php echo PATH . Configure::read('app.logo') ?>">
+                        <img src="<?php echo Configure::read('app.logo') ?>">
                     </li>
                     <li>
-                        <img src="<?php echo PATH?>/img/divider.jpg">
+                        <img src="/img/divider.jpg">
                     </li>
                     <li>
-                        <img src="<?php echo PATH . Configure::read('app.logo_ulpgc') ?>">
+                        <img src="<?php echo Configure::read('app.logo_ulpgc') ?>">
                     </li>
                 </ul>
             </div>

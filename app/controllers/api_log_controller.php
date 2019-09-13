@@ -51,7 +51,7 @@ class ApiLogController extends AppController {
                 $data['content'] = null;
             }
             
-            App::import('Core', 'Sanitize');;
+            App::import('Core', 'Sanitize');
             $ip = Sanitize::escape($data['ip']);
             $desc = Sanitize::escape($data['description']);
             $from1 = date('Y-m-d H:i:s', strtotime('- 10 min'));

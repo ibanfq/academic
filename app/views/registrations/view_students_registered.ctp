@@ -45,7 +45,7 @@
 		$link.attr(d,d).addClass(d);
 		$.ajax({
 			type: "POST", 
-			url: "<?php echo PATH ?>/registrations/request_add/<?php echo $activity['Activity']['id'] ?>/" + user_id,
+			url: "<?php echo Environment::getBaseUrl() ?>/registrations/request_add/<?php echo $activity['Activity']['id'] ?>/" + user_id,
 			asynchronous: false, 
 			complete: function(xhr, status){
 				$link.removeClass(d).removeAttr(d);
@@ -71,7 +71,7 @@
 		$req.find('a').attr(d,d).addClass(d);
 		$.ajax({
 			type: "POST", 
-			url: "<?php echo PATH ?>/registrations/request_accept/<?php echo $activity['Activity']['id'] ?>/" + user_id,
+			url: "<?php echo Environment::getBaseUrl() ?>/registrations/request_accept/<?php echo $activity['Activity']['id'] ?>/" + user_id,
 			asynchronous: false, 
 			complete: function(xhr, status){
 				$req.find('a').removeClass(d).removeAttr(d);
@@ -96,7 +96,7 @@
 		$req.find('a').attr(d,d).addClass(d);
 		$.ajax({
 			type: "POST", 
-			url: "<?php echo PATH ?>/registrations/request_cancel/<?php echo $activity['Activity']['id'] ?>/" + user_id,
+			url: "<?php echo Environment::getBaseUrl() ?>/registrations/request_cancel/<?php echo $activity['Activity']['id'] ?>/" + user_id,
 			asynchronous: false, 
 			complete: function(xhr, status){
 				$req.find('a').removeClass(d).removeAttr(d);

@@ -32,7 +32,13 @@ class ApiUsersAttendanceRegisterController extends AppController {
         return true;
     }
     
-    function add(){
+    function add() {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $attendance_id = false;
         $attendanceRegister = false;
         $student_id = false;
@@ -108,7 +114,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     array(), // Order
                     -1 // Recursive
                 );
-            } else if (strlen($dni)) {
+            } elseif (strlen($dni)) {
                 $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByDniAndPassword(
                     strtoupper($dni),
                     $password,
@@ -116,7 +122,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     array(), // Order
                     -1 // Recursive
                 );
-            } else if (strlen($username)) {
+            } elseif (strlen($username)) {
                 $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByUsernameAndPassword(
                     $username,
                     $password,
@@ -124,7 +130,7 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     array(), // Order
                     -1 // Recursive
                 );
-            } else if ($is_student) {
+            } elseif ($is_student) {
                 $user = $this->Auth->user();
                 $student = array('Student' => $user['User']);
             }
@@ -212,6 +218,12 @@ class ApiUsersAttendanceRegisterController extends AppController {
     }
     
     function delete($user_id, $attendance_id) {
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $user_id = $user_id === null ? null : intval($user_id);
         $attendance_id = $attendance_id === null ? null : intval($attendance_id);
         $this->UserAttendanceRegister->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('User')), false);

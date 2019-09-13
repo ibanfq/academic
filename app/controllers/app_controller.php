@@ -13,7 +13,7 @@ class AppController extends Controller {
 	 *
 	 * @since 2012-05-17
 	 */
-	var $helpers = array('Html', 'Form', 'Session', 'Javascript', 'DateHelper');
+	var $helpers = array('Html', 'Form', 'Session', 'Javascript', 'DateHelper', 'ModelHelper');
 
   var $isApi = false;
 
@@ -25,9 +25,17 @@ class AppController extends Controller {
     parent::__construct();
   }
 
+  function beforeRender() {
+    $this->webroot = '/';
+  }
+
 	function beforeFilter() {
-		$this->layout = 'default';
-    
+    $this->layout = 'default';
+
+    $this->Session->path = '/';
+
+    $this->_initEnvironment();
+
     if (Configure::read('debug') > 0) {
       $this->Email->delivery = 'debug';
     }
@@ -36,7 +44,7 @@ class AppController extends Controller {
       $authModel = ClassRegistry::init($this->Auth->userModel);
       $db = $authModel->getDataSource();
       $this->Auth->userScope = array(
-        "EXISTS (SELECT '' FROM institutions_users InstitutionUser WHERE InstitutionUser.user_id = {$authModel->escapeField()} AND InstitutionUser.institution_id = {$db->value(Environment::institution('id'))} AND InstitutionUser.active)"
+        "(super_admin OR EXISTS (SELECT '' FROM users_institutions UserInstitution WHERE UserInstitution.user_id = {$authModel->escapeField()} AND UserInstitution.institution_id = {$db->value(Environment::institution('id'))} AND UserInstitution.active))"
       );
     }
 
@@ -91,9 +99,9 @@ class AppController extends Controller {
         $this->Auth->allow($this->params['action']);
       }
     } else {
-      $this->Auth->loginAction = array('controller' => 'users', 'action' => 'login');
-      $this->Auth->logoutRedirect = array('controller' => 'users', 'action' => 'login');
-      $this->Auth->loginRedirect = array('controller' => 'users', 'action' => 'home');
+      $this->Auth->loginAction = array('controller' => 'users', 'action' => 'login', 'base' => false);
+      $this->Auth->logoutRedirect = Router::url(array('controller' => 'users', 'action' => 'login', 'base' => false, 'full_base' => true));
+      $this->Auth->loginRedirect = Router::url(array('controller' => 'users', 'action' => 'home', 'base' => false, 'full_base' => true));
       $this->Auth->allow('login');
       $this->Auth->allow('rememberPassword', 'find_subjects_by_name', 'add_by_secret_code', 'clean_up_day');
 
@@ -111,15 +119,31 @@ class AppController extends Controller {
         if ($this->RequestHandler->isAjax()) {
           $this->redirect(null, 401, true);
         } elseif ($this->Auth->user('id') == null) {
-          $this->redirect(array('controller' => 'users', 'action' => 'login'));
+          $this->redirect(array('controller' => 'users', 'action' => 'login', 'base' => false));
         } else {
           $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
 
           if ($this->Auth->user('type') == "Estudiante") {
-            $this->redirect(array('controller' => 'users', 'action' => 'home'));
+            $this->redirect(array('controller' => 'users', 'action' => 'home', 'base' => false));
           } else {
-            $this->redirect(array('controller' => 'courses', 'action' => 'index'));
+            $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
           }
+        }
+      }
+    }
+
+    Environment::setUser($this->Auth->user());
+
+    if (! $this->Auth->user('super_admin') && Environment::institution('id') && ! Environment::userInstitution('active')) {
+      if ($this->RequestHandler->isAjax()) {
+        $this->redirect(null, 401, true);
+      } else {
+        $this->Session->setFlash('Usted no tiene permisos para realizar esta acción.');
+        
+        if ($this->Auth->user('type') == "Estudiante") {
+          $this->redirect(array('controller' => 'users', 'action' => 'home', 'base' => false));
+        } else {
+          $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
       }
     }
@@ -152,6 +176,78 @@ class AppController extends Controller {
     $this->_updateAppBetaOptions();
   }
 
+  function _initEnvironment()
+  {
+    if (Environment::getInitialized()) {
+      // Initialize only the first time ignoring the next disptach calls
+      return;
+    }
+
+    Environment::setInitialized(true);
+
+    if (!empty($this->params['institution'])) {
+      $institution_id = intval($this->params['institution']);
+
+      // Set institution in environment
+      Environment::setInstitution($institution_id);
+
+      if (! Environment::institution('id')) {
+        $this->Session->setFlash('No se ha podido acceder al centro');
+        $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+      }
+
+      if (! is_dir(CONFIGS . "institutions/{$institution_id}")) {
+        if (! mkdir(CONFIGS . "institutions/{$institution_id}")) {
+          $this->Session->setFlash('No se ha podido acceder al centro');
+          $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+      }
+
+      if (! file_exists(CONFIGS . "institutions/{$institution_id}/app.php")) {
+        $fp = fopen(CONFIGS . "institutions/{$institution_id}/app.php", 'w');
+        if ($fp === false || !fwrite($fp, '<?php require CONFIGS . \'institutions/default/app.php\';')) {
+          $this->Session->setFlash('No se ha podido acceder al centro');
+          $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+        fclose($fp);
+      }
+
+      if (! file_exists(CONFIGS . "institutions/{$institution_id}/app.options.php")) {
+        $fp = fopen(CONFIGS . "institutions/{$institution_id}/app.options.php", 'w');
+        if ($fp === false || !fwrite($fp, '<?php return ' . var_export(array(), true) . ';')) {
+          $this->Session->setFlash('No se ha podido acceder al centro');
+          $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+        fclose($fp);
+      }
+
+      // Set environment base url
+      $base_url = "/institutions/{$institution_id}";
+      Environment::setBaseUrl($base_url);
+
+      // Change base url in all route paths to prefix automatically the environment base url to all generated urls
+      $router = Router::getInstance();
+      foreach (array_keys($router->__paths) as $i) {
+        $router->__paths[$i]['base'] = $base_url;
+      }
+
+      // Load specific institution app config
+      Configure::load("institutions/$institution_id/app");
+    
+      // Load configurable options values of current institution
+      $appOptions = include CONFIGS . "institutions/$institution_id/app.options.php";
+      foreach ($appOptions as $key => $value) {
+          Configure::write(
+              array(
+                  "app.$key" => Set::merge($value, Configure::read("app.$key"))
+              )
+          );
+      }
+    } else {
+        Configure::load('app');
+    }
+  }
+
   function _updateAppBetaOptions()
   {
     $username = $this->Auth->user('username');
@@ -168,7 +264,8 @@ class AppController extends Controller {
     $this->set("acl", $this->Acl);
     
 		if ($this->Auth->user('id') != null) {
-			$this->set("auth", $this->Auth);
+      $this->set("auth", $this->Auth);
+      
       return true;
 		}
     return false;

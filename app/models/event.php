@@ -75,7 +75,7 @@ class Event extends AcademicModel {
     );
 
     function eventDontOverlap() {
-        App::import('Core', 'Sanitize');;
+        App::import('Core', 'Sanitize');
 
         $db = $this->getDataSource();
 

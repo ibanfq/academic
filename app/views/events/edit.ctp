@@ -79,9 +79,9 @@
 			return 'No existe ningún profesor con este nombre.';
 	}
 	
-	$("#edit_teacher_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatEditItem}).result(function(event, item){ $("input#teacher_id").val(item[1]); });
+	$("#edit_teacher_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatEditItem}).result(function(event, item){ $("input#teacher_id").val(item[1]); });
 	
-	$("#edit_teacher_2_name").autocomplete("<?php echo PATH ?>/users/find_teachers_by_name", {formatItem: formatEditItem}).result(function(event, item){ $("input#teacher_2_id").val(item[1]); });
+	$("#edit_teacher_2_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatEditItem}).result(function(event, item){ $("input#teacher_2_id").val(item[1]); });
 			
 	</script>
 <?php } else { ?>
