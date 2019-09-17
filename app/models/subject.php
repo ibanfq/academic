@@ -204,8 +204,4 @@ class Subject extends AcademicModel {
     function levelToInt($level) {
         return array_search($level, array_keys(Configure::read('app.subject.levels')));
     }
-
-    function degreeToInt($degree) {
-        return array_search($degree, array_keys(Configure::read('app.degrees') ? Configure::read('app.degrees') : array()));
-    }
 }

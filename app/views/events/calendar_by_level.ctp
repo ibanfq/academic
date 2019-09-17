@@ -106,32 +106,36 @@ $(document).ready(function() {
 <p>Seleccione un curso para ver su calendario.</p>
 <br/>
 
-<dl id="course_form_group">
+<dl>
 	<dt>Año académico</dt>
 	<dd>
-		<select id="course" name="course">
-			<?php foreach ($courses as $course): ?>
+		<select id="academic_year" name="academic_year">
+			<?php foreach ($academic_years as $academic_year): ?>
 				<?php 
-					if ($course["Course"]["id"] == $current_course["id"])
+					if ($academic_year["id"] == $current_academic_year["id"])
 						$selected = "selected";
 					else
 						$selected = "";
 				?>
-				<option value="<?php echo h($course['Course']['id']) ?>" <?php echo $selected ?>><?php echo h($course['Degree']['name']) ?></option>
+				<option value="<?php echo h($academic_year['id']) ?>" <?php echo $selected ?>><?php echo h($modelHelper->academic_year_name($academic_year)) ?></option>
 			<?php endforeach; ?>
 		</select>
 	</dd>
 </dl>
 <dl>
 	<dt>Titulación</dt>
-	<dd>
-		<select id="degree" name="degree">
-			<option value="" selected>Seleccione una titulación</option>
-			<?php foreach ($degrees as $degree => $degreeName) : ?>
-				<option value="<?php echo h($degree) ?>"><?php echo h($degreeName) ?></option>
-			<?php endforeach; ?>
-			<option value="all" selected>Todas las titulaciones</option>
-		</select>
+	<dd id="courses">
+		<?php foreach ($academic_years as $academic_year): ?>
+			<select data-academic-year-id="<?php echo h($academic_year['id']) ?>" name="course" disabled style="display:none;">
+				<?php if (isset($academic_year['Course'])): ?>
+					<option value="">Seleccione una titulación</option>
+					<?php foreach ($academic_year['Course'] as $course): ?>
+						<option value="<?php echo h($course['id']) ?>"><?php echo h($course['Degree']['name']) ?></option>
+					<?php endforeach; ?>
+				<?php endif; ?>
+				<option value="all" selected>Todas las titulaciones</option>
+			</select>
+		<?php endforeach; ?>
 	</dd>
 </dl>
 <dl>
@@ -181,53 +185,19 @@ $(document).ready(function() {
 </div>
 
 <script type="text/javascript">
-	var degreeLevels = <?php echo json_encode(Configure::read('app.subject.degree_levels')) ?>;
-
 	$(document).ready(function() {
-
 		$('#booking').val(0);
-		$('#degree').val("");
+		$('#courses select').val("");
 		$('#level').val("");
-
-		$('#course, #booking').change(function() {
-			var degreeInput = $('#degree');
-			degreeInput.length ? degreeInput.change() : $('#level').change();
-		});
-
-		$('#degree').change(function() {
-			$('#calendar').fullCalendar('removeEvents');
-			var degree = $(this).val();
-			var level = $('#level').attr('disabled', 'disabled');
-			var levelSelectedIndex = level.prop('selectedIndex');
-			var levelOptions = level.find('option').attr('disabled', 'disabled');
-			if (degree in degreeLevels) {
-				for (var i in degreeLevels[degree]) {
-					levelOptions.filter(function (index) {
-						return this.value === 'all' || this.value === degreeLevels[degree][i];
-					}).removeAttr('disabled');
-				}
-				level.removeAttr('disabled');
-			} else if (degree === 'all') {
-				levelOptions.removeAttr('disabled');
-				level.removeAttr('disabled');
-			}
-			if ($(levelOptions[levelSelectedIndex]).prop('disabled')) {
-				level.val("");
-			} else {
-				level.change();
-			}
-		}).change();
 
 		$('#level').change(function() {
 			$('#calendar').fullCalendar('removeEvents');
 			var booking = $('#booking');
-			var course = $('#course');
-			var degree = $('#degree');
+			var academic_year = $('#academic_year');
+			var course = $('#courses select:visible');
 			var level = $('#level');
-			if (level.val()) {
-				var url = degree.length
-					? "<?php echo Environment::getBaseUrl() ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/degree:" + encodeURIComponent(degree.val()) + "/booking:" + encodeURIComponent(booking.val())
-					: "<?php echo Environment::getBaseUrl() ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/course:" + encodeURIComponent(course.val()) + "/booking:" + encodeURIComponent(booking.val())
+			if (course.val() && level.val()) {
+				var url = "<?php echo Environment::getBaseUrl() ?>/events/get_by_level/" + encodeURIComponent(level.val()) + "/academic_year:" + encodeURIComponent(academic_year.val()) + "/course:" + encodeURIComponent(course.val()) + "/booking:" + encodeURIComponent(booking.val())
 				;
 				$.ajax({
 					cache: false,
@@ -237,5 +207,22 @@ $(document).ready(function() {
 				});
 			}
 		});
+
+		$('#courses select, #booking').change(function() {
+			$('#level').change();
+		});
+
+		$('#academic_year').change(function() {
+			var value = $(this).val();
+			$('#courses select')
+				.prop('disabled', true).css('display', 'none')
+				.filter(function () {
+					return $(this).data('academic-year-id') == value;
+				})
+				.prop('disabled', false).css('display', 'block')
+				.val('');
+			$('#level').change();
+		}).change();
+
 	});
 </script>

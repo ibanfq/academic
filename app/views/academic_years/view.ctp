@@ -56,7 +56,7 @@
 				<?php endif ?>
 				<tbody>
 					<?php foreach ($institutions as $institution): ?>
-					<?php $institution_route = array('institution' => $institution['Institution']['id'], 'controller' => 'courses', 'action' => 'index', $academic_year['AcademicYear']['id']) ?>
+					<?php $institution_route = array('institution' => $institution['Institution']['id'], 'controller' => 'courses', 'action' => 'index', $academic_year['AcademicYear']['id'], 'base' => false) ?>
 					<tr>
 						<td><?php echo $html->link($modelHelper->format_acronym($institution['Institution']['acronym']), $institution_route) ?></td>
 						<td><?php echo $html->link($institution['Institution']['name'], $institution_route) ?></td>

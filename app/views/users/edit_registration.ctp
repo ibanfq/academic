@@ -1,6 +1,7 @@
-<?php $html->addCrumb('Usuarios', '/users'); ?>
-<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
-<?php $html->addCrumb("Modificar matrícula", "/users/edit_registration/{$user['User']['id']}"); ?>
+<?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$user['User']['id']}"); ?>
+<?php $html->addCrumb("Modificar matrícula", Environment::getBaseUrl() . "/users/edit_registration/{$user['User']['id']}"); ?>
 
 <div id="notice" class="message" style="display:none"></div>
 <h1>Modificar matrícula</h1>

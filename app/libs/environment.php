@@ -157,8 +157,8 @@ class Environment extends Object {
             $model =& Environment::getModel($_this->userInstitutionModel);
             $_this->_user_institution = $model->find('first', array(
                 'conditions' => array(
-                  'user_id' => Environment::user('id'),
-                  'institution_id' => Environment::institution('id')
+                  "{$model->alias}.user_id" => Environment::user('id'),
+                  "{$model->alias}.institution_id" => Environment::institution('id')
                 )
             ));
             if (! $_this->_user_institution) {

@@ -32,7 +32,7 @@ class EventsController extends AppController {
             'conditions' => array(
                 "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
             ),
-            'order' => "name ASC",
+            'order' => "Classroom.name ASC",
             'recursive' => 0
         ));
 
@@ -70,7 +70,7 @@ class EventsController extends AppController {
                 "Event.classroom_id = {$db->value($classroom_id)}"
             );
 
-            // @todo: update fullcalender request to with range of dates
+            // @todo: update fullcalender request to a range of dates
             $from_date = date('Y-m-d H:i:s', strtotime('- 3 years'));
             $where[] = "Event.initial_hour >= '$from_date'";
 
@@ -151,19 +151,20 @@ class EventsController extends AppController {
             "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
         ];
 
-        if (!empty($this->params['named']['course'])) {
-            $course_id = $this->params['named']['course'];
-            $conditions[] =  "Subject.course_id = {$db->value($course_id)}";
+        if (!empty($this->params['named']['academic_year'])) {
+            $academic_year_id = $this->params['named']['academic_year'];
+            $joins[] = 'INNER JOIN courses Course ON Course.id = Subject.course_id';
+            $conditions[] = "Course.academic_year_id = {$db->value($academic_year_id)}";
         } else {
-            // @todo: update fullcalender request to with range of dates
+            // @todo: update fullcalender request to a range of dates
             $from_date = date('Y-m-d H:i:s', strtotime('- 3 years'));
             $conditions[] = "Event.initial_hour >= '$from_date'";
         }
 
-        if (!empty($this->params['named']['degree'])) {
-            $degree = $this->params['named']['degree'];
-            if ($degree !== 'all') {
-                $conditions[] = "Subject.degree = {$db->value($degree)}";
+        if (!empty($this->params['named']['course'])) {
+            $course_id = $this->params['named']['course'];
+            if ($course_id !== 'all') {
+                $conditions[] = "Subject.course_id = {$db->value($course_id)}";
             }
         }
 
@@ -458,7 +459,7 @@ class EventsController extends AppController {
                 'conditions' => array(
                     "Classroom.id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
                 ),
-                'order' => "name ASC",
+                'order' => "Classroom.name ASC",
                 'recursive' => 0
             ));
     
@@ -747,11 +748,16 @@ class EventsController extends AppController {
         
         $db = $this->Event->getDataSource();
 
+        $conditions = array(
+            'Event.id' => $id,
+        );
+
+        if (Environment::institution('id')) {
+            $conditions[] = "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})";
+        }
+
         $event = $this->Event->find('first', array(
-            'conditions' => array(
-                'Event.id' => $id,
-                "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
-            )
+            'conditions' => $conditions
         ));
 
         if (!$event) {
@@ -912,8 +918,17 @@ class EventsController extends AppController {
     function calendar_by_classroom() {
         $this->layout = 'public';
         
+        $db_classrooms = $this->Event->Classroom->find('all', array(
+            'conditions' => array(
+                'Classroom.institution_id' => Environment::institution('id')
+            ),
+            'order' => array('Classroom.name'),
+            'recursive' => 0
+        ));
+
         $classrooms = array();
-        foreach($this->Event->Classroom->find('all', array('order' => array('Classroom.name'), 'recursive' => 0)) as $classroom):
+
+        foreach($db_classrooms as $classroom):
             $classrooms["{$classroom['Classroom']['id']}"] = $classroom['Classroom']['name'];
         endforeach;
 
@@ -922,27 +937,75 @@ class EventsController extends AppController {
 
     function calendar_by_subject() {
         $this->layout = 'public';
-        $courses = $this->Event->Activity->Subject->Course->find(
-            'all',
-            array(
-                'conditions' => array('institution_id' => Environment::institution('id')),
-                'order' => 'initial_date desc'
-            )
-        );
-        $this->set('courses', $courses);
+        
+        $academic_years = $this->Event->Activity->Subject->Course->AcademicYear->find('all', array(
+            'recursive' => -1,
+            'order' => array('AcademicYear.initial_date' => 'desc')
+        ));
+
+        $academic_years = Set::combine($academic_years, '{n}.AcademicYear.id', '{n}.AcademicYear');
+
+        $courses = $this->Event->Activity->Subject->Course->find('all', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Degree.id = Course.degree_id'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'order' => array('Degree.name' => 'desc'),
+            'recursive' => -1
+        ));
+
+        foreach ($courses as $course) {
+            $academic_years[$course['Course']['academic_year_id']]['Course'][] = array_merge($course['Course'], array('Degree' => $course['Degree']));
+        }
+
+        $this->set('academic_years', $academic_years);
         $this->set('current_academic_year', $this->Event->Activity->Subject->Course->AcademicYear->current());
     }
     
     function calendar_by_level() {
         $this->layout = 'public';
-        $courses = $this->Event->Activity->Subject->Course->find(
-            'all',
-            array(
-                'conditions' => array('institution_id' => Environment::institution('id')),
-                'order' => 'initial_date desc'
-            )
-        );
-        $this->set('courses', $courses);
+
+        $academic_years = $this->Event->Activity->Subject->Course->AcademicYear->find('all', array(
+            'recursive' => -1,
+            'order' => array('AcademicYear.initial_date' => 'desc')
+        ));
+
+        $academic_years = Set::combine($academic_years, '{n}.AcademicYear.id', '{n}.AcademicYear');
+
+        $courses = $this->Event->Activity->Subject->Course->find('all', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Degree.id = Course.degree_id'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'order' => array('Degree.name' => 'desc'),
+            'recursive' => -1
+        ));
+
+        foreach ($courses as $course) {
+            $academic_years[$course['Course']['academic_year_id']]['Course'][] = array_merge($course['Course'], array('Degree' => $course['Degree']));
+        }
+
+        $this->set('academic_years', $academic_years);
         $this->set('current_academic_year', $this->Event->Activity->Subject->Course->AcademicYear->current());
     }
 
@@ -954,6 +1017,17 @@ class EventsController extends AppController {
             $teacher = $this->Event->Teacher->find(
                 'first',
                 array(
+                    'joins' => array(
+                        array(
+                            'table' => 'users_institutions',
+                            'alias' => 'UserInstitution',
+                            'type' => 'LEFT',
+                            'conditions' => array(
+                                'UserInstitution.user_id = Teacher.id',
+                                'UserInstitution.institution_id' => Environment::institution('id')
+                            )
+                        )
+                    ),
                     'conditions' => array('Teacher.id' => $id),
                     'recursive' => -1
                 )
@@ -962,134 +1036,6 @@ class EventsController extends AppController {
 
         $this->set('teacher', $teacher);
         $this->layout = 'public';
-    }
-    
-    function board() {
-        /* @deprecated in favor of monitor::board */
-        $this->redirect(array('controller' => 'monitors', 'action' => 'board'));
-
-        /*
-        $this->layout = 'board';
-
-        $classroom_show_tv = Configure::read('app.classroom.show_tv');
-
-        $db = $this->Event->getDataSource();
-        $sql1 = $db->buildStatement(
-            array(
-                'table' => $db->fullTableName($this->Event),
-                'alias' => 'Event',
-                'fields' => array(
-                    'Event.initial_hour',
-                    'Event.final_hour',
-                    'Activity.name',
-                    'Activity.type',
-                    'Subject.acronym as subject_acronym',
-                    'Subject.degree as subject_degree',
-                    'Subject.level as subject_level',
-                    'Group.name as group_name',
-                    'Teacher.first_name as teacher_first_name',
-                    'Teacher.last_name as teacher_last_name',
-                    'Event.classroom_id',
-                    'Classroom.name as classroom_name'
-                ),
-                'conditions' => array(
-                    'Event.initial_hour > CURDATE()',
-                    'Event.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
-                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})",
-                    '(Event.show_tv' . ($classroom_show_tv ? ' OR Classroom.show_tv' : '') . ')'
-                ),
-                'joins' => array(
-                    array(
-                        'table' => 'classrooms',
-                        'alias' => 'Classroom',
-                        'type' => 'left',
-                        'conditions' => 'Event.classroom_id = Classroom.id'
-                    ),
-                    array(
-                        'table' => 'activities',
-                        'alias' => 'Activity',
-                        'type' => 'left',
-                        'conditions' => 'Event.activity_id = Activity.id'
-                    ),
-                    array(
-                        'table' => 'subjects',
-                        'alias' => 'Subject',
-                        'type' => 'left',
-                        'conditions' => 'Activity.subject_id = Subject.id'
-                    ),
-                    array(
-                        'table' => 'groups',
-                        'alias' => 'Group',
-                        'type' => 'left',
-                        'conditions' => 'Event.group_id = Group.id'
-                    ),
-                    array(
-                        'table' => 'users',
-                        'alias' => 'Teacher',
-                        'type' => 'left',
-                        'conditions' => 'Event.teacher_id = Teacher.id AND (Teacher.type = "Profesor" OR Teacher.type = "Administrador")'
-                    )
-                ),
-                'order' => null,
-                'recursive' => 0,
-                'limit' => null,
-                'group' => null
-            ),
-            $this->Event
-        );
-                    
-        $this->loadModel('Booking');
-        $sql2 = $db->buildStatement(
-            array(
-                'table' => $db->fullTableName($this->Booking),
-                'alias' => 'Booking',
-                'fields' => array(
-                    'Booking.initial_hour',
-                    'Booking.final_hour',
-                    'Booking.reason as name',
-                    '"booking" as type',
-                    'null as subject_acronym',
-                    'null as subject_degree',
-                    'null as subject_level',
-                    'null as group_name',
-                    'null as teacher_first_name',
-                    'null as teacher_last_name',
-                    'Booking.classroom_id',
-                    'Classroom.name as classroom_name'
-                ),
-                'conditions' => array(
-                    'Booking.initial_hour > CURDATE()',
-                    'Booking.initial_hour < (CURDATE() + INTERVAL 1 DAY)',
-                    'OR' => array(
-                        "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
-                        "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
-                    ),
-                    '(Booking.show_tv' . ($classroom_show_tv ? ' OR Booking.classroom_id = -1 OR Classroom.show_tv' : '') . ')',
-                ),
-                'joins' => array(
-                    array(
-                        'table' => 'classrooms',
-                        'alias' => 'Classroom',
-                        'type' => 'left',
-                        'conditions' => 'Booking.classroom_id = Classroom.id'
-                    )
-                ),
-                'order' => null,
-                'recursive' => 0,
-                'limit' => null,
-                'group' => null
-            ),
-            $this->Booking
-        );
-                    
-        $events = $db->fetchAll($sql1.' UNION '.$sql2.' ORDER BY initial_hour, ISNULL(subject_acronym), subject_acronym, name, group_name');
-        foreach($events as $i => &$event) {
-            $event = $event[0];
-            $event['sql_order'] = $i;
-        }
-        usort($events, array($this, '_sortBoardEvents'));
-        $this->set('events', $events);
-        */
     }
     
     function _add_days(&$date, $ndays, $nminutes = 0) {
@@ -1107,6 +1053,12 @@ class EventsController extends AppController {
     }
 
     function _authorizeEdit($event) {
+        $ref = isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null;
+
+        if (! Environment::institution('id') || ($ref && $ref !== 'events')) {
+            return false;
+        }
+
         if ($this->Auth->user('type') == "Administrador") {
             return true;
         }
@@ -1151,6 +1103,8 @@ class EventsController extends AppController {
 
         $action = $this->params['action'];
 
+        $no_institution_actions = array('view');
+
         $children_actions = array('get_by_teacher' => 'calendar_by_teacher');
 
         $private_actions = array('schedule', 'add', 'copy', 'edit', 'update', 'delete', 'update_classroom', 'update_teacher');
@@ -1160,6 +1114,10 @@ class EventsController extends AppController {
 
         if (isset($children_actions[$action])) {
             $action = $children_actions[$action];
+
+            if (array_search($action, $no_institution_actions) === false && ! Environment::institution('id')) {
+                return false;
+            }
 
             $auth_type = $this->Auth->user('type');
             $acl = Configure::read('app.acl');
@@ -1171,6 +1129,10 @@ class EventsController extends AppController {
                 $this->Auth->allow($this->params['action']);
                 return true;
             }
+        }
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            return false;
         }
 
         if (array_search($action, $private_actions) !== false) {
@@ -1187,30 +1149,5 @@ class EventsController extends AppController {
         }
 
         return $this->Acl->check("events.{$action}");
-    }
-
-    /* @todo remove _sortBoardEvents */
-    function _sortBoardEvents($a, $b) {
-        if ($a['initial_hour'] === $b['initial_hour']) {
-            if ($a['subject_degree'] !== null && $b['subject_degree'] !== null) {
-                $a_degree = $this->Event->Activity->Subject->degreeToInt($a['subject_degree']);
-                $b_degree = $this->Event->Activity->Subject->degreeToInt($b['subject_degree']);
-                if ($a_degree !== $b_degree) {
-                    return $a_degree - $b_degree;
-                }
-            }
-            if ($a['subject_level'] === null || $b['subject_level'] === null) {
-                if ($a['subject_level'] === $b['subject_level']) {
-                    return strcasecmp($a['name'], $b['name']);
-                }
-            } else {
-                $a_level = $this->Event->Activity->Subject->levelToInt($a['subject_level']);
-                $b_level = $this->Event->Activity->Subject->levelToInt($b['subject_level']);
-                if ($a_level !== $b_level) {
-                    return $a_level - $b_level;
-                }
-            }
-        }
-        return $a['sql_order'] - $b['sql_order'];
     }
 }

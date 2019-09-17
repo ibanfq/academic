@@ -1,6 +1,7 @@
 <?php 
-	$html->addCrumb('Registros de impartición', '/attendance_registers');
-	$html->addCrumb('Ver registro de impartición', "/attendance_registers/view/{$ar['AttendanceRegister']['id']}");
+	$html->addCrumb('Registros de impartición', '/institutions/ref:attendance_registers');
+	$html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/attendance_registers');
+	$html->addCrumb('Ver registro de impartición', Environment::getBaseUrl() . "/attendance_registers/view/{$ar['AttendanceRegister']['id']}"); 
 	$html->addCrumb('Editar registro', "/attendance_registers/edit/{$ar['AttendanceRegister']['id']}");
 	
 	$initial_hour = date_create($ar['AttendanceRegister']['initial_hour']);

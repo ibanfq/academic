@@ -1,7 +1,14 @@
 <!-- File: /app/views/users/edit.ctp -->
-<?php $html->addCrumb('Usuarios', '/users'); ?>
-<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
-<?php $html->addCrumb("Modificar usuario", "/users/edit/{$user['User']['id']}"); ?>
+<?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
+<?php if (Environment::institution('id')): ?>
+	<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+	<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$user['User']['id']}"); ?>
+	<?php $html->addCrumb("Modificar usuario", Environment::getBaseUrl() . "/users/edit/{$user['User']['id']}"); ?>
+<?php else: ?>
+	<?php $html->addCrumb('Todos los centros', '/users'); ?>
+	<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
+	<?php $html->addCrumb("Modificar usuario", "/users/edit/{$user['User']['id']}"); ?>
+<?php endif; ?>
 
 <h1>Modificar usuario</h1>
 <?php
@@ -21,7 +28,11 @@
 				else:
 					$help_text = '';
 				endif;
-				echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => "</dd></dl>$help_text", 'onchange' => 'userTypeChanged()', 'options' => array("Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario")));
+				$types = array("Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario");
+				if (! Environment::institution('id') && $auth->user('super_admin')) {
+					$types = array_merge(array('Super administrador' => 'Super administrador'), $types);
+				}
+				echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => "</dd></dl>$help_text", 'onchange' => 'userTypeChanged()', 'options' => $types));
 			else:
 				echo "
 					<div class=\"input\">

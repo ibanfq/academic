@@ -282,14 +282,18 @@ class CompetenceController extends AppController {
             $this->redirect(array('controller' => 'users', 'action' => 'index'));
         }
 
-        $courses = $this->Competence->Course->current();
+        $academic_year = $this->User->Subject->Course->AcademicYear->current();
+        $courses_id = null;
 
-        if (!$courses) {
+        if ($academic_year) {
+            $courses = $this->Competence->Course->current();
+            $courses_id = Set::extract($courses, '{n}.id');
+        }
+
+        if (empty($courses_id)) {
             $this->Session->setFlash('No se ha podido acceder al curso actual.');
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
-
-        $courses_id = Set::extract($courses, '{n}.id');
 
         $competence_joins = array(
             array(
@@ -373,6 +377,7 @@ class CompetenceController extends AppController {
         ));
 
         $this->set('student', $student);
+        $this->set('academic_year', $academic_year);
         $this->set('competence', $competence);
     }
 
@@ -385,11 +390,20 @@ class CompetenceController extends AppController {
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
-                'Course.id' => array('Course.id' => $course_id),
+                'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -513,11 +527,20 @@ class CompetenceController extends AppController {
         );
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $competence['Competence']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -557,11 +580,20 @@ class CompetenceController extends AppController {
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $subject['Subject']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -831,11 +863,20 @@ class CompetenceController extends AppController {
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $competence['Competence']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -908,11 +949,20 @@ class CompetenceController extends AppController {
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -1038,11 +1088,20 @@ class CompetenceController extends AppController {
         }
 
         $course = $this->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -1215,6 +1274,11 @@ class CompetenceController extends AppController {
     function _authorize()
     {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
+
         $administrator_actions = array(
             'by_course', 'by_subject', 'by_student',
             'view', 'view_by_subject','view_by_student',

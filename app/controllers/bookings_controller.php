@@ -250,7 +250,7 @@ class BookingsController extends AppController {
             }
         }
 
-        // @todo: update fullcalender request to with range of dates
+        // @todo: update fullcalender request to a range of dates
         $from_date = date('Y-m-d H:i:s', strtotime('- 3 years')); 
         $where = "($where) AND Booking.initial_hour >= '$from_date'";
 
@@ -262,16 +262,22 @@ class BookingsController extends AppController {
     
     function view($id = null) {
         $id = $id === null ? null : intval($id);
+
         $db = $this->Booking->getDataSource();
 
+        $conditions = array(
+            'Booking.id' => $id,
+        );
+
+        if (Environment::institution('id')) {
+            $conditions['OR'] = array(
+                "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
+                "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+            );
+        }
+
         $booking = $this->Booking->find('first', array(
-            'conditions' => array(
-                'Booking.id' => $id,
-                'OR' => array(
-                    "Booking.classroom_id = -1 AND Booking.institution_id = {$db->value(Environment::institution('id'))}",
-                    "Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
-                )
-            )
+            'conditions' => $conditions
         ));
 
         $this->set('booking', $booking);
@@ -526,6 +532,12 @@ class BookingsController extends AppController {
     }
     
     function _authorizeEdit($booking) {
+        $ref = isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null;
+
+        if (! Environment::institution('id') || ($ref && $ref !== 'bookings')) {
+            return false;
+        }
+
         $uid = $this->Auth->user('id');
 
         if (empty($booking['Classroom']['id']) && !empty($booking['Booking']['classroom_id']) && $booking['Booking']['classroom_id'] != -1) {
@@ -557,13 +569,20 @@ class BookingsController extends AppController {
 
     function _authorize() {
         parent::_authorize();
+
+        $no_institution_actions = array('view');
+        $public_actions = array('get', 'view');
         
-        if (($this->params['action'] == "get") || ($this->params['action'] == "view")) {
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            return false;
+        }
+        
+        if (array_search($this->params['action'], $public_actions) !== false) {
             return true;
         }
 
         if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Conserje")) {
-            if (!Configure::read('app.classroom.teachers_can_booking') || $this->Auth->user('type') !== "Profesor") {
+            if ($this->Auth->user('type') !== "Profesor" || ! Configure::read('app.classroom.teachers_can_booking')) {
                 return false;
             }
         }

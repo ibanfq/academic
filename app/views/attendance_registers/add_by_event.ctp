@@ -1,10 +1,13 @@
-<?php $html->addCrumb('Registros de impartición', '/attendance_registers'); ?>
-<?php $html->addCrumb('Crear registro de impartición', '/attendance_registers/add'); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb("Estadísticas asignatura", Environment::getBaseUrl() . "/subjects/statistics/{$subject['Subject']['id']}"); ?>
+<?php $html->addCrumb('Crear registro de impartición', $html->url(null)); ?>
 
 <h1>Crear registro de impartición</h1>
-<?php echo $this->Form->create('AttendanceRegister', array(
-	'action' => sprintf('add_by_event/%d', $this->data['AttendanceRegister']['event_id']),
-)) ?>
+<?php echo $this->Form->create('AttendanceRegister', array('url' => $html->url(null))) ?>
 	<?php echo $this->Form->hidden('event_id') ?>
 	<fieldset>
 	<legend>Datos generales</legend>
@@ -14,7 +17,7 @@
 					<label for="subject">Asignatura</label>
 				</dt>
 				<dd>
-					<input type="input" id="subject" readonly class="disabled" value="<?php echo $subject ?>" />
+					<input type="input" id="subject" readonly class="disabled" value="<?php echo $subject['Subject']['name'] ?>" />
 				</dd>
 			</dl>
 		</div>
@@ -25,7 +28,7 @@
 					<label for="activity">Actividad</label>
 				</dt>
 				<dd>
-					<input type="input" id="activity" readonly class="disabled" value="<?php echo $activity ?>" />
+					<input type="input" id="activity" readonly class="disabled" value="<?php echo $event['Activity']['name'] ?>" />
 					<?php echo $this->Form->hidden('activity_id')?>
 					<?php echo $this->Form->hidden('group_id')?>
 				</dd>

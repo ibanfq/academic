@@ -105,11 +105,6 @@ class AttendanceRegistersController extends AppController {
 
         // Set fixed values
         $subject = $this->AttendanceRegister->Activity->Subject->findById($event['Activity']['subject_id']);
-        $this->set(array(
-            'activity' => $event['Activity']['name'],
-            'subject' => $subject['Subject']['name'],
-            )
-        );
 
         if ($this->data) {
             if (empty($this->data['AttendanceRegister'])) {
@@ -209,6 +204,32 @@ class AttendanceRegistersController extends AppController {
                 'event_id' => $event['Event']['id'],
             );
         }
+
+        $course = $this->AttendanceRegister->Activity->Subject->Course->find(
+            'first',
+            array(
+                'fields' => array('Course.*', 'Degree.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'degrees',
+                        'alias' => 'Degree',
+                        'type' => 'INNER',
+                        'conditions' => 'Degree.id = Course.degree_id'
+                    )
+                ),
+                'conditions' => array(
+                    'Course.id' => $subject['Subject']['course_id'],
+                    'Course.institution_id' => Environment::institution('id')
+                ),
+                'recursive' => -1
+            )
+        );
+
+        $this->set(array(
+            'event' => $event,
+            'subject' => $subject,
+            'course' => $course
+        ));
     }
 
     /**
@@ -428,8 +449,33 @@ class AttendanceRegistersController extends AppController {
                 $this->redirect($this->referer());
                 break;
             case 'success':
-                $this->set('ar', $response['data']);
-                $this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($response['data']['Activity']['subject_id']));
+                $ar = $response['data'];
+
+                $subject = $this->AttendanceRegister->Activity->Subject->findById($ar['Activity']['subject_id']);
+
+                $course = $this->AttendanceRegister->Activity->Subject->Course->find(
+                    'first',
+                    array(
+                        'fields' => array('Course.*', 'Degree.*'),
+                        'joins' => array(
+                            array(
+                                'table' => 'degrees',
+                                'alias' => 'Degree',
+                                'type' => 'INNER',
+                                'conditions' => 'Degree.id = Course.degree_id'
+                            )
+                        ),
+                        'conditions' => array(
+                            'Course.id' => $subject['Subject']['course_id'],
+                            'Course.institution_id' => Environment::institution('id')
+                        ),
+                        'recursive' => -1
+                    )
+                );
+
+                $this->set('ar', $ar);
+                $this->set('subject', $subject);
+                $this->set('course', $course);
         }
     }
 
@@ -628,7 +674,19 @@ class AttendanceRegistersController extends AppController {
         $course = $this->AttendanceRegister->Activity->Subject->Course->find(
             'first',
             array(
-                'conditions' => array('Course.id' => $course_id, 'Course.institution_id' => Environment::institution('id')),
+                'fields' => array('Course.*', 'Degree.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'degrees',
+                        'alias' => 'Degree',
+                        'type' => 'INNER',
+                        'conditions' => 'Degree.id = Course.degree_id'
+                    )
+                ),
+                'conditions' => array(
+                    'Course.id' => $course_id,
+                    'Course.institution_id' => Environment::institution('id')
+                ),
                 'recursive' => -1
             )
         );
@@ -714,6 +772,7 @@ class AttendanceRegistersController extends AppController {
                     "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
                 )
             ));
+
             if ($this->Auth->user('type') !== "Profesor" || ($ar && floatval($ar['AttendanceRegister']['duration']))) {
                 if (isset($this->data['AttendanceRegister']['students'])) {
                     $selected_students = array_unique(array_keys($this->data['AttendanceRegister']['students']));
@@ -738,62 +797,85 @@ class AttendanceRegistersController extends AppController {
                     $this->Session->setFlash('No se ha podido crear el registro de asistencia. Por favor, revise que ha introducido todos los datos correctamente.');
                     $this->redirect(array('action' => 'index'));
                 }
-            } else {
-                $this->Session->setFlash('No es posible editar el registro de asistencia hasta que el evento haya sido marcado como impartido.');
-                $this->redirect(array('action' => 'view_my_registers', $subject['Subject']['course_id']));
             }
+
+            $this->Session->setFlash('No es posible editar el registro de asistencia hasta que el evento haya sido marcado como impartido.');
+            $this->redirect(array('action' => 'view_my_registers', $subject['Subject']['course_id']));
+        }
+
+        /**
+         * Block edition until attendance sheet has been printed or if is a teahcer until attendance sheet has been registered
+         */
+        $ar = $this->AttendanceRegister->findByEventId($event_id);
+        if (!$ar || ($this->Auth->user('type') === "Profesor" && !floatval($ar['AttendanceRegister']['duration']))) {
+            $this->set('students', false);
+            $this->set('subject', $subject);
+            $this->set('event', $event);
         } else {
-            /**
-             * Block edition until attendance sheet has been printed or if is a teahcer until attendance sheet has been registered
-             */
-            $ar = $this->AttendanceRegister->findByEventId($event_id);
-            if (!$ar || ($this->Auth->user('type') === "Profesor" && !floatval($ar['AttendanceRegister']['duration']))) {
-                $this->set('students', false);
-                $this->set('subject', $subject);
-                $this->set('event', $event);
-            } else {
-                if (!isset($ar['AttendanceRegister']['id'])) {
-                    $this->data['AttendanceRegister'] = array('id' => null,
-                        'event_id' => $event['Event']['id'],
-                        'initial_hour' => $event['Event']['initial_hour'],
-                        'final_hour' => $event['Event']['final_hour'],
-                        'activity_id' => $event['Event']['activity_id'],
-                        'group_id' => $event['Event']['group_id'],
-                        'teacher_id' => $event['Event']['teacher_id'],
-                        'teacher_2_id' => $event['Event']['teacher_2_id']);
+            if (!isset($ar['AttendanceRegister']['id'])) {
+                $this->data['AttendanceRegister'] = array('id' => null,
+                    'event_id' => $event['Event']['id'],
+                    'initial_hour' => $event['Event']['initial_hour'],
+                    'final_hour' => $event['Event']['final_hour'],
+                    'activity_id' => $event['Event']['activity_id'],
+                    'group_id' => $event['Event']['group_id'],
+                    'teacher_id' => $event['Event']['teacher_id'],
+                    'teacher_2_id' => $event['Event']['teacher_2_id']);
 
-                    $this->AttendanceRegister->save($this->data);
-                    $ar = $this->AttendanceRegister->findByEventId($event_id);
-                }
-
-                if ((isset($ar['Student'])) && (count($ar['Student']))) {
-                    $students = $this->AttendanceRegister->query("
-                        SELECT Student.*
-                        FROM users Student
-                        INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
-                        WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
-                        ORDER BY Student.last_name, Student.first_name
-                        ");
-                } else {
-                    $students = $this->AttendanceRegister->query("
-                        SELECT Student.*
-                        FROM users Student
-                        INNER JOIN registrations ON registrations.student_id = Student.id
-                        WHERE registrations.activity_id = {$event['Event']['activity_id']}
-                        AND registrations.group_id = {$event['Event']['group_id']}
-                        ORDER BY Student.last_name, Student.first_name
-                        ");
-                }
-
-                $students_raw = array();
-                foreach ($students as $student) {
-                    array_push($students_raw, $student['Student']);
-                }
-
-                $this->set('students', $students_raw);
-                $this->set('subject', $this->AttendanceRegister->Activity->Subject->findById($ar["Activity"]["subject_id"]));
-                $this->set('ar', $ar);
+                $this->AttendanceRegister->save($this->data);
+                $ar = $this->AttendanceRegister->findByEventId($event_id);
             }
+
+            if ((isset($ar['Student'])) && (count($ar['Student']))) {
+                $students = $this->AttendanceRegister->query("
+                    SELECT Student.*
+                    FROM users Student
+                    INNER JOIN users_attendance_register UAR ON UAR.user_id = Student.id
+                    WHERE UAR.attendance_register_id = {$ar['AttendanceRegister']['id']}
+                    ORDER BY Student.last_name, Student.first_name
+                    ");
+            } else {
+                $students = $this->AttendanceRegister->query("
+                    SELECT Student.*
+                    FROM users Student
+                    INNER JOIN registrations ON registrations.student_id = Student.id
+                    WHERE registrations.activity_id = {$event['Event']['activity_id']}
+                    AND registrations.group_id = {$event['Event']['group_id']}
+                    ORDER BY Student.last_name, Student.first_name
+                    ");
+            }
+
+            $students_raw = array();
+            foreach ($students as $student) {
+                array_push($students_raw, $student['Student']);
+            }
+
+            $subject = $this->AttendanceRegister->Activity->Subject->findById($ar["Activity"]["subject_id"]);
+
+            $course = $this->AttendanceRegister->Activity->Subject->Course->find(
+                'first',
+                array(
+                    'fields' => array('Course.*', 'Degree.*'),
+                    'joins' => array(
+                        array(
+                            'table' => 'degrees',
+                            'alias' => 'Degree',
+                            'type' => 'INNER',
+                            'conditions' => 'Degree.id = Course.degree_id'
+                        )
+                    ),
+                    'conditions' => array(
+                        'Course.id' => $subject['Subject']['course_id'],
+                        'Course.institution_id' => Environment::institution('id')
+                    ),
+                    'recursive' => -1
+                )
+            );
+
+            $this->set('students', $students_raw);
+            $this->set('subject', $subject);
+            $this->set('course', $course);
+            $this->set('ar', $ar);
         }
     }
 
@@ -857,7 +939,7 @@ class AttendanceRegistersController extends AppController {
         $this->redirect($this->referer());
     }
 
-    function _authorize(){
+    function _authorize() {
         parent::_authorize();
         
         $no_institution_actions = array("clean_up_day");
@@ -872,11 +954,13 @@ class AttendanceRegistersController extends AppController {
             return true;
         }
 
-        if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario"))
+        if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario")) {
             return false;
+        }
 
-        if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Becario") && ($this->Auth->user('type') != "Administrativo") && (array_search($this->params['action'], $private_actions) !== false))
+        if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Becario") && ($this->Auth->user('type') != "Administrativo") && (array_search($this->params['action'], $private_actions) !== false)) {
             return false;
+        }
 
         $this->set('section', 'attendance_registers');
         return true;

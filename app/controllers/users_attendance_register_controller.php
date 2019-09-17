@@ -37,11 +37,19 @@ class UsersAttendanceRegisterController extends AppController {
             
             $this->UserAttendanceRegister->set($this->data);
             if (!$error && $this->UserAttendanceRegister->validates()) {
-                $response = $this->Api->call(
-                    'POST',
-                    '/api/institutions/'.Environment::institution('id').'/users_attendance_register',
-                    $data
-                );
+                if (Environment::institution('id')) {
+                    $response = $this->Api->call(
+                        'POST',
+                        '/api/institutions/'.Environment::institution('id').'/users_attendance_register',
+                        $data
+                    );
+                } else {
+                    $response = $this->Api->call(
+                        'POST',
+                        '/api/users_attendance_register',
+                        $data
+                    );
+                }
                 if ($response['status'] === 'success') {
                     $this->Session->setFlash("Te has registrado correctamente en el grupo \"{$response['data']['Group']['name']}\" de la actividad \"{$response['data']['Activity']['name']}\".");
                     $this->redirect(array('action' => 'add_by_secret_code'));
@@ -56,6 +64,26 @@ class UsersAttendanceRegisterController extends AppController {
     
     function _authorize(){
         parent::_authorize();
+        
+        $no_institution_actions = array("add_by_secret_code");
+        $public_actions = array("add_by_secret_code");
+        $private_actions = array();
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            return false;
+        }
+        
+        if (array_search($this->params['action'], $public_actions) !== false) {
+            return true;
+        }
+
+        if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario")) {
+            return false;
+        }
+
+        if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Becario") && ($this->Auth->user('type') != "Administrativo") && (array_search($this->params['action'], $private_actions) !== false)) {
+            return false;
+        }
 
         $this->set('section', 'users_attendance_register');
         return true;

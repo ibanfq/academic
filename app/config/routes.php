@@ -69,6 +69,10 @@
     array('institution' => '[0-9]+', 'id' => '[0-9]+', 'pass' => array('id'))
   );
   Router::connect(
+    '/api/users_attendance_register',
+    array('controller' => 'api_users_attendance_register', 'action' => 'add', '[method]' => 'POST')
+  );
+  Router::connect(
     '/api/institutions/:institution/users_attendance_register',
     array('controller' => 'api_users_attendance_register', 'action' => 'add', '[method]' => 'POST'),
     array('institution' => '[0-9]+')

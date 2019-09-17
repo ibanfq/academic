@@ -1,5 +1,6 @@
-<?php $html->addCrumb('Registros de impartición', '/attendance_registers'); ?>
-<?php $html->addCrumb('Crear registro de impartición', '/attendance_registers/add'); ?>
+<?php $html->addCrumb('Registros de impartición', '/institutions/ref:attendance_registers'); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/attendance_registers'); ?>
+<?php $html->addCrumb('Crear registro de impartición', Environment::getBaseUrl() . '/attendance_registers/add'); ?>
 
 <h1>Crear registro de impartición</h1>
 <?php echo $this->Form->create('AttendanceRegister') ?>

@@ -129,6 +129,9 @@ class UsersController extends AppController {
                 $this->Session->setFlash('No se ha podido acceder al centro.');
                 $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
             }
+        } elseif (Environment::institution('id')) {
+            $this->Session->setFlash('No tiene permisos para realizar esta acción.');
+            $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
         } else {
             $course_id = intval($this->params['named']['course']);
             
@@ -139,11 +142,20 @@ class UsersController extends AppController {
             $this->loadModel('Course');
 
             $course = $this->Course->find('first', array(
-                'recursive' => -1,
+                'fields' => array('Course.*', 'Degree.*'),
+                'joins' => array(
+                    array(
+                        'table' => 'degrees',
+                        'alias' => 'Degree',
+                        'type' => 'INNER',
+                        'conditions' => 'Degree.id = Course.degree_id'
+                    )
+                ),
                 'conditions' => array(
                     'Course.id' => $course_id,
                     'Course.institution_id' => Environment::institution('id')
-                )
+                ),
+                'recursive' => -1
             ));
 
             if (!$course) {
@@ -205,7 +217,7 @@ class UsersController extends AppController {
                 )
             );
         } elseif (! $this->Auth->user('super_admin')) {
-            $this->Session->setFlash('No se ha podido acceder al centro.');
+            $this->Session->setFlash('No tiene permisos para realizar esta acción.');
             $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
         }
 
@@ -226,6 +238,7 @@ class UsersController extends AppController {
             $this->loadModel('UserInstitution');
 
             $user_institutions = $this->UserInstitution->find('all', array(
+                'fields' => array('Institution.*', 'UserInstitution.*'),
                 'joins' => array(
                     array(
                         'table' => 'institutions',
@@ -285,6 +298,9 @@ class UsersController extends AppController {
                         $this->Session->setFlash('El usuario ya está registrado en el sistema como otro tipo de usuario.');
                         $this->redirect($this->referer());
                     }
+                } elseif (! $this->Auth->user('super_admin')) {
+                    $this->Session->setFlash('No tiene permisos para realizar esta acción.');
+                    $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
                 } else {
                     $user = $this->User->find('first', array(
                         'conditions' => array(
@@ -309,7 +325,14 @@ class UsersController extends AppController {
                 $this->data['User']['password'] = $this->Auth->password($password);
             }
 
-            if ($this->User->save($this->data)) {
+            $dataToSave = $this->data;
+
+            if (isset($dataToSave['User']['type']) && $dataToSave['User']['type'] === 'Super administrador') {
+                $dataToSave['User']['type'] = 'Administrador';
+                $dataToSave['User']['super_admin'] = $this->Auth->user('super_admin');
+            }
+
+            if ($this->User->save($dataToSave)) {
                 $ok = true;
 
                 if (Environment::institution('id')) {
@@ -332,13 +355,13 @@ class UsersController extends AppController {
 
                 if ($ok || $is_new) {
                     $this->Email->from = 'Academic <noreply@ulpgc.es>';
-                    $this->Email->to = $this->data['User']['username'];
+                    $this->Email->to = $dataToSave['User']['username'];
                     $this->Email->subject = "Alta en Academic";
                     $this->Email->sendAs = 'both';
                     $this->Email->template = Configure::read('app.email.user_registered')
                         ? Configure::read('app.email.user_registered')
                         : 'user_registered';
-                    $this->set('user', $this->data);
+                    $this->set('user', $dataToSave);
                     if (! $user) {
                         $this->set('password', $password);
                     }
@@ -413,34 +436,44 @@ class UsersController extends AppController {
             $type_editable = true;
             $betaTesters = array();
         }
+        
 
         if (empty($this->data)) {
             $this->data = $user;
             $this->data['User']['beta_tester'] = !empty($betaTesters[$user['User']['username']]);
             $this->data['User']['active'] = !empty($user['UserInstitution']['active']);
+            if ($this->Auth->user('super_admin') && $this->data['User']['super_admin']) {
+                $this->data['User']['type'] = 'Super Administrador';
+            }
         } else {
-            $this->data = $this->Form->filter($this->data);
-            $this->data['User']['id'] = $user['User']['id'];
-            $this->data['User']['modified'] = null;
+            $dataToSave = $this->Form->filter($this->data);
+
+            $dataToSave['User']['id'] = $user['User']['id'];
+            $dataToSave['User']['modified'] = null;
 
             if (!$type_editable) {
-                unset($this->data['User']['type']);
+                unset($dataToSave['User']['type']);
+            } elseif (isset($dataToSave['User']['type']) && $dataToSave['User']['type'] === 'Super administrador') {
+                $dataToSave['User']['type'] = 'Administrador';
+                $dataToSave['User']['super_admin'] = $this->Auth->user('super_admin');
+            } elseif ($this->Auth->user('super_admin')) {
+                $dataToSave['User']['super_admin'] = false;
             }
 
-            if ($this->User->save($this->data)) {
+            if ($this->User->save($dataToSave)) {
                 $ok = true;
 
                 if (Environment::institution('id')) {
-                    if (isset($this->data['User']['active']) && ($this->Auth->user('type') === 'Administrativo' || $this->Auth->user('type') === 'Administrador')) {
+                    if (isset($dataToSave['User']['active']) && ($this->Auth->user('type') === 'Administrativo' || $this->Auth->user('type') === 'Administrador')) {
                         $this->UserInstitution->save(array(
                             'UserInstitution' => array(
                                 'id' => $user['UserInstitution']['id'],
-                                'active' => !empty( $this->data['User']['active'])
+                                'active' => !empty($dataToSave['User']['active'])
                             )
                         ));
                     }
 
-                    if (isset($this->data['User']['beta_tester']) && $this->Auth->user('type') === 'Administrador') {
+                    if (isset($dataToSave['User']['beta_tester']) && $this->Auth->user('type') === 'Administrador') {
                         $institution_id = Environment::institution('id');
                         $config_file = CONFIGS . "institutions/$institution_id/app.options.php";
                         $app_options = include $config_file;
@@ -448,8 +481,8 @@ class UsersController extends AppController {
                             $app_options = array();
                         }
 
-                        $username = $this->data['User']['username'];
-                        if (empty($this->data['User']['beta_tester'])) {
+                        $username = $dataToSave['User']['username'];
+                        if (empty($dataToSave['User']['beta_tester'])) {
                             unset($app_options['beta']['testers'][$username]);
                         } else {
                             $app_options['beta']['testers'][$username] = true;
@@ -486,18 +519,28 @@ class UsersController extends AppController {
             $this->redirect(array('action' => 'index'));
         }
 
-        $user = $this->User->find('first', array(
-            'joins' => array(
-                array(
-                    'table' => 'users_institutions',
-                    'alias' => 'UserInstitution',
-                    'type' => 'INNER',
-                    'conditions' => array(
-                        'UserInstitution.user_id = User.id',
-                        'UserInstitution.institution_id' => Environment::institution('id')
-                    )
+        $fields = array('User.*');
+        $joins = array();
+
+        if (Environment::institution('id')) {
+            $fields[] = 'UserInstitution.*';
+            $joins[] = array(
+                'table' => 'users_institutions',
+                'alias' => 'UserInstitution',
+                'type' => 'INNER',
+                'conditions' => array(
+                    'UserInstitution.user_id = User.id',
+                    'UserInstitution.institution_id' => Environment::institution('id')
                 )
-            ),
+            );
+        } elseif (! $this->Auth->user('super_admin')) {
+            $this->Session->setFlash('No se ha podido acceder al centro.');
+            $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
+        }
+
+        $user = $this->User->find('first', array(
+            'fields' => $fields,
+            'joins' => $joins,
             'conditions' => array(
                 'User.id' => $id
             )
@@ -508,19 +551,17 @@ class UsersController extends AppController {
             $this->redirect(array('action' => 'index'));
         }
 
-        $this->loadModel('UserInstitution');
-
-        $institutionsCount = $this->UserInstitution->find('count', array(
-            'conditions' => array(
-                'UserInstitution.user_id' => $id
-            )
-        ));
+        if (Environment::institution('id')) {
+            $and_course_in_institution = "AND course.institution_id = {$db->value(Environment::institution('id'))}";
+        } else {
+            $and_course_in_institution = '';
+        }
 
         $this->User->query("
             DELETE group_request FROM `group_requests` group_request
             INNER JOIN activities activity ON activity.id = group_request.activity_id
             INNER JOIN subjects subject ON subject.id = activity.subject_id
-            INNER JOIN courses course ON course.id = subject.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = subject.course_id $and_course_in_institution
             WHERE group_request.student_id = {$id} OR group_request.student_2_id = {$id}
         ");
         $this->User->query("
@@ -528,7 +569,7 @@ class UsersController extends AppController {
             INNER JOIN competence_criteria competence_criterion ON competence_criterion.id = competence_criterion_teacher.criterion_id
             INNER JOIN competence_goals competence_goal ON competence_goal.id = competence_criterion.goal_id
             INNER JOIN competence ON competence.id = competence_goal.competence_id
-            INNER JOIN courses course ON course.id = competence.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = competence.course_id $and_course_in_institution
             WHERE competence_criterion_teacher.teacher_id = {$id}
         ");
         $this->User->query("
@@ -536,35 +577,49 @@ class UsersController extends AppController {
             INNER JOIN competence_criteria competence_criterion ON competence_criterion.id = competence_criterion_grade.criterion_id
             INNER JOIN competence_goals competence_goal ON competence_goal.id = competence_criterion.goal_id
             INNER JOIN competence ON competence.id = competence_goal.competence_id
-            INNER JOIN courses course ON course.id = competence.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = competence.course_id $and_course_in_institution
             WHERE competence_criterion_grade.student_id = {$id}
         ");
         $this->User->query("
             DELETE competence_goal_request FROM `competence_goal_requests` competence_goal_request
             INNER JOIN competence_goals competence_goal ON competence_goal.id = competence_goal_request.goal_id
             INNER JOIN competence ON competence.id = competence_goal.competence_id
-            INNER JOIN courses course ON course.id = competence.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = competence.course_id $and_course_in_institution
             WHERE competence_goal_request.student_id = {$id} OR competence_goal_request.teacher_id = {$id}
         ");
         $this->User->query("
             DELETE subject_user FROM `subjects_users` subject_user
             INNER JOIN subjects subject ON subject.id = subject_user.subject_id
-            INNER JOIN courses course ON course.id = subject.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = subject.course_id $and_course_in_institution
             WHERE subject_user.user_id = {$id}
         ");
         $this->User->query("
             DELETE registration FROM `registrations` registration
             INNER JOIN activities activity ON activity.id = registration.activity_id
             INNER JOIN subjects subject ON subject.id = activity.subject_id
-            INNER JOIN courses course ON course.id = subject.course_id AND course.institution_id = {$db->value(Environment::institution('id'))}
+            INNER JOIN courses course ON course.id = subject.course_id $and_course_in_institution
             WHERE registration.student_id = {$id}
         ");
-        $this->User->query("
-            DELETE user_institution FROM `users_institutions` user_institution
-            WHERE user_institution.user_id = {$id} AND user_institution.institution_id = {$db->value(Environment::institution('id'))}
-        ");
 
-        if ($institutionsCount === 1) {
+        if (Environtment::institution('id')) {
+            $this->loadModel('UserInstitution');
+
+            $this->User->query("
+                DELETE user_institution FROM `users_institutions` user_institution
+                WHERE user_institution.user_id = {$id} AND user_institution.institution_id = {$db->value(Environment::institution('id'))}
+            ");
+
+            $institutionsCount = $this->UserInstitution->find('count', array(
+                'conditions' => array(
+                    'UserInstitution.user_id' => $id
+                )
+            ));
+
+            if ($institutionsCount === 1) {
+                $this->User->query("DELETE user FROM `users` user WHERE user.id = {$id}"); 
+            }
+        } else {
+            $this->User->query("DELETE user_institution FROM `users_institutions` user_institution WHERE user_institution.user_id = {$id}}");
             $this->User->query("DELETE user FROM `users` user WHERE user.id = {$id}"); 
         }
 
@@ -886,18 +941,6 @@ class UsersController extends AppController {
     function rememberPassword() {
         if (!empty($this->data)) {
             $this->data = $this->User->find('first', array(
-                'joins' => array(
-                    array(
-                        'table' => 'users_institutions',
-                        'alias' => 'UserInstitution',
-                        'type' => 'INNER',
-                        'conditions' => array(
-                            'UserInstitution.user_id = User.id',
-                            'UserInstitution.institution_id' => Environment::institution('id'),
-                            'UserInstitution.active'
-                        )
-                    )
-                ),
                 'conditions' => array('username' => $this->data['User']['username'])
             ));
             if ($this->data != null){
@@ -1134,11 +1177,20 @@ class UsersController extends AppController {
         }
 
         $course = $this->User->Subject->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
-                'Course.id' => array('Course.id' => $course_id),
+                'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -1236,19 +1288,44 @@ class UsersController extends AppController {
                 $inexistent_subjects = implode(';', array_diff(array_unique($imported_subjects), array_flip($subjects)));
                 $failed_students = implode(';', array_unique($failed_students));
                             
-                $this->redirect(array('action' => 'import_finished', $saved_students, $inexistent_subjects, $failed_students));
+                $this->redirect(array('action' => 'import_finished', $course_id, $saved_students, $inexistent_subjects, $failed_students));
             }
         }
 
         $this->set('course_id', $course_id);
+        $this->set('course', $course);
     }
     
-    function import_finished($imported_students, $inexistent_subjects = null, $failed_students = null) {
+    function import_finished($course_id = null, $imported_students = null, $inexistent_subjects = null, $failed_students = null) {
         $inexistent_subjects = trim($inexistent_subjects);
         $failed_students = trim($failed_students);
+
+        $course_id = $course_id === null ? null : intval($course_id);
+        $imported_students = $imported_students === null ? null : intval($imported_students);
+        $inexistent_subjects = $inexistent_subjects ? array_map('intval', explode(';', trim($inexistent_subjects))) : array();
+        $failed_students = $failed_students ? array_map('intval', explode(';', trim($failed_students))) : array();
+
+        $course = $this->User->Subject->Course->find('first', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
+            'conditions' => array(
+                'Course.id' => $course_id,
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
+        ));
+
+        $this->set('course', $course);
         $this->set('imported_students', $imported_students);
-        $this->set('inexistent_subjects', $inexistent_subjects ? explode(';', trim($inexistent_subjects)) : array());
-        $this->set('failed_students', $failed_students ? explode(';', trim($failed_students)) : array());
+        $this->set('inexistent_subjects', $inexistent_subjects);
+        $this->set('failed_students', $failed_students);
     }
 
     function my_subjects() {
@@ -1366,15 +1443,39 @@ class UsersController extends AppController {
             $this->redirect(array('action' => 'index'));
         }
 
-        $courses = $this->User->Subject->Course->find('all', array(
-            'conditions' => array(
-                'Course.institution_id' => Environment::institution('id')
-            ),
-            'order' => 'initial_date desc'
+        $academic_years = $this->User->Subject->Course->AcademicYear->find('all', array(
+            'recursive' => -1,
+            'order' => array('AcademicYear.initial_date' => 'desc')
         ));
-      
+
+        $academic_years = Set::combine($academic_years, '{n}.AcademicYear.id', '{n}.AcademicYear');
+
+        $courses = $this->User->Subject->Course->find('all', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Degree.id = Course.degree_id'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'order' => array('Degree.name' => 'desc'),
+            'recursive' => -1
+        ));
+
+        foreach ($courses as $course) {
+            $academic_years[$course['Course']['academic_year_id']]['Course'][] = array_merge($course['Course'], array('Degree' => $course['Degree']));
+        }
+
         $this->set('user', $user);
-        $this->set('courses', $courses);
+        $this->set('academic_years', $academic_years);
+        $this->set('current_academic_year', $this->User->Subject->Course->AcademicYear->current());
     }
     
     function get_student_subjects($id = null) {
@@ -1497,15 +1598,39 @@ class UsersController extends AppController {
             $this->redirect(array('action' => 'index'));
         }
         
-        $courses = $this->User->Subject->Course->find('all', array(
-            'conditions' => array(
-                'Course.institution_id' => Environment::institution('id')
-            ),
-            'order' => 'initial_date desc'
+        $academic_years = $this->User->Subject->Course->AcademicYear->find('all', array(
+            'recursive' => -1,
+            'order' => array('AcademicYear.initial_date' => 'desc')
         ));
 
+        $academic_years = Set::combine($academic_years, '{n}.AcademicYear.id', '{n}.AcademicYear');
+
+        $courses = $this->User->Subject->Course->find('all', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Degree.id = Course.degree_id'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'order' => array('Degree.name' => 'desc'),
+            'recursive' => -1
+        ));
+
+        foreach ($courses as $course) {
+            $academic_years[$course['Course']['academic_year_id']]['Course'][] = array_merge($course['Course'], array('Degree' => $course['Degree']));
+        }
+
         $this->set('user', $user);
-        $this->set('courses', $courses);
+        $this->set('academic_years', $academic_years);
+        $this->set('current_academic_year', $this->User->Subject->Course->AcademicYear->current());
     }
     
     /**
@@ -1642,15 +1767,39 @@ class UsersController extends AppController {
             $this->redirect(array('action' => 'index'));
         }
         
-        $courses = $this->User->Subject->Course->find('all', array(
-            'conditions' => array(
-                'Course.institution_id' => Environment::institution('id')
-            ),
-            'order' => 'initial_date desc'
+        $academic_years = $this->User->Subject->Course->AcademicYear->find('all', array(
+            'recursive' => -1,
+            'order' => array('AcademicYear.initial_date' => 'desc')
         ));
-        
-        $this->set('courses', $courses);
+
+        $academic_years = Set::combine($academic_years, '{n}.AcademicYear.id', '{n}.AcademicYear');
+
+        $courses = $this->User->Subject->Course->find('all', array(
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Degree.id = Course.degree_id'
+                    )
+                )
+            ),
+            'conditions' => array(
+                'Course.institution_id' => Environment::institution('id'),
+            ),
+            'order' => array('Degree.name' => 'desc'),
+            'recursive' => -1
+        ));
+
+        foreach ($courses as $course) {
+            $academic_years[$course['Course']['academic_year_id']]['Course'][] = array_merge($course['Course'], array('Degree' => $course['Degree']));
+        }
+
         $this->set('user', $user);
+        $this->set('academic_years', $academic_years);
+        $this->set('current_academic_year', $this->User->Subject->Course->AcademicYear->current());
     }
 
     function teacher_schedule_details($id = null) {
@@ -1882,12 +2031,16 @@ class UsersController extends AppController {
             $this->set('section', 'users');
         }
         
-        $no_institution_actions = array('index', 'edit', 'add', 'view', 'calendars', 'editProfile', 'home', 'login', 'logout', 'my_subjects', 'rememberPassword');
+        $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'logout', 'my_subjects', 'rememberPassword');
         $administrator_actions = array('delete', 'import', 'acl_edit');
         $administrative_actions = array('edit_registration', 'delete_subject', 'edit', 'add');
         $stats_actions = array('index', 'teacher_stats', 'student_stats', 'teacher_stats_details', 'student_stats_details', 'get_student_subjects', 'view');
         $my_subjects_actions = array('my_subjects');
         $public_actions = array();
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            return false;
+        }
 
         $acl = Configure::read('app.acl');
         $auth_type = $this->Auth->user('type');

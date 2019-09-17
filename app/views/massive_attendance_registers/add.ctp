@@ -1,9 +1,11 @@
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('Crear registro de impartición masivo', '/massive_attendance_registers/add'); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('Crear registro de impartición masivo', Environment::getBaseUrl() . "/massive_attendance_registers/add/{$course['Course']['id']}"); ?>
 
 <h1>Crear registro de impartición masivo</h1>
-	<?php echo $form->create('MassiveAttendanceRegister'); ?>
+	<?php echo $form->create('MassiveAttendanceRegister', array('url' => $html->url(null))); ?>
   <fieldset>
     <dl>
       <dt>Aula</dt>

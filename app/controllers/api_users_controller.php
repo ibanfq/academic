@@ -8,11 +8,18 @@ class ApiUsersController extends AppController {
             return false;
         }
 
+        $no_institution_actions = array('me', 'login');
         $administrator_actions = array('delete');
         $administrative_actions = array('edit', 'add');
         $neither_student_nor_concierge = array('index', 'view');
         $student_actions = array();
-        
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
             return false;
         }
@@ -34,12 +41,6 @@ class ApiUsersController extends AppController {
     
     function me()
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $responseData = $this->Auth->user();
         $username = $responseData['User']['username'];
         $beta_testers = (array) Configure::read('app.beta.testers');
@@ -53,12 +54,6 @@ class ApiUsersController extends AppController {
 
     function login()
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $issuer    = Configure::read('app.issuer');
         $issuedAt  = time();
         $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
@@ -97,12 +92,6 @@ class ApiUsersController extends AppController {
     
     function index()
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         App::import('Core', 'Sanitize');
         $db = $this->User->getDataSource();
         

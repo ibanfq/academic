@@ -1,10 +1,12 @@
 <!-- File: /app/views/courses/view.ctp -->
 
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb("{$course['Degree']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('Estudiantes', "/users/index/type:Estudiante/course:{$course['Course']['id']}/ref:competence"); ?>
-<?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", "/competence/stats_by_student/{$course['Course']['id']}/{$student['User']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('Estudiantes', Environment::getBaseUrl() . "/users/index/type:Estudiante/course:{$course['Course']['id']}/ref:competence"); ?>
+<?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", Environment::getBaseUrl() . "/competence/stats_by_student/{$course['Course']['id']}/{$student['User']['id']}"); ?>
 
 <h1>Evaluación por estudiante: <?php echo "{$student['User']['first_name']} {$student['User']['last_name']}" ?></h1>
 

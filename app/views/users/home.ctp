@@ -72,9 +72,9 @@ $(document).ready(function() {
       var id = event.id.match(/\d+/);
       var url;
       if (event.className == 'booking')
-        url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
+        url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/ref:home/";
       else
-        url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
+        url = "<?php echo Environment::getBaseUrl() ?>/events/view/ref:home/";
       $.ajax({
         cache: false,
         type: "GET",
@@ -105,9 +105,9 @@ $(document).ready(function() {
 					var id = event.id.match(/\d+/);
           var url;
           if (event.className == 'booking')
-            url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/";
+            url = "<?php echo Environment::getBaseUrl() ?>/bookings/view/ref:home/";
           else
-            url = "<?php echo Environment::getBaseUrl() ?>/events/view/";
+            url = "<?php echo Environment::getBaseUrl() ?>/events/view/ref:home/";
 
           var eventDetails = $('#EventDetails');
 					if (eventDetails.data('eventId') !== event.id) {

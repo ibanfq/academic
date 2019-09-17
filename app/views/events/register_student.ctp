@@ -1,6 +1,8 @@
 <!-- File: /app/views/users/view.ctp -->
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($subject['Course']), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
-<?php $html->addCrumb($subject['Subject']['name'], '/users/my_subjects'); ?>
+<?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/events/register_student/{$subject['Subject']['id']}"); ?>
 
 <?php $flexible_groups = (bool) Configure::read('app.registration.flexible_groups'); ?>
 <?php $flexible_until_days_to_start = Configure::read('app.activity.teacher_can_block_groups_if_days_to_start'); ?>

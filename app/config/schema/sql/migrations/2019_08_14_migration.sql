@@ -45,7 +45,7 @@ ALTER TABLE `monitors`
 ADD COLUMN `institution_id` INT(11) NOT NULL AFTER `id`;
 
 ALTER TABLE `log` 
-ADD COLUMN `institution_id` INT(11) NOT NULL AFTER `id`;
+ADD COLUMN `institution_id` INT(11) NULL AFTER `id`;
 
 
 ALTER TABLE `bookings` 

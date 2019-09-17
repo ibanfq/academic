@@ -34,11 +34,20 @@ class CompetenceGoalRequestsController extends AppController {
         }
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $course_id,
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -279,6 +288,11 @@ class CompetenceGoalRequestsController extends AppController {
     function _authorize()
     {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
+
         $administrator_actions = array(
             'by_course'
         );

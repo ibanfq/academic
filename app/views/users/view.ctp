@@ -1,8 +1,13 @@
 <!-- File: /app/views/users/view.ctp -->
 
 <?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
-<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
-<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$user['User']['id']}"); ?>
+<?php if (Environment::institution('id')): ?>
+	<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+	<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$user['User']['id']}"); ?>
+<?php else: ?>
+	<?php $html->addCrumb('Todos los centros', '/users'); ?>
+	<?php $html->addCrumb("{$user['User']['first_name']} {$user['User']['last_name']}", "/users/view/{$user['User']['id']}"); ?>
+<?php endif; ?>
 
 <h1>
 	<?php echo $modelHelper->full_name($user)?> - <?php echo $user['User']['type'] ?></h1>
@@ -66,7 +71,7 @@
 		<?php if ($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo"): ?>
 			<dl>
 				<dt>Tipo</dt>
-				<dd><?php echo $user['User']['type']?></dd>
+				<dd><?php echo $user['User']['super_admin'] ? 'Super administrador' : $user['User']['type'] ?></dd>
 			</dl>
 		<?php endif; ?>
 		<?php if (Environment::institution('id')): ?>
@@ -90,7 +95,7 @@
 					</thead>
 					<tbody>
 						<?php foreach ($user_institutions as $institution): ?>
-							<?php $url = array('controller' => 'users', 'action' => 'index', $institution => $institution['Institution']['id']); ?>
+							<?php $url = array('controller' => 'users', 'action' => 'index', 'institution' => $institution['Institution']['id']); ?>
 							<tr>
 								<td><?php echo $html->link($modelHelper->format_acronym($institution['Institution']['acronym']), $url) ?></td>
 								<td><?php echo $html->link($institution['Institution']['name'], $url); ?></td>

@@ -1,8 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!-- File: /app/views/events/schedule.ctp -->
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('Programar curso', "/events/schedule/{$course['Course']['id']}"); ?>
 
 <div id="mobile-query" class="visible-block-phone-portrait"></div>

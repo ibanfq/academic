@@ -29,11 +29,11 @@
     <p><strong>Observaciones:</strong> <?php echo $event['Activity']['notes'] ?>
     <br>
     <?php if (isset($auth) && in_array($auth->user('type'), array("Profesor", "Administrador", "Administrativo", "Becario"))): ?>
-        <?php echo $this->Form->create('AttendanceRegister', array('action' => 'add_by_event/'.$event['Event']['id'])) ?>
+        <?php echo $this->Form->create('AttendanceRegister', array('url' => array('institution' => $subject['Course']['institution_id'], 'controller' => 'attendance_registers', 'action' => 'add_by_event', $event['Event']['id'], 'base' => false))) ?>
         <?php echo $form->input('Event.id', array('type' => 'hidden', 'value' => $event['Event']['id'])); ?>
         <div class="actions">
             <ul>
-                <li><a class="button" target="_blank" href="<?php echo Environment::getBaseUrl() ?>/attendance_registers/print_attendance_file/<?php echo $event['Event']['id'] ?>">Imprimir hoja de asistencia</a></li>
+                <li><a class="button" target="_blank" href="/institutions/<?php echo $subject['Course']['institution_id'] ?>/attendance_registers/print_attendance_file/<?php echo $event['Event']['id'] ?>">Imprimir hoja de asistencia</a></li>
                 <?php
                 $today = new DateTime("today");
                 $isToday = $today->format('Ymd') === $initial_date->format('Ymd');

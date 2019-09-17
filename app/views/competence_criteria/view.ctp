@@ -1,9 +1,11 @@
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb("Competencia {$competence['Competence']['code']}", "/competence/view/{$competence['Competence']['id']}"); ?>
-<?php $html->addCrumb("Objetivo {$competence_goal['CompetenceGoal']['code']}", "/competence_goals/view/{$competence_goal['CompetenceGoal']['id']}"); ?>
-<?php $html->addCrumb("Criterio {$competence_criterion['CompetenceCriterion']['code']}", "/competence_criteria/view/{$competence_criterion['CompetenceCriterion']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb("Competencia {$competence['Competence']['code']}", Environment::getBaseUrl() . "/competence/view/{$competence['Competence']['id']}"); ?>
+<?php $html->addCrumb("Objetivo {$competence_goal['CompetenceGoal']['code']}", Environment::getBaseUrl() . "/competence_goals/view/{$competence_goal['CompetenceGoal']['id']}"); ?>
+<?php $html->addCrumb("Criterio {$competence_criterion['CompetenceCriterion']['code']}", Environment::getBaseUrl() . "/competence_criteria/view/{$competence_criterion['CompetenceCriterion']['id']}"); ?>
 
 <?php if ($auth->user('type') == "Profesor"): ?>
     <h1>Mi criterio de evaluación</h1>

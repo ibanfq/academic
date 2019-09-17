@@ -1,8 +1,8 @@
-<?php $html->addCrumb('Usuarios', '/users'); ?>
-<?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", "/users/view/{$student['User']['id']}"); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_student/{$student['User']['id']}"); ?>
-<?php $html->addCrumb("Competencia {$competence['Competence']['code']}", "/competence/view_by_student/{$student['User']['id']}/{$competence['Competence']['id']}"); ?>
+<?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+<?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$student['User']['id']}"); ?>
+<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_student/{$student['User']['id']}"); ?>
+<?php $html->addCrumb("Competencia {$competence['Competence']['code']}", Environment::getBaseUrl() . "/competence/view_by_student/{$student['User']['id']}/{$competence['Competence']['id']}"); ?>
 
 <?php if ($auth->user('type') == "Profesor"): ?>
     <h1>Mis objetivos de aprendizaje por estudiante: <?php echo h("{$student['User']['first_name']} {$student['User']['last_name']}") ?></h1>

@@ -153,7 +153,7 @@ class RegistrationsController extends AppController {
         }
         
         $activity = $this->Registration->Activity->find('first', array(
-            'fields' => array('Activity.*'),
+            'fields' => array('Activity.*', 'Subject.*', 'Course.*'),
             'joins' => array(
                 array(
                     'table' => 'subjects',
@@ -179,6 +179,8 @@ class RegistrationsController extends AppController {
             $this->Session->setFlash('No se ha podido acceder a la actividad.');
             $this->redirect($this->referer());
         }
+
+        $course = $activity['Course'];
 
         $group = $this->Registration->Group->find('first', array(
             'conditions' => array(
@@ -216,6 +218,7 @@ class RegistrationsController extends AppController {
         
         $this->set('section', 'groups');
         $this->set('registrations', $registrations);
+        $this->set('course', $course);
         $this->set('activity', $this->Registration->Activity->find("first", array('conditions' => array('Activity.id' => $activity_id))));
         $this->set('group', $this->Registration->Group->find("first", array('conditions' => array('`Group`.id' => $group_id))));
         $this->set('changes_closed', $changes_closed);
@@ -513,6 +516,10 @@ class RegistrationsController extends AppController {
     
     function _authorize(){
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
         
         if (($this->Auth->user('type') != "Estudiante") && ($this->Auth->user('type') == "Becario")) {
             return false;

@@ -1,11 +1,14 @@
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb("Modificar competencia", "/competence/edit/{$competence['Competence']['id']}"); ?>
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}"); ?>
+<?php $html->addCrumb("Competencia {$competence['Competence']['code']}", Environment::getBaseUrl() . "/competence/view/{$competence['Competence']['id']}"); ?>
+<?php $html->addCrumb("Modificar competencia", Environment::getBaseUrl() . "/competence/edit/{$competence['Competence']['id']}"); ?>
 
 <h1>Modificar competencia</h1>
 <?php
-	echo $form->create('Competence', array('url' => "/competence/edit/{$competence['Competence']['id']}"));
+	echo $form->create('Competence', array('url' => $this->Html->url(null, true)));
 ?>
 	<fieldset>
 	<legend>Datos generales</legend>

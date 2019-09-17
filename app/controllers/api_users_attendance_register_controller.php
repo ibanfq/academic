@@ -5,17 +5,25 @@ class ApiUsersAttendanceRegisterController extends AppController {
     
 
     function _authorize(){
+        $authorize = parent::_authorize();
+
+        $no_institution_actions = array("add");
         $public_actions = array("add");
-        
-        if (!parent::_authorize()) {
+        $private_actions = array("index");
+        $private_or_teacher_actions = array("delete");
+
+        if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
+        if (!$authorize) {
             if (array_search($this->params['action'], $public_actions) !== false) {
                 return true;
             }
             return false;
         }
-        
-        $private_actions = array("index");
-        $private_or_teacher_actions = array("delete");
         
         if (($this->Auth->user('type') !== "Estudiante") && ($this->Auth->user('type') !== "Profesor") && ($this->Auth->user('type') !== "Administrador") && ($this->Auth->user('type') !== "Administrativo") && ($this->Auth->user('type') !== "Becario")) {
             return false;
@@ -33,12 +41,6 @@ class ApiUsersAttendanceRegisterController extends AppController {
     }
     
     function add() {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $attendance_id = false;
         $attendanceRegister = false;
         $student_id = false;
@@ -69,6 +71,12 @@ class ApiUsersAttendanceRegisterController extends AppController {
         $secret_code = $this->Api->getParameter('AttendanceRegister.secret_code', ($is_anonymous || $is_student? array('required') : array()));
         
         if ($attendance_id) {
+            if (! Environment::institution('id')) {
+                $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+                $this->Api->respond($this);
+                return;
+            }
+
             $db = $this->UserAttendanceRegister->getDataSource();
             $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->find('first', array(
                 'conditions' => array(
@@ -91,12 +99,16 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     }
                 }
             }
-        } else if (strlen($secret_code)) {
-            $db = $this->UserAttendanceRegister->getDataSource();
+        } elseif (strlen($secret_code)) {
+            $today = date('Y-m-d');
+            $tomorrow = date('Y-m-d', strtotime('tomorrow'));
             $attendanceRegister = $this->UserAttendanceRegister->AttendanceRegister->find('first', array(
                 'conditions' => array(
                     'AttendanceRegister.secret_code' => $secret_code,
-                    "Event.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id = {$db->value(Environment::institution('id'))})"
+                    'OR' => array(
+                        'AttendanceRegister.initial_hour BETWEEN ? AND ?' => array($today, $tomorrow),
+                        'Event.initial_hour BETWEEN ? AND ?' => array($today, $tomorrow)
+                    )
                 )
             ));
             if (!$attendanceRegister) {
@@ -218,12 +230,6 @@ class ApiUsersAttendanceRegisterController extends AppController {
     }
     
     function delete($user_id, $attendance_id) {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $user_id = $user_id === null ? null : intval($user_id);
         $attendance_id = $attendance_id === null ? null : intval($attendance_id);
         $this->UserAttendanceRegister->AttendanceRegister->unbindModel(array('hasAndBelongsToMany' => array('User')), false);

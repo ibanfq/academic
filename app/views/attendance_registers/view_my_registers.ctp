@@ -1,11 +1,14 @@
 <?php 
-  $html->addCrumb('Cursos', '/courses');
-  $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}");
+  $html->addCrumb('Cursos', '/academic_years');
+  $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}");
+  $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}");
+  $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}");
+  
   if ($subject) {
-    $html->addCrumb($subject['Subject']['name'], "/subjects/view/{$subject['Subject']['id']}");
-    $html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers/$course_id/{$subject['Subject']['id']}");
+    $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}");
+    $html->addCrumb('Registros de asistencia', Environment::getBaseUrl() . "/attendance_registers/view_my_registers/$course_id/{$subject['Subject']['id']}");
   } else {
-    $html->addCrumb('Registros de asistencia', "/attendance_registers/view_my_registers/$course_id");
+    $html->addCrumb('Registros de asistencia', Environment::getBaseUrl() . "/attendance_registers/view_my_registers/$course_id");
   }
 ?>
 

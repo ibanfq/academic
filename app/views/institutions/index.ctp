@@ -71,7 +71,7 @@
 					<tr>
 						<?php
 							if ($ref) {
-								$url = array('controller' => $ref, 'action' => 'index', 'institution' => $institution['Institution']['id']);
+								$url = array('controller' => $ref, 'action' => 'index', 'institution' => $institution['Institution']['id'], 'base' => false);
 							} else {
 								$url = array('controller' => 'institutions', 'action' => 'view', $institution['Institution']['id']);
 							}

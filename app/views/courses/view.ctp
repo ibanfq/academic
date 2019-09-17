@@ -4,14 +4,14 @@
 <?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
 <?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
 <?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
-<?php if ($ref === 'competence'): ?>
+<?php if ($ref === 'competence_subject_stats'): ?>
 	<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}"); ?>
-	<?php $html->addCrumb('Asignaturas', Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}/ref:competence"); ?>
+	<?php $html->addCrumb('Evaluación por asignaturas', Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}/ref:competence"); ?>
 <?php endif; ?>
 
 <h1><?php echo "{$course['Degree']['name']} ({$course['Course']['initial_date']} - {$course['Course']['final_date']})" ?></h1>
 
-<?php if ($ref !== 'competence'): ?>
+<?php if (!$ref): ?>
 	<div class="actions">
 		<ul>
 			<?php if ($auth->user('type') == "Administrador"): ?>
@@ -51,7 +51,7 @@
 	</div>
 <?php endif; ?>
 
-<div class="<?php echo $ref !== 'competence' ? 'view' : '' ?>">
+<div class="<?php echo !$ref ? 'view' : '' ?>">
 	<fieldset>
 	<legend>Asignaturas</legend>
 		<div class="horizontal-scrollable-content">
@@ -69,7 +69,7 @@
 						<?php foreach ($course['Subject'] as $subject): ?>
 							<tr>
 								<td><?php
-									if ($ref === 'competence') {
+									if ($ref === 'competence_subject_stats') {
 										echo $html->link($subject['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['id']));
 									} else {
 										echo $html->link($subject['code'], array('controller' => 'subjects', 'action' => 'view', $subject['id']));

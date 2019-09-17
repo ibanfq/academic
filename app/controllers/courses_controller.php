@@ -6,6 +6,8 @@ class CoursesController extends AppController {
     var $fields_guarded = array('Course' => ['id', 'name', 'initial_date', 'final_date', 'institution_id', 'academic_year_id', 'created', 'modified']);
 
     function index($academic_year_id = null) {
+        $ref = isset($this->params['named']['ref']) ? $this->params['named']['ref'] : null;
+
         $academic_year_id = $academic_year_id === null ? null : intval($academic_year_id);
 
         if (! $academic_year_id) {
@@ -24,6 +26,46 @@ class CoursesController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
+        $student = null;
+
+        if ($ref === 'competence_student_stats') {
+            $student_id = isset($this->params['named']['student_id']) ? intval($this->params['named']['student_id']) : null;
+
+            if (is_null($student_id)) {
+                $this->Session->setFlash('No se ha podido acceder al estudiante.');
+                $this->redirect(array('controller' => 'users', 'action' => 'index'));
+            }
+
+            $student = null;
+
+            $this->loadModel('User');
+
+            $student = $this->User->find('first', array(
+                'recursive' => -1,
+                'joins' => array(
+                    array(
+                        'table' => 'users_institutions',
+                        'alias' => 'UserInstitution',
+                        'type' => 'INNER',
+                        'conditions' => array(
+                            'UserInstitution.user_id = User.id',
+                            'UserInstitution.institution_id' => Environment::institution('id'),
+                            'UserInstitution.active'
+                        )
+                    )
+                ),
+                'conditions' => array(
+                    'User.id' => $student_id,
+                    'User.type' => 'Estudiante'
+                )
+            ));
+
+            if (!$student) {
+                $this->Session->setFlash('No se ha podido acceder al estudiante.');
+                $this->redirect(array('controller' => 'users', 'action' => 'index'));
+            }
+        }
+
         $courses = $this->Course->find('all', array(
             'conditions' => array(
                 'Course.academic_year_id' => $academic_year_id,
@@ -34,6 +76,8 @@ class CoursesController extends AppController {
 
         $this->set('academic_year', $academic_year);
         $this->set('courses', $courses);
+        $this->set('ref', $ref);
+        $this->set('student', $student);
     }
 
     function add($academic_year_id = null) {
@@ -178,6 +222,8 @@ class CoursesController extends AppController {
             $this->Session->setFlash('No se ha podido acceder al curso.');
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
+
+        $student_id = null;
 
         $this->Course->set($course);
 

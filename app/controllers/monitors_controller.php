@@ -9,7 +9,7 @@ class MonitorsController extends AppController {
         'MonitorMedia' => ['monitor_id']
     );
     
-    function index(){
+    function index() {
         App::import('Core', 'Sanitize');
         if (isset($this->params['url']['q'])) {
             $q = Sanitize::escape($this->params['url']['q']);
@@ -434,7 +434,7 @@ class MonitorsController extends AppController {
         if (empty($classrooms_ids)) {
             if ($classroom_show_tv) {
                 $events_filters []= 'Classroom.show_tv';
-                $bookings_filters []= 'Booking.classroom_id = -1 OR Classroom.show_tv';
+                $bookings_filters []= '(Booking.classroom_id = -1 OR Classroom.show_tv)';
             }
         } else {
             $events_filters[]= array('Classroom.id' => $classrooms_ids);
@@ -456,7 +456,6 @@ class MonitorsController extends AppController {
                     'Activity.name',
                     'Activity.type',
                     'Subject.acronym as subject_acronym',
-                    'Subject.degree as subject_degree',
                     'Subject.level as subject_level',
                     'Group.name as group_name',
                     'Teacher.first_name as teacher_first_name',
@@ -520,7 +519,6 @@ class MonitorsController extends AppController {
                     'Booking.reason as name',
                     '"booking" as type',
                     'null as subject_acronym',
-                    'null as subject_degree',
                     'null as subject_level',
                     'null as group_name',
                     'null as teacher_first_name',
@@ -567,13 +565,6 @@ class MonitorsController extends AppController {
 
     function _sortBoardEvents($a, $b) {
         if ($a['initial_hour'] === $b['initial_hour']) {
-            if ($a['subject_degree'] !== null && $b['subject_degree'] !== null) {
-                $a_degree = $this->Event->Activity->Subject->degreeToInt($a['subject_degree']);
-                $b_degree = $this->Event->Activity->Subject->degreeToInt($b['subject_degree']);
-                if ($a_degree !== $b_degree) {
-                    return $a_degree - $b_degree;
-                }
-            }
             if ($a['subject_level'] === null || $b['subject_level'] === null) {
                 if ($a['subject_level'] === $b['subject_level']) {
                     return strcasecmp($a['name'], $b['name']);
@@ -628,6 +619,10 @@ class MonitorsController extends AppController {
     
     function _authorize() {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
 
         $action = $this->params['action'];
         

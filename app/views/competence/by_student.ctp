@@ -1,8 +1,6 @@
 <?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
 <?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
 <?php $html->addCrumb("{$student['User']['first_name']} {$student['User']['last_name']}", Environment::getBaseUrl() . "/users/view/{$student['User']['id']}"); ?>
-<?php $html->addCrumb($modelHelper->academic_year_name($course), Environment::getBaseUrl() . "/courses/index/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb($course['Degree']['name'], Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
 <?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_student/{$student['User']['id']}"); ?>
 
 <?php if ($auth->user('type') == "Profesor"): ?>
@@ -14,7 +12,8 @@
 <?php if ($auth->user('type') != "Estudiante") : ?>
     <div class="actions">
         <ul>
-            <li><?php echo $html->link('Ver todas las competencias', array('action' => 'by_course', $course['Course']['id'])) ?></li>
+            <li><?php echo $html->link('Ver todas las competencias', array('controller' => 'courses', 'action' => 'index', $academic_year['id'], 'ref' => 'competence')) ?></li>
+            <li><?php echo $html->link('Evaluación', array('controller' => 'courses', 'action' => 'index', $academic_year['id'], 'ref' => 'competence_student_stats', 'student_id' => $student['User']['id'])) ?></li>
         </ul>
     </div>
 <?php endif; ?>

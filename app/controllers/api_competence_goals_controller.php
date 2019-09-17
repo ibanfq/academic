@@ -6,6 +6,13 @@ class ApiCompetenceGoalsController extends AppController {
 
     function _authorize(){
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $administrator_actions = array(
         );
         $teacher_actions = array(
@@ -33,12 +40,6 @@ class ApiCompetenceGoalsController extends AppController {
 
     function by_teacher($teacher_id = null)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $db = $this->CompetenceGoal->getDataSource();
         $this->loadModel('User');
 
@@ -72,7 +73,7 @@ class ApiCompetenceGoalsController extends AppController {
             $courses_id = intval($this->params['url']['course_id']);
         } else {
             $courses = $this->CompetenceGoal->Competence->Course->current();
-            if (!$courses) {
+            if (empty($courses)) {
                 $this->Api->setError('No hay ningún curso activo actualmente.', 404);
                 $this->Api->respond($this);
                 return;
@@ -262,12 +263,6 @@ class ApiCompetenceGoalsController extends AppController {
 
     function by_student($student_id = null, $id = null)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $student_id = $student_id === null ? null : intval($student_id);
         $id = $id === null ? null : intval($id);
 
@@ -408,12 +403,6 @@ class ApiCompetenceGoalsController extends AppController {
 
     function grade_by_student($student_id = null, $id = null)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $student_id = $student_id === null ? null : intval($student_id);
         $id = $id === null ? null : intval($id);
         $data = array('CompetenceCriterionGrade' => $this->Api->getParameter('CompetenceCriterionGrade'));

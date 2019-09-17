@@ -407,7 +407,16 @@ class SubjectsController extends AppController {
         App::import('Core', 'Sanitize');
         $q = '%'.Sanitize::escape($this->params['url']['q']).'%';
 
-        if (isset($this->params['url']['course_id'])) {
+        $course = null;
+        $course_id = null;
+        $academic_year_id = null;
+
+        if (empty($this->params['url']['course_id'])) {
+            if (empty($this->params['url']['academic_year_id'])) {
+                $academic_year = $this->Subject->Course->AcademicYear->current();
+                $academic_year_id = $academic_year ? $academic_year['id'] : null;
+            }
+        } else {
             $course_id = intval($this->params['url']['course_id']);
 
             $course = $this->Subject->Course->find('first', array(
@@ -418,16 +427,51 @@ class SubjectsController extends AppController {
                 'recursive' => -1
             ));
 
-            $courses_id = $course ? $course_id : null;;
-        } else {
-            $courses = $this->Subject->Course->current();
-            $courses_id = Set::extract($courses, '{n}.id');
+            $course_id = $course ? $course_id : null;;
         }
 
-        if (!$courses_id) {
+        if (empty($this->params['url']['academic_year_id'])) {
+            if ($course) {
+                $academic_year_id = $course['Course']['academic_year_id'];
+            }
+        } else {
+            $academic_year_id = intval($this->params['url']['academic_year_id']);
+
+            if ($course) {
+                if ($course['Course']['academic_year_id'] != $academic_year_id) {
+                    $academic_year_id = null;
+                }
+            } else {
+                $academic_year = $this->Subject->Course->AcademicYear->find('first', array(
+                    'conditions' => array(
+                        'AcademicYear.id' => $academic_year_id
+                    ),
+                    'recursive' => -1
+                ));
+
+                $academic_year_id = $academic_year ? $academic_year_id : null;;
+            }
+        }
+        
+        if (!$academic_year_id) {
             $subjects = array();
         } elseif (isset($this->params['url']['user_id'])) {
             $student_id = intval($this->params['url']['user_id']);
+
+            $conditions = array(
+                "Subject.id NOT IN (SELECT subject_id AS id FROM subjects_users WHERE user_id = {$student_id})",
+                'OR' => array(
+                    'Subject.code LIKE' => $q,
+                    'Subject.name LIKE' => $q
+                ),
+            );
+
+            if ($course_id) {
+                $conditions['Subject.course_id'] = $course_id;
+            } else {
+                $conditions['Course.academic_year_id'] = $academic_year_id;
+            }
+
             $subjects = $this->Subject->find('all', array(
                 'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
                 'joins' => array(
@@ -444,17 +488,23 @@ class SubjectsController extends AppController {
                         'conditions' => 'Degree.id = Course.degree_id'
                     )
                 ),
-                'conditions' => array(
-                    "Subject.id NOT IN (SELECT subject_id AS id FROM subjects_users WHERE user_id = {$student_id})",
-                    'OR' => array(
-                        'Subject.code LIKE' => $q,
-                        'Subject.name LIKE' => $q
-                    ),
-                    'Subject.course_id' => $courses_id
-                ),
+                'conditions' => $conditions,
                 'recursive' => -1
             ));
         } else {
+            $conditions = array(
+                'OR' => array(
+                    'Subject.code LIKE' => $q,
+                    'Subject.name LIKE' => $q
+                )
+            );
+
+            if ($course_id) {
+                $conditions['Subject.course_id'] = $course_id;
+            } else {
+                $conditions['Course.academic_year_id'] = $academic_year_id;
+            }
+
             $subjects = $this->Subject->find('all', array(
                 'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
                 'joins' => array(
@@ -471,18 +521,12 @@ class SubjectsController extends AppController {
                         'conditions' => 'Degree.id = Course.degree_id'
                     )
                 ),
-                'conditions' => array(
-                    'OR' => array(
-                        'Subject.code LIKE' => $q,
-                        'Subject.name LIKE' => $q
-                    ),
-                    'Subject.course_id' => $courses_id
-                ),
+                'conditions' => $conditions,
                 'recursive' => -1
             ));
         }
 
-        $this->set('courses_id', $courses_id);
+        $this->set('course_id', $course_id);
         $this->set('subjects', $subjects);
     }
 
@@ -758,6 +802,11 @@ class SubjectsController extends AppController {
 
     function _authorize() {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
+
         $administrator_actions = array('add', 'edit', 'delete', 'send_alert_students_without_group', 'students_edit');
         $owner_actions = array('send_alert_students_without_group', 'students_edit');
 

@@ -560,6 +560,10 @@ class ActivitiesController extends AppController {
 
     function _authorize() {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
         
         $administrator_actions = array('add', 'edit', 'delete', 'delete_student');
         

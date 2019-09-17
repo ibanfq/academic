@@ -15,6 +15,7 @@
     <div class="actions">
         <ul>
             <li><?php echo $html->link('Ver todas las competencias', array('action' => 'by_course', $course['Course']['id'])) ?></li>
+            <li><?php echo $html->link('Evaluación', array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['Subject']['id'])) ?></li>
         </ul>
     </div>
 <?php endif; ?>

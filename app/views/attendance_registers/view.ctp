@@ -10,11 +10,17 @@
   $has_students_with_user_gone = count($students_with_user_gone);
           
   if ($auth->user('type') !== 'Profesor') {
-    $html->addCrumb('Registros de impartición', '/attendance_registers'); 
+    $html->addCrumb('Registros de impartición', '/institutions/ref:attendance_registers');
+	  $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/attendance_registers');
   } else {
-    $html->addCrumb('Registros de impartición', "/attendance_registers/view_my_registers/{$subject['Subject']['course_id']}"); 
+    $html->addCrumb('Cursos', '/academic_years');
+    $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}");
+    $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}");
+    $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}");
+    $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}");
+    $html->addCrumb('Registros de asistencia', Environment::getBaseUrl() . "/attendance_registers/view_my_registers/{$course['Course']['id']}/{$subject['Subject']['id']}");
   }
-	$html->addCrumb('Ver registro de impartición', "/attendance_registers/view/{$ar['AttendanceRegister']['id']}"); 
+	$html->addCrumb('Ver registro de impartición', Environment::getBaseUrl() . "/attendance_registers/view/{$ar['AttendanceRegister']['id']}"); 
 ?>
 
 <h1>Registro de impartición</h1>
@@ -142,7 +148,7 @@
 				<?php endforeach; ?>
 			</tbody>
 		</table>
-	</fielset>
+	</fieldset>
 </div>
 
 <?php if ($isTeacherOfEvent && $hasSecretCode): ?>
@@ -150,7 +156,7 @@
   function refresh() {
     $.ajax({
       type: "GET",
-      url: "<?php echo Environment::getBaseUrl() ?>/api/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
+      url: "/api<?php echo Environment::getBaseUrl() ?>/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
       dataType: "json",
       success: function (response) {
         var index = parseInt(($('#students > tr:last').attr('id') || '_0').split('_')[1]) + 1;
@@ -207,7 +213,7 @@
       row.find('td:last').html('Añadiendo...');
       $.ajax({
         type: "POST", 
-        url: "<?php echo Environment::getBaseUrl() ?>/api/users_attendance_register/",
+        url: "/api<?php echo Environment::getBaseUrl() ?>/users_attendance_register/",
         data: {'User[id]': id, 'AttendanceRegister[id]': <?php echo $ar['AttendanceRegister']['id'] ?>},
         dataType: "json",
         success: function (response) {
@@ -242,7 +248,7 @@
         link = row.find('td:last a').addClass('disabled').text('Eliminando...');
         $.ajax({
           type: "DELETE", 
-          url: "<?php echo Environment::getBaseUrl() ?>/api/users/" + id + "/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
+          url: "/api<?php echo Environment::getBaseUrl() ?>/users/" + id + "/attendance_registers/<?php echo $ar['AttendanceRegister']['id'] ?>",
           dataType: 'json',
           success: function (response) {
             var total = response.data.Students.length;

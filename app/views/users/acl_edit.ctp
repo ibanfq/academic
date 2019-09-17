@@ -1,6 +1,7 @@
 <!-- File: /app/views/users/edit.ctp -->
-<?php $html->addCrumb('Usuarios', '/users'); ?>
-<?php $html->addCrumb("Modificar permisos", "/users/acl_edit"); ?>
+<?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
+<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+<?php $html->addCrumb("Modificar permisos", Environment::getBaseUrl() . "/users/acl_edit"); ?>
 
 <h1>Modificar permisos</h1>
 <?php

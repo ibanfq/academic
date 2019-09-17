@@ -1,6 +1,8 @@
+<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['academic_year_id']}"); ?>
 <?php $html->addCrumb('Mis asignaturas', '/users/my_subjects'); ?>
-<?php $html->addCrumb($activity['Subject']['name'], "/events/register_student/{$activity['Subject']['id']}"); ?>
-<?php $html->addCrumb("Ver alumnos apuntados", "/registrations/view_students_registered/{$activity['Activity']['id']}/{$group['Group']['id']}"); ?>
+<?php $html->addCrumb($activity['Subject']['name'], Environment::getBaseUrl() . "/events/register_student/{$activity['Subject']['id']}"); ?>
+<?php $html->addCrumb("Ver alumnos apuntados", Environment::getBaseUrl() . "/registrations/view_students_registered/{$activity['Activity']['id']}/{$group['Group']['id']}"); ?>
 
 <h2><?php echo "Alumnos apuntados al grupo {$group['Group']['name']} de la actividad {$activity['Activity']['name']}"?></h2>
 

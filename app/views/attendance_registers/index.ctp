@@ -1,5 +1,6 @@
 <?php
-	$html->addCrumb('Registros de impartición', '/attendance_registers');
+	$html->addCrumb('Registros de impartición', '/institutions/ref:attendance_registers');
+	$html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/attendance_registers');
 
 	if (isset($activity))
 	  $activity_id = $activity['Activity']['id'];

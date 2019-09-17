@@ -23,11 +23,11 @@
 			<?php foreach ($subjects as $subject): ?>
 				<tr>
 					<?php if ($auth->user('type') == 'Estudiante'): ?>
-						<td><?php echo $html->link($subject['Subject']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'events', 'action' => 'register_student', $subject['Subject']['id'])) ?></td>
+						<td><?php echo $html->link($subject['Subject']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'events', 'action' => 'register_student', $subject['Subject']['id'], 'base' => false)) ?></td>
 						<td><?php echo $subject['Degree']['name'] ?></td>
 					<?php else: ?>
-						<td><?php echo $html->link($subject['Subject']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'subjects', 'action' => 'view', $subject['Subject']['id'])) ?></td>
-						<td><?php echo $html->link($subject['Degree']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'courses', 'action' => 'view', $subject['Course']['id'])) ?></td>
+						<td><?php echo $html->link($subject['Subject']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'subjects', 'action' => 'view', $subject['Subject']['id'], 'base' => false)) ?></td>
+						<td><?php echo $html->link($subject['Degree']['name'], array('institution' => $subject['Course']['institution_id'], 'controller' => 'courses', 'action' => 'view', $subject['Course']['id'], 'base' => false)) ?></td>
 					<?php endif; ?>
 					<td><?php echo $subject['Subject']['level'] ?></td>
 				</tr>

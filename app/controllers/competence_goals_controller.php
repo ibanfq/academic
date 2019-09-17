@@ -27,11 +27,21 @@ class CompetenceGoalsController extends AppController {
         }
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
-            'Course.id' => $competence['Competence']['course_id'],
-            'Course.institution_id' => Environment::institution('id')
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
+            'conditions' => array(
+                'Course.id' => $competence['Competence']['course_id'],
+                'Course.institution_id' => Environment::institution('id')
+            ),
+            'recursive' => -1
         ));
-
 
         if (!$course) {
             $this->Session->setFlash('No se ha podido acceder al curso.');
@@ -200,11 +210,20 @@ class CompetenceGoalsController extends AppController {
         }
         
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $competence['Competence']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -252,11 +271,20 @@ class CompetenceGoalsController extends AppController {
         }
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $subject['Subject']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (!$course) {
@@ -615,11 +643,20 @@ class CompetenceGoalsController extends AppController {
         }
 
         $course = $this->CompetenceGoal->Competence->Course->find('first', array(
-            'recursive' => -1,
+            'fields' => array('Course.*', 'Degree.*'),
+            'joins' => array(
+                array(
+                    'table' => 'degrees',
+                    'alias' => 'Degree',
+                    'type' => 'INNER',
+                    'conditions' => 'Degree.id = Course.degree_id'
+                )
+            ),
             'conditions' => array(
                 'Course.id' => $competence['Competence']['course_id'],
                 'Course.institution_id' => Environment::institution('id')
-            )
+            ),
+            'recursive' => -1
         ));
 
         if (empty($this->data)) {
@@ -688,6 +725,11 @@ class CompetenceGoalsController extends AppController {
     function _authorize()
     {
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
+
         $administrator_actions = array(
             'view', 'view_by_subject', 'view_by_student',
             'grade_by_student',

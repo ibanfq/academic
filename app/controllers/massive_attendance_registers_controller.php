@@ -27,7 +27,7 @@ class MassiveAttendanceRegistersController extends AppController {
             'conditions' => array(
                 'Classroom.institution_id' => Environment::institution('id'),
             ),
-            'order' => "name ASC",
+            'order' => "Classroom.name ASC",
             'recursive' => 0
         ));
 
@@ -132,6 +132,10 @@ class MassiveAttendanceRegistersController extends AppController {
 
     function _authorize(){
         parent::_authorize();
+
+        if (! Environment::institution('id')) {
+            return false;
+        }
 
         $private_actions = array("add");
 

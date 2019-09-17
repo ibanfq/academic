@@ -109,7 +109,7 @@ class ClassroomsController extends AppController {
             'conditions' => array(
                 'Classroom.institution_id' => Environment::institution('id'),
             ),
-            'order' => "name ASC",
+            'order' => "Classroom.name ASC",
             'recursive' => 0
         ));
 
@@ -244,7 +244,7 @@ class ClassroomsController extends AppController {
                 'conditions' => array(
                     'Classroom.institution_id' => Environment::institution('id'),
                 ),
-                'order' => "name ASC",
+                'order' => "Classroom.name ASC",
                 'recursive' => 0
             ));
 

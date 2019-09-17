@@ -1,7 +1,8 @@
 <?php 
-	$html->addCrumb('Reservas', '/bookings'); 
-    $html->addCrumb('Ver reserva', "/bookings/view/{$booking['Booking']['id']}"); 
-	$html->addCrumb('Editar reserva', "/bookings/edit/{$booking['Booking']['id']}");
+	$html->addCrumb('Reservas', '/institutions/ref:bookings');
+	$html->addCrumb(Environment::institution('name'), array('action' => 'index'));
+	$html->addCrumb('Ver reserva', array('action' => 'view', $booking['Booking']['id']));
+	$html->addCrumb('Editar reserva', array('action' => 'edit', $booking['Booking']['id']));
 
     $teachers_can_booking = Configure::read('app.classroom.teachers_can_booking');
     $isTeacher = $auth->user('type') == 'Profesor';

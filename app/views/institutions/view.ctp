@@ -68,7 +68,7 @@
 				<tbody>
 				<?php foreach ($administrators as $user): ?>
 					<tr>
-						<td><?php echo $html->link("{$user['User']['last_name']}, {$user['User']['first_name']}", $html->url(array('institution' => $institution['Institution']['id'], 'controller' => 'users', 'action' => 'view', $user['User']['id']))) ?></td>
+						<td><?php echo $html->link("{$user['User']['last_name']}, {$user['User']['first_name']}", $html->url(array('institution' => $institution['Institution']['id'], 'controller' => 'users', 'action' => 'view', $user['User']['id'], 'base' => false))) ?></td>
 						<td><?php echo $user['User']['dni'] ?></td>
 						<td><?php echo $user['User']['username'] ?></td>
 					</tr>

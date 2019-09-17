@@ -1,8 +1,17 @@
-<?php $index_by_course = isset($index_by_course) ? $index_by_course : false ?>
-<?php $html->addCrumb('Cursos', '/courses'); ?>
-<?php $html->addCrumb($course['Degree']['name'], "/courses/view/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
-<?php $html->addCrumb('Solicitudes de evaluación', "/competence_goal_requests/by_course/{$course['Course']['id']}"); ?>
+<?php
+    $index_by_course = isset($index_by_course) ? $index_by_course : false;
+
+    if ($index_by_course) {
+        $html->addCrumb('Cursos', '/academic_years');
+        $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}");
+        $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}");
+        $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}");
+        $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}");
+        $html->addCrumb('Solicitudes de evaluación', Environment::getBaseUrl() . "/competence_goal_requests/by_course/{$course['Course']['id']}");
+    } else {
+        // Fill it
+    }
+?>
 
 <?php if ($auth->user('type') == "Estudiante") : ?>
     <h1>Competencias</h1>
@@ -118,11 +127,13 @@
                         '00000000',
                         '%teacher_id%',
                         $this->Javascript->object(Router::url(array(
+                            'institution' => Environment::institution('id'),
                             'controller' => 'api_competence_goals',
-                            '[method]' => 'GET',
                             'action' => 'by_teacher',
+                            '[method]' => 'GET',
                             'teacher_id' => '00000000',
-                            '?' => array('course_id' => $course['Course']['id'], 'group_path' => 'CompetenceGoal.competence_id')
+                            '?' => array('course_id' => $index_by_course ? $course['Course']['id'] : null, 'group_path' => 'CompetenceGoal.competence_id'),
+                            'base' => false
                         )))
                     );
                 ?>;

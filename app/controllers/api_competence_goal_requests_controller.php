@@ -9,6 +9,12 @@ class ApiCompetenceGoalRequestsController extends AppController {
             return false;
         }
 
+        if (! Environment::institution('id')) {
+            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
+            $this->Api->respond($this);
+            return;
+        }
+
         $administrator_actions = array(
         );
         $teacher_actions = array(
@@ -40,15 +46,9 @@ class ApiCompetenceGoalRequestsController extends AppController {
     
     function index()
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $courses = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->current();
 
-        if (!$courses) {
+        if (empty($courses)) {
             $this->Api->setError('No hay ningún curso activo actualmente.', 404);
             $this->Api->respond($this);
             return;
@@ -62,12 +62,6 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function by_goal($goal_id)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $goal_id = intval($goal_id);
 
         $goal = $this->CompetenceGoalRequest->CompetenceGoal->find('first', array(
@@ -113,12 +107,6 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function by_course($course_id)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $course_id = intval($course_id);
 
         $course = $this->CompetenceGoalRequest->CompetenceGoal->Competence->Course->find('first', array(
@@ -140,12 +128,6 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function add()
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $goal_id = $this->Api->getParameter('CompetenceGoalRequest.goal_id', array('required', 'integer'));
         $teacher_id = $this->Api->getParameter('CompetenceGoalRequest.teacher_id', array('required', 'integer'));
 
@@ -241,12 +223,6 @@ class ApiCompetenceGoalRequestsController extends AppController {
 
     function delete($id)
     {
-        if (! Environment::institution('id')) {
-            $this->Api->setError('No se ha especificado la institución en la url de la petición.', 400);
-            $this->Api->respond($this);
-            return;
-        }
-
         $id = $id === null ? null : intval($id);
 
         if (is_null($id)) {

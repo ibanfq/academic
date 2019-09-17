@@ -7,7 +7,7 @@
 
 <h1>Añadir contenido multimedia</h1>
 <?php
-    echo $form->create('MonitorMedia', array('url' => "/monitors/add_media/{$monitor['Monitor']['id']}", 'enctype' => 'multipart/form-data'));
+    echo $form->create('MonitorMedia', array('url' => $this->Html->url(null, true), 'enctype' => 'multipart/form-data'));
 ?>
     <fieldset>
     <legend>Datos generales</legend>

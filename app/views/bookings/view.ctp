@@ -4,6 +4,7 @@
   $userType = $booking['Booking']['user_type'];
   $editable = call_user_func($authorizeEdit, $booking);
   $deletable = call_user_func($authorizeDelete, $booking);
+  $institution_id = empty($booking['Classroom']) ? $booking['Booking']['institution_id'] : $booking['Classroom']['institution_id'];
 ?>
 <?php if ($isAjax): ?>
   <h3><?php echo "{$booking['Booking']['reason']}" ?></h3>
@@ -39,7 +40,7 @@
   <?php if (isset($auth) && (($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo" || $auth->user('type') == "Conserje") || ($teachers_can_booking && $auth->user('type') == "Profesor" && $booking['Classroom']['teachers_can_booking']))): ?>
   <p class="actions">
     <?php if ($numAttendees): ?>
-      <a class="button button-action" href="<?php echo Environment::getBaseUrl() ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
+      <a class="button button-action" href="/institutions/<?php echo $institution_id ?>/bookings/view/<?php echo $booking['Booking']['id'] ?>">Ver asistentes</a>
     <?php endif ?>
     <?php if ($editable): ?>
       <a class="button button-action" href="<?php echo Environment::getBaseUrl() ?>/bookings/edit/<?php echo $booking['Booking']['id'] ?>">Editar</a>
@@ -51,10 +52,9 @@
   </p>
   <?php endif; ?>
 <?php else: //No ajax ?>
-  <?php
-    $html->addCrumb('Reservas', '/bookings'); 
-    $html->addCrumb('Ver reserva', "/bookings/view/{$booking['Booking']['id']}"); 
-  ?>
+  <?php $html->addCrumb('Reservas', '/institutions/ref:bookings'); ?>
+  <?php $html->addCrumb(Environment::institution('name'), array('action' => 'index')); ?>
+  <?php $html->addCrumb('Ver reserva', array('action' => 'view', $booking['Booking']['id'])); ?>
 
   <h1>Reserva</h1>
 
@@ -155,7 +155,7 @@
       <?php else: ?>
         <p>No se ha especificado ningún asistente a esta reserva.</p>
       <?php endif; ?>
-    </fielset>
+    </fieldset>
   </div>
 
 <?php endif; ?>

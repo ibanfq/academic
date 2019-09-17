@@ -1,16 +1,20 @@
-<?php if ($ref === 'competence'): ?>
-	<?php $html->addCrumb('Cursos', '/courses'); ?>
-	<?php $html->addCrumb("{$course['Degree']['name']}", "/courses/view/{$course['Course']['id']}"); ?>
-	<?php $html->addCrumb('E-portfolio', "/competence/by_course/{$course['Course']['id']}"); ?>
-	<?php $html->addCrumb('Estudiantes', $this->Html->url(null, true)); ?>
-<?php else: ?>
+<?php if ($ref === 'competence_student_stats'): ?>
+	<?php $html->addCrumb('Cursos', '/academic_years'); ?>
+	<?php $html->addCrumb($modelHelper->academic_year_name($course), "/academic_years/view/{$course['Course']['academic_year_id']}"); ?>
+	<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$course['Course']['academic_year_id']}"); ?>
+	<?php $html->addCrumb("{$course['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$course['Course']['id']}"); ?>
+	<?php $html->addCrumb('E-portfolio', Environment::getBaseUrl() . "/competence/by_course/{$course['Course']['id']}"); ?>
+	<?php $html->addCrumb('Estudiantes', Environment::getBaseUrl() . "/users/index/type:Estudiante/course:{$course['Course']['id']}/ref:competence"); ?>
 	<?php $html->addCrumb('Usuarios', '/institutions/ref:users'); ?>
+<?php elseif (Environment::institution('id')): ?>
 	<?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . '/users'); ?>
+<?php else: ?>
+	<?php $html->addCrumb('Todos los centros', '/users'); ?>
 <?php endif; ?>
 
 <h1><?php echo $type === 'Estudiante' ? 'Estudiantes' : 'Usuarios' ?></h1>
 
-<?php if ($ref !== 'competence'): ?>
+<?php if (!$ref): ?>
 	<div class="actions">
 		<ul>
 			<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")): ?>
@@ -20,6 +24,8 @@
 			<?php if (($auth->user('type') == "Administrador") || ($auth->user('type') == "Administrativo")): ?>
 				<?php if (Environment::institution('id')): ?>
 					<li><?php echo $html->link('Modificar permisos', array('action' => 'acl_edit')) ?></li>
+				<?php else: ?>
+					<li><?php echo $html->link('Filtrar por centro', '/institutions/ref:users') ?></li>
 				<?php endif; ?>
 			<?php endif; ?>
 
@@ -32,7 +38,7 @@
 	</div>
 <?php endif; ?>
 
-<div class="<?php echo $ref !== 'competence' ? 'view' : '' ?>">
+<div class="<?php echo !$ref ? 'view' : '' ?>">
 	<?php
 		echo $form->create('User', array('url' => $this->Html->url(null, true), 'type' => 'get'))
 	?>
@@ -72,7 +78,7 @@
 				<?php foreach ($users as $user): ?>
 				<tr>
 					<td><?php
-						if ($ref === 'competence') {
+						if ($ref === 'competence_student_stats') {
 							echo $html->link("{$user['User']['last_name']}, {$user['User']['first_name']}", array('controller' => 'competence', 'action' => 'stats_by_student', $course['Course']['id'], $user['User']['id']));
 						} else {
 							echo $html->link("{$user['User']['last_name']}, {$user['User']['first_name']}", array('controller' => 'users', 'action' => 'view', $user['User']['id']));
