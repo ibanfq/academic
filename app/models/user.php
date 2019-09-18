@@ -40,10 +40,9 @@ class User extends AppModel {
             )
         ),
         'dni' => array(
-            'isUnique' => array(
-                'rule' => 'isUnique',
-                'allowEmpty' => true,
-                'message' => 'Ya existe un usuario con el mismo DNI.'
+            'unique' => array(
+                'rule' => array('dniMustBeUnique'),
+                'message' => 'Ya existe un usuario del mismo tipo con el mismo DNI.'
             )
         ),
         'password' => array(
@@ -103,6 +102,29 @@ class User extends AppModel {
             $value .= $this->data['User']['created'];
         }
         return rtrim(strtr(base64_encode($security->cipher($value, $key)), '+/', '-_'), '=');
+    }
+
+    /**
+     * Validates that a combination of dni, type is unique
+     */
+    function dniMustBeUnique($dni){
+        $user = $this->data[$this->alias];
+        $dni = trim($user['dni']);
+
+        if (empty($dni)) {
+            return true;
+        }
+
+        $conditions = array(
+            "{$this->alias}.dni" => $dni,
+            "{$this->alias}.type" => $user['type'],
+        );
+
+        if (!empty($this->id)) {
+            $conditions[] = array("{$this->alias}.id !=" => $this->id);
+        }
+
+        return $this->find('count', array('conditions' => $conditions)) == 0;
     }
     
     function findByCalendarToken($token) {
