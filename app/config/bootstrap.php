@@ -53,12 +53,12 @@ require_once ROOT . '/vendors/plugins/autoload.php';
 Inflector::rules('singular', array('irregular' => array('users_institutions' => 'user_institution')));
 Inflector::rules('singular', array('irregular' => array('usersinstitutions'  => 'UserInstitution')));
 Inflector::rules('plural',   array('irregular' => array('user_institution'   => 'users_institutions')));
-Inflector::rules('plural',   array('irregular' => array('userinstitution'   => 'users_institutions')));
+Inflector::rules('plural',   array('irregular' => array('userinstitution'    => 'users_institutions')));
 
 Inflector::rules('singular', array('irregular' => array('subjects_users' => 'subject_user')));
 Inflector::rules('singular', array('irregular' => array('subjectsusers'  => 'SubjectUser')));
 Inflector::rules('plural',   array('irregular' => array('subject_user'   => 'subjects_users')));
-Inflector::rules('plural',   array('irregular' => array('subjectuser'   => 'subjects_users')));
+Inflector::rules('plural',   array('irregular' => array('subjectuser'    => 'subjects_users')));
 
 Inflector::rules('singular', array('irregular' => array('users_attendance_register' => 'user_attendance_register')));
 Inflector::rules('singular', array('irregular' => array('usersattendanceregister'   => 'UserAttendanceRegister')));
@@ -70,8 +70,10 @@ Inflector::rules('singular', array('irregular' => array('usersbooking'  => 'User
 Inflector::rules('plural',   array('irregular' => array('user_booking'  => 'users_booking')));
 Inflector::rules('plural',   array('irregular' => array('userbooking'   => 'users_booking')));
 
-Inflector::rules('singular', array('irregular' => array('log' => 'log')));
-Inflector::rules('plural', array('irregular' => array('log' => 'log')));
+Inflector::rules('singular', array('irregular' => array('classrooms_institutions' => 'classroom_institution')));
+Inflector::rules('singular', array('irregular' => array('classroomsinstitutions'  => 'ClassroomInstitution')));
+Inflector::rules('plural',   array('irregular' => array('classroom_institution'   => 'classrooms_institutions')));
+Inflector::rules('plural',   array('irregular' => array('classroominstitution'    => 'classrooms_institutions')));
 
 Inflector::rules('singular', array('irregular' => array('monitors_media' => 'monitor_media')));
 Inflector::rules('singular', array('irregular' => array('monitorsmedia'  => 'MonitorMedia')));
@@ -81,7 +83,11 @@ Inflector::rules('plural',   array('irregular' => array('monitormedia'   => 'mon
 Inflector::rules('singular', array('irregular' => array('competence' => 'competence')));
 Inflector::rules('plural',   array('irregular' => array('competence' => 'competence')));
 
-Inflector::rules('singular', array('irregular' => array('competence_criteria' => 'competence_criterion')));
-Inflector::rules('singular', array('irregular' => array('competencecriteria'  => 'CompetenceCriterion')));
-Inflector::rules('plural',   array('irregular' => array('competence_criterion'  => 'competence_criteria')));
-Inflector::rules('plural',   array('irregular' => array('competencecriterion'   => 'competence_criteria')));
+Inflector::rules('singular', array('irregular' => array('competence_criteria'  => 'competence_criterion')));
+Inflector::rules('singular', array('irregular' => array('competencecriteria'   => 'CompetenceCriterion')));
+Inflector::rules('plural',   array('irregular' => array('competence_criterion' => 'competence_criteria')));
+Inflector::rules('plural',   array('irregular' => array('competencecriterion'  => 'competence_criteria')));
+
+Inflector::rules('singular', array('irregular' => array('log' => 'log')));
+Inflector::rules('plural', array('irregular' => array('log' => 'log')));
+

@@ -60,5 +60,8 @@ ADD INDEX `institution_idx` (`institution_id` ASC);
 ALTER TABLE `monitors` 
 ADD INDEX `institution_idx` (`institution_id` ASC);
 
+ALTER TABLE `attendance_registers` 
+ADD INDEX `secret_code_idx` (`secret_code` ASC);
+
 ALTER TABLE `log` 
 ADD INDEX `institution_idx` (`institution_id` ASC);

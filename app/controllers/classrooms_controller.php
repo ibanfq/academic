@@ -25,7 +25,20 @@ class ClassroomsController extends AppController {
     function add(){
         if (!empty($this->data)){
             $this->data['Classroom']['institution_id'] = Environment::institution('id');
-            if ($this->Classroom->save($this->data)){
+            if ($this->Classroom->save($this->data)) {
+                if (Environment::institution('id')) {
+                    $this->loadModel('ClassroomInstitution');
+
+                    $classroom_institution = array(
+                        'ClassroomInstitution' => array(
+                            'classroom_id' => $this->Classroom->id,
+                            'institution_id' => Environment::institution('id'),
+                            'active' => 1 
+                        )
+                    );
+
+                    $this->ClassroomInstitution->save($classroom_institution);
+                }
                 $this->Session->setFlash('El aula se ha guardado correctamente');
                 $this->redirect(array('action' => 'index'));
             }
@@ -278,6 +291,7 @@ class ClassroomsController extends AppController {
         }
 
         $this->Classroom->delete($id);
+        $this->Classroom->query("DELETE classroom_institution FROM `classrooms_institutions` classroom_institution WHERE classroom_institution.classroom_id = {$id}");
         $this->Session->setFlash('El aula ha sido eliminada correctamente');
         $this->redirect(array('action' => 'index'));
     }

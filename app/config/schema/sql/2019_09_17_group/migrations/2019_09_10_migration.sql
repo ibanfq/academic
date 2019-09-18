@@ -34,6 +34,9 @@ ADD COLUMN `academic_year_id` INT(11) NOT NULL AFTER `id`,
 ADD COLUMN `degree_id` INT(11) NOT NULL AFTER `institution_id`
 ;
 
-
 ALTER TABLE `subjects` 
 DROP COLUMN `degree`;
+
+ALTER TABLE `subjects_users` 
+DROP COLUMN `course_id`,
+DROP INDEX `course_idx`;
