@@ -12,7 +12,7 @@
     'forms_type' => isset($events_schedule) || isset($bookings_schedule)? 'events' : 'generic'
 )); ?>
 </head>
-<body <?php if (Configure::read('debug') > 0): ?>class="debug"<?php endif; ?>>
+<body <?php if (Configure::read('debug') > 1): ?>class="debug"<?php endif; ?>>
 <div id="container">
     <div id="header">
             <div class="left">
@@ -103,7 +103,7 @@
         <img src="<?php echo Configure::read('app.logo') ?>">
       </a>
     </p>
-        <?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
+        <?php if (Configure::read('debug') > 1) echo $this->element('sql_dump') ?>
     </div>
 </div>
 </body>

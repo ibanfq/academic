@@ -45,7 +45,7 @@
         <img src="<?php echo Configure::read('app.logo') ?>">
       </a>
 	</p>
-	<?php if (Configure::read('debug') > 0) echo $this->element('sql_dump') ?>
+	<?php if (Configure::read('debug') > 1) echo $this->element('sql_dump') ?>
 	</div>
 </div>
 </body>

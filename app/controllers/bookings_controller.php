@@ -308,7 +308,7 @@ class BookingsController extends AppController {
         }
   
         if (!empty($this->data)) {
-            # Sanatize the data
+            # Sanitize the data
             $this->data = array('Booking' => $this->data['Booking']);
             $this->data['Booking']['id'] = $id;
             $this->data['Booking']['institution_id'] = $booking['Booking']['institution_id'];
