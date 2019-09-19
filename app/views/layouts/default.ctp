@@ -94,7 +94,7 @@
         <?php } ?>
         <?php echo $this->Session->flash(); ?>
         <?php echo $content_for_layout ?>
-    <?php if (Configure::read('debug') > 0) echo $this->Session->flash('email') ?>
+    <?php if (Configure::read('debug_email')) echo $this->Session->flash('email') ?>
     </div>
 
     <div id="footer">

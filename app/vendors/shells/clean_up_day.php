@@ -8,4 +8,3 @@ class CleanUpDayShell extends Shell {
     $dispatcher->dispatch('attendance_registers/clean_up_day', array('return' => true));
   }
 }
-?>

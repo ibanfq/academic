@@ -7,12 +7,12 @@
  * should respond to the different needs of a handheld computer and a desktop machine.
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2010, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2010, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       cake
  * @subpackage    cake.cake.libs.controller.components
@@ -25,7 +25,7 @@
  *
  * @package       cake
  * @subpackage    cake.cake.libs.controller.components
- * @link http://book.cakephp.org/view/1291/Request-Handling
+ * @link http://book.cakephp.org/1.3/en/The-Manual/Core-Components/Request-Handling.html
  *
  */
 class RequestHandlerComponent extends Object {
@@ -80,7 +80,7 @@ class RequestHandlerComponent extends Object {
 		'html'			=> array('text/html', '*/*'),
 		'text'			=> 'text/plain',
 		'txt'			=> 'text/plain',
-		'csv'			=> array('application/vnd.ms-excel', 'text/plain'),
+		'csv'			=> array('text/csv', 'application/vnd.ms-excel', 'text/plain'),
 		'form'			=> 'application/x-www-form-urlencoded',
 		'file'			=> 'multipart/form-data',
 		'xhtml'			=> array('application/xhtml+xml', 'application/xhtml', 'text/xhtml'),
@@ -115,11 +115,13 @@ class RequestHandlerComponent extends Object {
 		'DoCoMo',
 		'iPod',
 		'iPhone',
+		'iPad',
 		'J2ME',
 		'MIDP',
 		'NetFront',
 		'Nokia',
 		'Opera Mini',
+		'Opera Mobi',
 		'PalmOS',
 		'PalmSource',
 		'portalmmm',
@@ -130,6 +132,7 @@ class RequestHandlerComponent extends Object {
 		'UP\.Browser',
 		'webOS',
 		'Windows CE',
+		'Windows Phone OS',
 		'Xiino'
 	);
 
@@ -176,11 +179,12 @@ class RequestHandlerComponent extends Object {
  */
 	function __construct() {
 		$this->__acceptTypes = explode(',', env('HTTP_ACCEPT'));
+		$this->__acceptTypes = array_map('trim', $this->__acceptTypes);
 
 		foreach ($this->__acceptTypes as $i => $type) {
 			if (strpos($type, ';')) {
 				$type = explode(';', $type);
-				$this->__acceptTypes[$i] = $type[0];
+				$this->__acceptTypes[$i] = trim($type[0]);
 			}
 		}
 		parent::__construct();
@@ -202,6 +206,7 @@ class RequestHandlerComponent extends Object {
 		if (isset($controller->params['url']['ext'])) {
 			$this->ext = $controller->params['url']['ext'];
 		}
+		$this->params = $controller->params;
 		$this->_set($settings);
 	}
 
@@ -239,6 +244,8 @@ class RequestHandlerComponent extends Object {
 			$this->renderAs($controller, $this->ext);
 		} elseif ($this->isAjax()) {
 			$this->renderAs($controller, 'ajax');
+		} elseif (empty($this->ext) || in_array($this->ext, array('html', 'htm'))) {
+			$this->respondAs('html', array('charset' => Configure::read('App.encoding')));
 		}
 
 		if ($this->requestedWith('xml')) {
@@ -279,7 +286,7 @@ class RequestHandlerComponent extends Object {
 			$msg = $statusCode[$code];
 			$controller->header("HTTP/1.1 {$code} {$msg}");
 		}
-		echo $this->requestAction($url, array('return'));
+		echo $this->requestAction($url, array('return', 'bare' => false));
 		$this->_stop();
 	}
 
@@ -690,7 +697,6 @@ class RequestHandlerComponent extends Object {
  *    like 'application/x-shockwave'.
  * @param array $options If $type is a friendly type name that is associated with
  *    more than one type of content, $index is used to select which content-type to use.
- *
  * @return boolean Returns false if the friendly type name given in $type does
  *    not exist in the type map, or if the Content-type header has
  *    already been set by this method.
@@ -699,9 +705,6 @@ class RequestHandlerComponent extends Object {
  */
 	function respondAs($type, $options = array()) {
 		$this->__initializeTypes();
-		if ($this->__responseTypeSet != null) {
-			return false;
-		}
 		if (!array_key_exists($type, $this->__requestContent) && strpos($type, '/') === false) {
 			return false;
 		}
@@ -738,15 +741,26 @@ class RequestHandlerComponent extends Object {
 				$header .= '; charset=' . $options['charset'];
 			}
 			if (!empty($options['attachment'])) {
-				header("Content-Disposition: attachment; filename=\"{$options['attachment']}\"");
+				$this->_header("Content-Disposition: attachment; filename=\"{$options['attachment']}\"");
 			}
-			if (Configure::read() < 2 && !defined('CAKEPHP_SHELL')) {
-				@header($header);
+			if (Configure::read() < 2 && !defined('CAKEPHP_SHELL') && empty($this->params['requested'])) {
+				$this->_header($header);
 			}
 			$this->__responseTypeSet = $cType;
 			return true;
 		}
 		return false;
+	}
+
+/**
+ * Wrapper for header() so calls can be easily tested.
+ *
+ * @param string $header The header to be sent.
+ * @return void
+ * @access protected
+ */
+	function _header($header) {
+		header($header);
 	}
 
 /**

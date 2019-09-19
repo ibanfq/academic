@@ -6,11 +6,21 @@ class AppError extends ErrorHandler {
             Configure::load('app');
         }
 
-        if ($method === 'missingConnection' || $method === 'missingDatabase') {
+        if (! class_exists('ConnectionManager')) {
+            App::import('Model', 'ConnectionManager', false);
+        }
+
+        if (! class_exists('ConnectionManager')) {
             return parent::__construct($method, $messages);
         }
 
-        if ($method === 'missingTable' && $messages['table'] === 'log') {
+        $db = ConnectionManager::getDataSource('default');
+
+        if (! $db->isConnected()) {
+            return parent::__construct($method, $messages);
+        }
+
+        if ($method === 'missingTable' && $messages[0]['table'] === 'log') {
             return parent::__construct($method, $messages);
         }
 
@@ -25,16 +35,6 @@ class AppError extends ErrorHandler {
                 }
             }
         }
-
-        if (! class_exists('ConnectionManager')) {
-            App::import('Model', 'ConnectionManager', false);
-        }
-
-        if (! class_exists('ConnectionManager')) {
-            return parent::__construct($method, $messages);
-        }
-
-        $db = ConnectionManager::getDataSource('default');
 
         $log_content = array(
             'messages' => $messages,

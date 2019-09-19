@@ -9,7 +9,6 @@ $config['app']['logo'] = '/img/logo_academic.jpg';
 $config['app']['logo_ulpgc'] = '/img/logo_ulpgc.jpg';
 $config['app']['logo_ulpgc_white'] = '/img/logo_ulpgc_white.gif';
 $config['app']['logo_ulpgc_link'] = 'https://www.ulpgc.es';
-$config['app']['audit_email'] = 'admin@correo.es';
 $config['app']['fullcalendar']['menus'] = true;
 $config['app']['vcalendar']['name'] = 'Academic';
 $config['app']['registration']['flexible_groups'] = true;

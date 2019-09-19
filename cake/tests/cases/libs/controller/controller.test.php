@@ -5,12 +5,12 @@
  * PHP versions 4 and 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright 2005-2010, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright 2005-2010, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP Project
  * @package       cake
  * @subpackage    cake.tests.cases.libs.controller
@@ -391,6 +391,16 @@ class TestComponent extends Object {
  */
 	function shutdown(&$controller) {
 	}
+/**
+ * beforeRender callback
+ *
+ * @return void
+ */
+	function beforeRender(&$controller) {
+		if ($this->viewclass) {
+			$controller->view = $this->viewclass;
+		}
+	}
 }
 
 /**
@@ -686,6 +696,44 @@ class ControllerTest extends CakeTestCase {
 	}
 
 /**
+ * testPaginateFieldsDouble method
+ *
+ * @return void
+ * @access public
+ */
+	function testPaginateFieldsDouble(){
+		$Controller =& new Controller();
+		$Controller->uses = array('ControllerPost');
+		$Controller->params['url'] = array();
+		$Controller->constructClasses();
+
+		$Controller->paginate = array(
+			'fields' => array(
+				'ControllerPost.id',
+				'radians(180.0) as floatvalue'
+			),
+			'order' => array('ControllerPost.created'=>'DESC'),
+			'limit' => 1,
+			'page' => 1,
+			'recursive' => -1
+		);
+		$conditions = array();
+		$result = $Controller->paginate('ControllerPost',$conditions);
+		$expected = array(
+			array(
+				'ControllerPost' => array(
+					'id' => 3,
+				),
+				0 => array(
+					'floatvalue' => '3.14159265358979',
+				),
+			),
+		);
+		$this->assertEqual($result, $expected);
+	}
+
+
+/**
  * testPaginatePassedArgs method
  *
  * @return void
@@ -785,6 +833,36 @@ class ControllerTest extends CakeTestCase {
 	}
 
 /**
+ * test paginate() and virtualField overlapping with real fields.
+ *
+ * @return void
+ */
+	function testPaginateOrderVirtualFieldSharedWithRealField() {
+		$Controller =& new Controller();
+		$Controller->uses = array('ControllerPost', 'ControllerComment');
+		$Controller->params['url'] = array();
+		$Controller->constructClasses();
+		$Controller->ControllerComment->virtualFields = array(
+			'title' => 'ControllerComment.comment'
+		);
+		$Controller->ControllerComment->bindModel(array(
+			'belongsTo' => array(
+				'ControllerPost' => array(
+					'className' => 'ControllerPost',
+					'foreignKey' => 'article_id'
+				)
+			)
+		), false);
+
+		$Controller->paginate = array(
+			'fields' => array('ControllerComment.id', 'title', 'ControllerPost.title'),
+		);
+		$Controller->passedArgs = array('sort' => 'ControllerPost.title', 'dir' => 'asc');
+		$result = $Controller->paginate('ControllerComment');
+		$this->assertEqual(Set::extract($result, '{n}.ControllerComment.id'), array(1, 2, 3, 4, 5, 6));
+	}
+
+/**
  * testFlash method
  *
  * @access public
@@ -855,6 +933,13 @@ class ControllerTest extends CakeTestCase {
 		$expected = array('ModelName' => 'name', 'ModelName2' => 'name2');
 		$Controller->set(array('ModelName', 'ModelName2'), array('name', 'name2'));
 		$this->assertIdentical($Controller->viewVars, $expected);
+
+		$Controller->viewVars = array();
+		$Controller->set(array(3 => 'three', 4 => 'four'));
+		$Controller->set(array(1 => 'one', 2 => 'two'));
+		$expected = array(3 => 'three', 4 => 'four', 1 => 'one', 2 => 'two');
+		$this->assertEqual($Controller->viewVars, $expected);
+		
 	}
 
 /**
@@ -891,6 +976,31 @@ class ControllerTest extends CakeTestCase {
 
 		$Controller->ControllerComment->validationErrors = array();
 		ClassRegistry::flush();
+		App::build();
+	}
+
+/**
+ * test that a component beforeRender can change the controller view class.
+ *
+ * @return void
+ */
+	function testComponentBeforeRenderChangingViewClass() {
+		$core = App::core('views');
+		App::build(array(
+			'views' => array(
+				TEST_CAKE_CORE_INCLUDE_PATH . 'tests' . DS . 'test_app' . DS . 'views'. DS,
+				$core[0]
+			)
+		), true);
+		$Controller =& new Controller();
+		$Controller->uses = array();
+		$Controller->components = array('Test');
+		$Controller->constructClasses();
+		$Controller->Test->viewclass = 'Theme';
+		$Controller->viewPath = 'posts';
+		$Controller->theme = 'test_theme';
+		$result = $Controller->render('index');
+		$this->assertPattern('/default test_theme layout/', $result);
 		App::build();
 	}
 
@@ -1069,9 +1179,13 @@ class ControllerTest extends CakeTestCase {
 					? array_merge($appVars['uses'], $testVars['uses'])
 					: $testVars['uses'];
 
-		$this->assertEqual(count(array_diff($TestController->helpers, $helpers)), 0);
+		$this->assertEqual(count(array_diff_assoc(Set::normalize($TestController->helpers), Set::normalize($helpers))), 0);
 		$this->assertEqual(count(array_diff($TestController->uses, $uses)), 0);
 		$this->assertEqual(count(array_diff_assoc(Set::normalize($TestController->components), Set::normalize($components))), 0);
+
+		$expected = array('ControllerComment', 'ControllerAlias', 'ControllerPost');
+		$this->assertEqual($expected, $TestController->uses, '$uses was merged incorrectly, AppController models should be last.');
+		
 
 		$TestController =& new AnotherTestController();
 		$TestController->constructClasses();
@@ -1228,12 +1342,29 @@ class ControllerTest extends CakeTestCase {
 
 		$TestController->ControllerComment->invalidate('some_field', 'error_message');
 		$TestController->ControllerComment->invalidate('some_field2', 'error_message2');
-		$comment = new ControllerComment;
+		$comment =& new ControllerComment();
 		$comment->set('someVar', 'data');
 		$result = $TestController->validateErrors($comment);
 		$expected = array('some_field' => 'error_message', 'some_field2' => 'error_message2');
 		$this->assertIdentical($result, $expected);
 		$this->assertEqual($TestController->validate($comment), 2);
+	}
+
+/**
+ * test that validateErrors works with any old model.
+ *
+ * @return void
+ */
+	function testValidateErrorsOnArbitraryModels() {
+		$TestController =& new TestController();
+
+		$Post = new ControllerPost();
+		$Post->validate = array('title' => 'notEmpty');
+		$Post->set('title', '');
+		$result = $TestController->validateErrors($Post);
+
+		$expected = array('title' => 'This field cannot be left blank');
+		$this->assertEqual($result, $expected);
 	}
 
 /**
@@ -1394,4 +1525,22 @@ class ControllerTest extends CakeTestCase {
 		$MockedController->MockTest->expectCallCount('shutdown', 1);
 		$MockedController->shutdownProcess();
 	}
+
+/**
+ * Tests that the correct alias is selected
+ *
+ * @return void
+ */
+	function testValidateSortAlias() {
+		$Controller =& new Controller();
+		$Controller->uses = array('ControllerPost', 'ControllerComment');
+		$Controller->passedArgs[] = '1';
+		$Controller->params['url'] = array();
+		$Controller->constructClasses();
+		$Controller->passedArgs = array('sort' => 'Derp.id', 'direction' => 'asc');
+		$results = Set::extract($Controller->paginate('ControllerPost'), '{n}.ControllerPost.id');
+		$this->assertEqual($Controller->params['paging']['ControllerPost']['page'], 1);
+		$this->assertEqual($results, array(1, 2, 3));
+	}
+
 }

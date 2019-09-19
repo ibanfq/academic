@@ -27,6 +27,10 @@
 			<dt>Denominación</dt>
 			<dd><?php echo $institution['Institution']['name'] ?></dd>
 		</dl>
+		<dl>
+			<dt>Correo de auditoría</dt>
+			<dd><?php echo $institution['Institution']['audit_email'] ?></dd>
+		</dl>
 	</fieldset>
 
 	<fieldset>

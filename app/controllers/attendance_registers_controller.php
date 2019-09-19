@@ -334,8 +334,10 @@ class AttendanceRegistersController extends AppController {
     function clean_up_day() {
         set_time_limit(0);
 
-        $log_file = dirname(dirname(__FILE__)) . '/tmp/clean_up_day_' . date('l');
-        file_put_contents($log_file, 'init: ' . date('c'));
+        $log_file = dirname(dirname(__FILE__)) . '/tmp/logs/clean_up_day_' . date('l');
+        file_put_contents($log_file, '');
+
+        $this->_log($log_file, 'init: ' . date('c'));
 
         if (intval(date('H') < 20)) {
             $today_filter = '"' . date('Y-m-d', strtotime('yesterday')) . '" AND "' . date('Y-m-d') . '"';
@@ -346,12 +348,15 @@ class AttendanceRegistersController extends AppController {
         $db = $this->AttendanceRegister->getDataSource();
         
         $events = $this->AttendanceRegister->query("
-            SELECT Event.*, AttendanceRegister.*, Activity.*, Teacher.*, Teacher_2.*, count(UserAttendanceRegister.user_id) as total_students
+            SELECT Event.*, AttendanceRegister.*, Activity.*, Institution.*, Teacher.*, Teacher_2.*, count(UserAttendanceRegister.user_id) as total_students
             FROM events Event
             LEFT JOIN attendance_registers AttendanceRegister ON AttendanceRegister.event_id = Event.id
             LEFT JOIN users_attendance_register UserAttendanceRegister ON UserAttendanceRegister.attendance_register_id = AttendanceRegister.id
                 AND UserAttendanceRegister.user_gone
             LEFT JOIN activities Activity ON Activity.id = Event.activity_id
+            LEFT JOIN subjects Subject ON Subject.id = Activity.subject_id
+            LEFT JOIN courses Course ON Course.id = Subject.course_id
+            LEFT JOIN institutions Institution ON Institution.id = Course.institution_id
             LEFT JOIN users Teacher ON Teacher.id = Event.teacher_id
             LEFT JOIN users Teacher_2 ON Teacher_2.id = Event.teacher_2_id
             WHERE Event.final_hour BETWEEN $today_filter
@@ -386,7 +391,7 @@ class AttendanceRegistersController extends AppController {
                             $attendance_register['AttendanceRegister']['group_id']
                         );
                         $this->AttendanceRegister->notifyAttendanceRegisterClosed($attendance_register, $this);
-                        file_put_contents($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed", FILE_APPEND);
+                        $this->_log($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed");
                     }
                 }
             } elseif ($event['AttendanceRegister']['secret_code']) {
@@ -395,14 +400,14 @@ class AttendanceRegistersController extends AppController {
                     SET duration = 0, secret_code = NULL
                     WHERE id = {$event['AttendanceRegister']['id']}
                 ");
-                file_put_contents($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed with duration 0", FILE_APPEND);
+                $this->_log($log_file, "\nAttendance register with id {$event['AttendanceRegister']['id']} closed with duration 0");
             } elseif (empty($event['AttendanceRegister']['id'])) {
                 
                 $this->Email->reset();
                 $this->Email->from = 'Academic <noreply@ulpgc.es>';
                 $this->Email->to = $event['Teacher']['username'];
-                if (Configure::read('app.audit_email')) {
-                    $this->Email->bcc = array(Configure::read('app.audit_email'));
+                if ($event['Institution']['audit_email']) {
+                    $this->Email->bcc = array($event['Institution']['audit_email']);
                 }
                 $this->Email->subject = "Evento no registrado";
                 $this->Email->sendAs = 'both';
@@ -413,20 +418,20 @@ class AttendanceRegistersController extends AppController {
                 $this->set('event', $event);
                 if ($event['Teacher']['notify_all']) {
                     $this->Email->send();
-                    file_put_contents($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher']['username']}", FILE_APPEND);
+                    $this->_log($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher']['username']}");
                 }
                 if (!empty($event['Teacher_2']['username'])) {
                     $this->Email->to = $event['Teacher_2']['username'];
                     $this->set('teacher', $event['Teacher_2']);
                     if ($event['Teacher_2']['notify_all']) {
                         $this->Email->send();
-                        file_put_contents($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher_2']['username']}", FILE_APPEND);
+                        $this->_log($log_file, "\nNotify event with id {$event['Event']['id']} not registed to {$event['Teacher_2']['username']}");
                     }
                 }
             }
         }
         
-        file_put_contents($log_file, "\nend: " . date('c'), FILE_APPEND);
+        $this->_log($log_file, "\nend: " . date('c'));
         exit;
     }
 
@@ -937,6 +942,13 @@ class AttendanceRegistersController extends AppController {
 
         $this->Session->setFlash('El registro de asistencia no se pudo eliminar. Si el error continúa contacta con el administrador.');
         $this->redirect($this->referer());
+    }
+
+    function _log($file, $content) {
+        file_put_contents($file, $content, FILE_APPEND);
+        if (PHP_SAPI === 'cli') {
+            echo $content;
+        }
     }
 
     function _authorize() {

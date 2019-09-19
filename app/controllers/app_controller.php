@@ -2,6 +2,7 @@
 
 App::import('Lib', 'Environment');
 App::import('Lib', 'TextUtils');
+App::import('Lib', 'ObjectProxy');
 
 class AppController extends Controller {
 	/**
@@ -33,13 +34,22 @@ class AppController extends Controller {
 	function beforeFilter() {
     $this->layout = 'default';
 
+    if (Configure::read('debug_email')) {
+      $this->Email->delivery = 'debug';
+      $this->Email = new ObjectProxy($this->Email);
+      $this->Email->setProxyOverload('reset', function ($object, $arguments) {
+        call_user_func_array(array($object, 'reset'), $arguments);
+        $object->delivery = 'debug';
+      });
+      $this->Email->setProxyOverload('send', function ($object, $arguments) {
+        $object->delivery = 'debug';
+        return call_user_func_array(array($object, 'send'), $arguments);
+      });
+    }
+
     $this->Session->path = '/';
 
     $this->_initEnvironment();
-
-    if (Configure::read('debug') > 0) {
-      $this->Email->delivery = 'debug';
-    }
 
     if (Environment::institution('id')) {
       $authModel = ClassRegistry::init($this->Auth->userModel);

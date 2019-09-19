@@ -415,6 +415,7 @@ CREATE TABLE `institutions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `acronym` varchar(16) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `audit_email` VARCHAR(255) NULL,
   `created` datetime DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),

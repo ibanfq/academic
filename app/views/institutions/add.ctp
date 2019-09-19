@@ -9,6 +9,7 @@
 	<legend>Datos generales</legend>
 		<?php echo $form->input('acronym', array('label' => 'Acrónimo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php echo $form->input('name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+		<?php echo $form->input('audit_email', array('label' => 'Correo de auditoría', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 	</fieldset>
 <?php
 	echo $form->end('Crear');

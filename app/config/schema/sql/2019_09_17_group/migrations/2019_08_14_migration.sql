@@ -2,6 +2,7 @@ CREATE TABLE `institutions` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `acronym` VARCHAR(16) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
+  `audit_email` VARCHAR(255) NULL,
   `created` datetime DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
