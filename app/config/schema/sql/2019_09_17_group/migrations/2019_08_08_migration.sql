@@ -7,6 +7,7 @@ ADD INDEX `goal_idx` (`goal_id` ASC);
 ;
 
 ALTER TABLE `competence_criterion_grades` 
+ADD COLUMN `teacher_id` INT(11) NULL AFTER `rubric_id`,
 ADD INDEX `student_idx` (`student_id` ASC);
 ;
 

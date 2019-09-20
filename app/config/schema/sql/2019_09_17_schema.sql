@@ -195,6 +195,7 @@ CREATE TABLE `competence_criterion_grades` (
   `criterion_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `rubric_id` int(11) NOT NULL,
+  `teacher_id` int(11) NULL,
   `created` datetime DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),

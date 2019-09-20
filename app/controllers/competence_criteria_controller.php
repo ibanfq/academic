@@ -592,6 +592,7 @@ class CompetenceCriteriaController extends AppController {
 
             foreach ($students as $i => $student) {
                 $student_id = $student['Student']['id'];
+                $teacher_id = $this->Auth->user('id');
 
                 if (isset($data_user_rubrics[$student_id])) {
                     $rubric_id = trim($data_user_rubrics[$student_id]);
@@ -599,8 +600,11 @@ class CompetenceCriteriaController extends AppController {
                     if (isset($competence_criterion_rubrics_values[$rubric_id])) {
                         $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                         $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $id;
-                        $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
-                        unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
+                        if (!isset($filteredData[$i]['CompetenceCriterionGrade']['rubric_id']) || $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] != $rubric_id) {
+                            $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
+                            $filteredData[$i]['CompetenceCriterionGrade']['teacher_id'] = $teacher_id;
+                            unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
+                        }
                     } elseif (empty($rubric_id)) {
                         // Remove
                         unset($filteredData[$i]);
