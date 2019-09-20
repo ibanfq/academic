@@ -472,6 +472,7 @@ class ApiCompetenceGoalsController extends AppController {
         // Loop over each criterion to fill $filteredData with the input data
         foreach ($competence_goal['CompetenceCriterion'] as $i => $criterion) {
             $criterion_id = $criterion['id'];
+            $teacher_id = $this->Auth->user('id');
 
             if (isset($data_criterion_rubrics[$criterion_id])) {
                 $rubric_id = trim($data_criterion_rubrics[$criterion_id]);
@@ -493,8 +494,11 @@ class ApiCompetenceGoalsController extends AppController {
                     // Save if is valid rubric
                     $filteredData[$i]['CompetenceCriterionGrade']['student_id'] = $student_id;
                     $filteredData[$i]['CompetenceCriterionGrade']['criterion_id'] = $criterion_id;
-                    $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
-                    unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
+                    if (!isset($filteredData[$i]['CompetenceCriterionGrade']['rubric_id']) || $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] != $rubric_id) {
+                        $filteredData[$i]['CompetenceCriterionGrade']['rubric_id'] = $rubric_id;
+                        $filteredData[$i]['CompetenceCriterionGrade']['teacher_id'] = $teacher_id;
+                        unset($filteredData[$i]['CompetenceCriterionGrade']['modified']);
+                    }
                     $competence_goal['CompetenceCriterion'][$i]['CompetenceCriterionGrade'] = $filteredData[$i]['CompetenceCriterionGrade'];
                 }
             } elseif (!isset($filteredData[$i]['CompetenceCriterionGrade']['criterion_id'])) {
