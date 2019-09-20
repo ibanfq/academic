@@ -319,7 +319,9 @@ INSERT INTO `bookings` (`id`, `institution_id`, `parent_id`, `user_id`, `user_ty
         2,
         (`parent_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`bookings`) - (select min(`id`) FROM `bd_centros_eite`.`bookings`)),
         (`user_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
-        `user_type`, `initial_hour`, `classroom_id`, `final_hour`, `reason`, `required_equipment`, `show_tv`, `created`, `modified`
+        `user_type`, `initial_hour`,
+        (`classroom_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`classrooms`) - (select min(`id`) FROM `bd_centros_eite`.`classrooms`)),
+        `final_hour`, `reason`, `required_equipment`, `show_tv`, `created`, `modified`
     FROM `bd_centros_eite`.`bookings`
     ORDER BY `bookings`.`id`;
 

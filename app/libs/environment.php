@@ -14,6 +14,7 @@ class Environment extends Object {
     var $_user;
     var $_institution;
     var $_user_institution;
+    var $_user_institutions;
 
     /**
      * Gets a reference to the Inflector object instance
@@ -108,10 +109,10 @@ class Environment extends Object {
             if (isset($_this->_user[$model->alias][$key])) {
                 return $_this->_user[$model->alias][$key];
             }
-            return null;
         }
-    }
 
+        return null;
+    }
     
     static function institution($key = null)
     {
@@ -141,8 +142,9 @@ class Environment extends Object {
             if (isset($_this->_institution[$model->alias][$key])) {
                 return $_this->_institution[$model->alias][$key];
             }
-            return null;
         }
+
+        return null;
     }
 
     static function userInstitution($key =  null)
@@ -173,7 +175,36 @@ class Environment extends Object {
             if (isset($_this->_user_institution[$model->alias][$key])) {
                 return $_this->_user_institution[$model->alias][$key];
             }
-            return null;
         }
+
+        return null;
+    }
+
+    static function userInstitutions($key =  null)
+    {
+        $_this =& Environment::getInstance();
+
+        if (! is_array($_this->_user_institutions)) {
+            if (! Environment::user('id')) {
+                return null;
+            }
+
+            $model =& Environment::getModel($_this->userInstitutionModel);
+            $_this->_user_institutions = $model->find('all', array(
+                'conditions' => array(
+                  "{$model->alias}.user_id" => Environment::user('id')
+                )
+            ));
+            if (! $_this->_user_institutions) {
+                return null;
+            }
+        }
+
+        if ($key !== null) {
+            $model =& Environment::getModel($_this->userInstitutionModel);
+            return Set::extract("/{$model->alias}/{$key}", $_this->_user_institutions);
+        }
+
+        return $_this->_user_institutions;
     }
 }

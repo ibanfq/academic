@@ -247,11 +247,16 @@ class User extends AppModel {
                 ) AND ($whereUserType OR UserBooking.user_id = {$id})
             ");
         } else {
+            $user_institutions_ids = array_filter(Environment::userInstitutions('institution_id')) ?: array(null);
+            $user_institutions_ids_list = implode(',', array_map(array($db, 'value'), $user_institutions_ids));
             $bookings = $this->query("
                 SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
                 FROM bookings Booking
                 LEFT JOIN users_booking UserBooking ON Booking.id = UserBooking.booking_id
-                WHERE $whereUserType OR UserBooking.user_id = {$id}
+                WHERE (
+                    (Booking.classroom_id = -1 AND Booking.institution_id IN ($user_institutions_ids_list))
+                    OR (Booking.classroom_id IN (SELECT classroom_id FROM classrooms_institutions ClassroomInstitution WHERE ClassroomInstitution.institution_id IN ($user_institutions_ids_list)))
+                ) AND ($whereUserType OR UserBooking.user_id = {$id})
             ");
         }
 
