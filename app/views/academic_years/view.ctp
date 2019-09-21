@@ -36,6 +36,7 @@
 				<thead>
 					<tr>
 						<th>Acrónimo</th>
+						<th>Código</th>
 						<th>Nombre</th>
 					</tr>
 				</thead>
@@ -59,6 +60,7 @@
 					<?php $institution_route = array('institution' => $institution['Institution']['id'], 'controller' => 'courses', 'action' => 'index', $academic_year['AcademicYear']['id'], 'base' => false) ?>
 					<tr>
 						<td><?php echo $html->link($modelHelper->format_acronym($institution['Institution']['acronym']), $institution_route) ?></td>
+						<td><?php echo $html->link($institution['Institution']['code'], $institution_route) ?></td>
 						<td><?php echo $html->link($institution['Institution']['name'], $institution_route) ?></td>
 					</tr>
 					<?php endforeach; ?>

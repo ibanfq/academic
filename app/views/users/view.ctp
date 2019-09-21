@@ -90,6 +90,7 @@
 					<thead>
 						<tr>
 							<th>Acrónimo</th>
+							<th>Código</th>
 							<th>Nombre</th>
 						</tr>
 					</thead>
@@ -98,6 +99,7 @@
 							<?php $url = array('controller' => 'users', 'action' => 'index', 'institution' => $institution['Institution']['id']); ?>
 							<tr>
 								<td><?php echo $html->link($modelHelper->format_acronym($institution['Institution']['acronym']), $url) ?></td>
+								<td><?php echo $html->link($institution['Institution']['code'], $url); ?></td>
 								<td><?php echo $html->link($institution['Institution']['name'], $url); ?></td>
 							</tr>
 						<?php endforeach; ?>

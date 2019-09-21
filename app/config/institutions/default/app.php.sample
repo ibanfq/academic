@@ -35,17 +35,10 @@ $config['app']['subject']['semesters'] = array(
     'Anual'   => 'Anual'
 );
 $config['app']['subject']['types'] = array(
-    'Grado' => array(
-        'Básica de Rama' => 'Básica de Rama',
-        'Básica'         => 'Básica',
-        'Obligatoria'    => 'Obligatoria',
-        'Optativa'       => 'Optativa'
-    ),
-    'Licencitura' => array(
-        'Troncal'     => 'Troncal',
-        'Obligatoria' => 'Obligatoria',
-        'Optativa'    => 'Optativa'
-    )
+    'Básica de Rama' => 'Básica de Rama',
+    'Básica'         => 'Básica',
+    'Obligatoria'    => 'Obligatoria',
+    'Optativa'       => 'Optativa'
 );
 $config['app']['subject']['default_type'] = 'Troncal';
 $config['app']['activity']['types'] = array(

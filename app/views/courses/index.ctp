@@ -29,6 +29,7 @@
 			<thead>
 				<tr>
 					<th>Acronym</th>
+					<th>Código</th>
 					<th>Nombre</th>
 				</tr>
 			</thead>
@@ -45,6 +46,7 @@
 						}
 					?>
 					<td><?php echo $html->link($modelHelper->format_acronym($course['Degree']['acronym']), $url) ?></td>
+					<td><?php echo $html->link($course['Degree']['code'], $url) ?></td>
 					<td><?php echo $html->link($course['Degree']['name'], $url) ?></td>
 				</tr>
 				<?php endforeach; ?>

@@ -35,19 +35,6 @@ $config['app']['subject']['semesters'] = array(
     "Segundo" => "Segundo",
     "Anual"   => "Anual"
 );
-$config['app']['subject']['types'] = array(
-    'Grado' => array(
-        'Básica de Rama' => 'Básica de Rama',
-        'Básica'         => 'Básica',
-        'Obligatoria'    => 'Obligatoria',
-        'Optativa'       => 'Optativa'
-    ),
-    'Licencitura' => array(
-        'Troncal'     => 'Troncal',
-        'Obligatoria' => 'Obligatoria',
-        'Optativa'    => 'Optativa'
-    )
-);
 $config['app']['subject']['default_type'] = 'Troncal';
 $config['app']['color_legend'] = array(
     'legend_left' => array(
