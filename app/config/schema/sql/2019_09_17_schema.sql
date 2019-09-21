@@ -321,6 +321,7 @@ CREATE TABLE `courses` (
 CREATE TABLE `degrees` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `institution_id` int(11) NOT NULL,
+  `code` int(11) NOT NULL,
   `acronym` varchar(16) NOT NULL,
   `name` varchar(255) NOT NULL,
   `created` datetime DEFAULT NULL,
@@ -414,6 +415,7 @@ CREATE TABLE `groups` (
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `institutions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` int(11) NOT NULL,
   `acronym` varchar(16) NOT NULL,
   `name` varchar(255) NOT NULL,
   `audit_email` VARCHAR(255) NULL,
@@ -556,7 +558,7 @@ CREATE TABLE `subjects` (
   `semester` varchar(255) NOT NULL,
   `credits_number` decimal(10,2) NOT NULL,
   `coordinator_id` int(11) NOT NULL DEFAULT '0',
-  `practice_responsible_id` int(11) NOT NULL,
+  `practice_responsible_id` int(11) NULL,
   `closed_attendance_groups` tinyint(1) DEFAULT '0',
   `created` datetime DEFAULT NULL,
   `modified` datetime DEFAULT NULL,

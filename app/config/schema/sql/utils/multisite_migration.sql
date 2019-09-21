@@ -1,16 +1,16 @@
 # INSTITUTIONS
-INSERT INTO `institutions` (`id`, `acronym`, `name`, `created`, `modified`)
+INSERT INTO `institutions` (`id`, `code`, `acronym`, `name`, `created`, `modified`)
 	VALUES
-    (1, 'FV', 'Facultad de veterinaria', now(), now()),
-    (2, 'EITE', 'Escuela de Ingeniería de Telecomunicación y Electrónica', now(), now());
+    (1, 185, 'FV', 'Facultad de veterinaria', now(), now()),
+    (2, 110, 'EITE', 'Escuela de Ingeniería de Telecomunicación y Electrónica', now(), now());
 
 # DEGREES
-INSERT INTO `degrees` (`id`, `institution_id`, `acronym`, `name`, `created`, `modified`)
+INSERT INTO `degrees` (`id`, `institution_id`, `code`, `acronym`, `name`, `created`, `modified`)
 	VALUES
-    (1, 1, 'GV', 'Grado en veterinaria', now(), now()),
-    (2, 2, 'GITT', 'GITT (Grado en Ingeniería en Tecnologías de la Telecomunicación)', now(), now()),
-    (3, 2, 'DG-GITT-ADE', 'DG-GITT+ADE (Doble Grado en GITT y ADE)', now(), now()),
-    (4, 2, 'MUIT', 'MUIT (Máster en Ingeniería de Telecomunicación)', now(), now());
+    (1, 1, 4025, 'GV', 'Grado en veterinaria', now(), now()),
+    (2, 2, 4037, 'GITT', 'GITT (Grado en Ingeniería en Tecnologías de la Telecomunicación)', now(), now()),
+    (3, 2, 4803, 'DG-GITT-ADE', 'DG-GITT+ADE (Doble Grado en GITT y ADE)', now(), now()),
+    (4, 2, 5023, 'MUIT', 'MUIT (Máster en Ingeniería de Telecomunicación)', now(), now());
 
 # ACADEMIC YEARS
 INSERT INTO `academic_years` (`initial_date`, `final_date`, `created`, `modified`)

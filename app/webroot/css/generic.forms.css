@@ -23,7 +23,8 @@ dd {
 }
 dl + .help-text {
         display: inline-block;
-        margin-left: 17em;
+		margin-left: 17em;
+		margin-top: .3em;
 }
 
 /** Forms **/

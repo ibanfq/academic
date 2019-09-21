@@ -24,6 +24,10 @@
 			<dd><?php echo $modelHelper->format_acronym($institution['Institution']['acronym']) ?></dd>
 		</dl>
 		<dl>
+			<dt>Código</dt>
+			<dd><?php echo $institution['Institution']['code'] ?></dd>
+		</dl>
+		<dl>
 			<dt>Denominación</dt>
 			<dd><?php echo $institution['Institution']['name'] ?></dd>
 		</dl>
@@ -40,6 +44,7 @@
 				<thead>
 					<tr>
 						<th>Acrónimo</th>
+						<th>Código</th>
 						<th>Nombre</th>
 					</tr>
 				</thead>
@@ -49,6 +54,7 @@
 							<?php $url = array('controller' => 'degrees', 'action' => 'view', $degree['id']); ?>
 							<tr>
 								<td><?php echo $html->link($modelHelper->format_acronym($degree['acronym']), $url) ?></td>
+								<td><?php echo $html->link($degree['code'], $url) ?></td>
 								<td><?php echo $html->link($degree['name'], $url); ?></td>
 							</tr>
 						<?php endforeach; ?>

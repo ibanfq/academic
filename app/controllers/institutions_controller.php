@@ -50,6 +50,7 @@ class InstitutionsController extends AppController {
 
         if (!empty($q)) {
             $scope['OR'] = array(
+                'Institution.code LIKE' => "%$q%",
                 'Institution.acronym LIKE' => "%$q%",
                 'Institution.name LIKE' => "%$q%",
             );

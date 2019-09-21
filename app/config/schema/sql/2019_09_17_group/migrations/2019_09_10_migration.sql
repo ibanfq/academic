@@ -12,6 +12,7 @@ CREATE TABLE `academic_years` (
 CREATE TABLE `degrees` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `institution_id` INT(11) NOT NULL,
+  `code` int(11) NOT NULL,
   `acronym` VARCHAR(16) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `levels` TEXT NOT NULL,
@@ -35,6 +36,7 @@ ADD COLUMN `degree_id` INT(11) NOT NULL AFTER `institution_id`
 ;
 
 ALTER TABLE `subjects` 
+CHANGE COLUMN `practice_responsible_id` `practice_responsible_id` INT(11) NULL,
 DROP COLUMN `degree`;
 
 ALTER TABLE `subjects_users` 

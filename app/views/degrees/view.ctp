@@ -24,6 +24,10 @@
 			<dd><?php echo $modelHelper->format_acronym($degree['Degree']['acronym']) ?></dd>
 		</dl>
 		<dl>
+			<dt>Código</dt>
+			<dd><?php echo $degree['Degree']['code'] ?></dd>
+		</dl>
+		<dl>
 			<dt>Denominación</dt>
 			<dd><?php echo $degree['Degree']['name'] ?></dd>
 		</dl>

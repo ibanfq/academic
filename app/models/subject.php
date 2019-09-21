@@ -38,9 +38,12 @@ class Subject extends AcademicModel {
                 'required' => true,
                 'message' => 'Debe introducir el código de la asignatura (p.ej. 12587)'
             ),
+            'numeric' => array(
+                'rule' => 'numeric',
+                'message' => 'El código debe ser de tipo numérico.'
+            ),
             'unique' => array(
                 'rule' => array('codeMustBeUnique'),
-                'on' => 'create',
                 'message' => 'Ya existe una asignatura con este código en el curso'
             )
         ),
@@ -89,25 +92,33 @@ class Subject extends AcademicModel {
                 'required' => true,
                 'message' => 'El coordinador de la asignatura no puede estar vacío'
             )
-        ),
-        'practice_responsible_id' => array(
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
-                'message' => 'El responsable de prácticas de la asignatura no puede estar vacío'
-            )
         )
     );
     
     /**
      * Validates that a combination of code,course is unique
      */
-    function codeMustBeUnique($code){
-        $subject = $this->data[$this->alias];
-        return $this->find('count', array('conditions' => array(
-            'Subject.code' => $code,
-            'Subject.course_id' => $subject['course_id'],
-        ))) == 0;
+    function codeMustBeUnique($code) {
+        $code = is_array($code)
+            ? isset($code['code']) ? $code['code'] : $code[0]
+            : $code;
+
+        $data = $this->data[$this->alias];
+        
+        if (! isset($data['course_id'])) {
+            return false;
+        }
+
+        $conditions = array(
+            "{$this->alias}.code" => $code,
+            "{$this->alias}.course_id" => $data['course_id'],
+        );
+
+        if (!empty($this->id)) {
+            $conditions[$this->alias . '.' . $this->primaryKey . ' !='] =  $this->id;
+        }
+
+        return 0 == $this->find('count', array('recursive' => -1, 'conditions' => $conditions));
     }
 
     /**

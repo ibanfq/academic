@@ -48,6 +48,7 @@
 				<thead>
 					<tr>
 						<th>Acrónimo</th>
+						<th>Código</th>
 						<th>Denominación</th>
 					</tr>
 				</thead>
@@ -77,6 +78,7 @@
 							}
 						?>
 						<td><?php echo $html->link($modelHelper->format_acronym($institution['Institution']['acronym']), $url) ?></td>
+						<td><?php echo $html->link($institution['Institution']['code'], $url) ?></td>
 						<td><?php
 							echo $html->link($institution['Institution']['name'], $url)
 						?></td>
