@@ -72,13 +72,33 @@ class Environment extends Object {
     static function setUser($user)
     {
         $_this =& Environment::getInstance();
-        $_this->_user = $user;
+
+        if (is_array($user)) {
+            $model =& Environment::getModel($_this->userModel);
+            if (isset($user[$model->alias])) {
+                $_this->_user = array($model->alias => $user[$model->alias]);
+            } else {
+                $_this->_user = array($model->alias => $user);
+            }
+        } else {
+            $_this->_user = $user;
+        }
     }
 
     static function setInstitution($institution)
     {
         $_this =& Environment::getInstance();
-        $_this->_institution = $institution;
+
+        if (is_array($institution)) {
+            $model =& Environment::getModel($_this->institutionModel);
+            if (isset($institution[$model->alias])) {
+                $_this->_institution = array($model->alias => $institution[$model->alias]);
+            } else {
+                $_this->_institution = array($model->alias => $institution);
+            }
+        } else {
+            $_this->_institution = $institution;
+        }
     }
 
     static function user($key = null)

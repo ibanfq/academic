@@ -533,7 +533,7 @@ class CompetenceCriteriaController extends AppController {
                 array(
                     'table' => 'competence_criteria',
                     'alias' => 'CompetenceCriterion',
-                    'fields' => array('distinct Student.*, CompetenceCriterionGrade.*'),
+                    'fields' => array('DISTINCT Student.*, CompetenceCriterionGrade.*'),
                     'recursive' => -1,
                     'joins' => array(
                         array(

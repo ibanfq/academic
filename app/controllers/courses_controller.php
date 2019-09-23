@@ -301,7 +301,7 @@ class CoursesController extends AppController {
         $competenceList = $this->Competence->find(
             'all',
             array(
-                'conditions' => array('Competence.course_id' => $new_course_id),
+                'conditions' => array('Competence.course_id' => $course['Course']['id']),
                 'recursive' => -1
             )
         );

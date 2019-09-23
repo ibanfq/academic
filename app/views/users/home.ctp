@@ -177,7 +177,7 @@ $(document).ready(function() {
 <p id="calendar_ics">
   <strong>Url de exportación:</strong> <br />
   <?php echo $html->tag('input', null, array(
-      'value' => $this->Html->url('/users/calendars/'.$user->getCalendarToken().'.ics', true),
+      'value' => $this->Html->url(Environment::getBaseUrl().'/users/calendars/'.$user->getCalendarToken().'.ics', true),
       'onFocus' => 'window.setTimeout((function(){$(this).select();}).bind(this), 100);'
   )); ?>
 </p>

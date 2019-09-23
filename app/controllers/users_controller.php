@@ -35,18 +35,20 @@ class UsersController extends AppController {
     }
     
     function calendars($token) {
-        $user = $this->User->findByCalendarToken($token);
+        if (! Environment::user('id')) {
+            $user = $this->User->findByCalendarToken($token);
 
-        if ($user === false) {
-            return $this->cakeError('error404');
+            if (! $user) {
+                return $this->cakeError('error404');
+            }
+
+            Environment::setUser($user);
         }
-
-        $this->User->id = $user['User']['id'];
-        $this->User->data = $user;
         
-        $calendarName = Configure::read('app.vcalendar.name')
-            ? Configure::read('app.vcalendar.name')
-            : 'Academic';
+        $this->User->id = Environment::user('id');
+        $this->User->data = Environment::user();
+        
+        $calendarName = (Environment::institution('name') ?: 'Academic') . ' - ULPGC';
 
         #header('Content-type: text/calendar; charset=utf-8');
         #header('Content-Disposition: attachment; filename=calendar.ics');
@@ -800,7 +802,7 @@ class UsersController extends AppController {
             }
 
             $users = $this->User->find('all', array(
-                'fields' => array('distinct User.id', 'User.first_name', 'User.last_name'),
+                'fields' => array('DISTINCT User.id', 'User.first_name', 'User.last_name'),
                 'joins' => array(
                     array(
                         'table' => 'competence_criteria',
@@ -2030,13 +2032,27 @@ class UsersController extends AppController {
         } else {
             $this->set('section', 'users');
         }
+
+        if ($this->params['action'] === 'calendars') {
+            if (empty($this->params['pass'][0])) {
+                return false;
+            }
+            
+            $user = $this->User->findByCalendarToken($this->params['pass'][0]);
+
+            if ($user === false) {
+                return false;
+            }
+
+            Environment::setUser($user);
+        } 
         
         $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'logout', 'my_subjects', 'rememberPassword');
         $administrator_actions = array('delete', 'import', 'acl_edit');
         $administrative_actions = array('edit_registration', 'delete_subject', 'edit', 'add');
         $stats_actions = array('index', 'teacher_stats', 'student_stats', 'teacher_stats_details', 'student_stats_details', 'get_student_subjects', 'view');
         $my_subjects_actions = array('my_subjects');
-        $public_actions = array();
+        $public_actions = array('calendars');
 
         if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
             return false;

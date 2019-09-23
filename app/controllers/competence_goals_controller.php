@@ -69,7 +69,7 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
         
-        $fields = array('distinct CompetenceGoal.*, CompetenceCriterion.*');
+        $fields = array('DISTINCT CompetenceGoal.*, CompetenceCriterion.*');
 
         $competence_goal_joins = array(
         );
@@ -292,7 +292,7 @@ class CompetenceGoalsController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $fields = array('distinct CompetenceGoal.*, CompetenceCriterion.*');
+        $fields = array('DISTINCT CompetenceGoal.*, CompetenceCriterion.*');
 
         $competence_goal_joins = array(
             array(

@@ -116,7 +116,7 @@ class CompetenceController extends AppController {
         }
 
         $competence = $this->Competence->find('all', array(
-            'fields' => array('distinct Competence.*'),
+            'fields' => array('DISTINCT Competence.*'),
             'recursive' => -1,
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
@@ -235,7 +235,7 @@ class CompetenceController extends AppController {
         }
 
         $competence = $this->Competence->find('all', array(
-            'fields' => array('distinct Competence.*'),
+            'fields' => array('DISTINCT Competence.*'),
             'recursive' => -1,
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
@@ -369,7 +369,7 @@ class CompetenceController extends AppController {
         }
 
         $competence = $this->Competence->find('all', array(
-            'fields' => array('distinct Competence.*'),
+            'fields' => array('DISTINCT Competence.*'),
             'recursive' => -1,
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
@@ -510,7 +510,7 @@ class CompetenceController extends AppController {
 
         $competence_result = $this->Competence->find('all', array(
             'recursive' => -1,
-            'fields' => array('distinct Competence.*, CompetenceGoal.*'),
+            'fields' => array('DISTINCT Competence.*, CompetenceGoal.*'),
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
             'order' => array('CompetenceGoal.code asc')
@@ -666,7 +666,7 @@ class CompetenceController extends AppController {
 
         $competence_result = $this->Competence->find('all', array(
             'recursive' => -1,
-            'fields' => array('distinct Competence.*, CompetenceGoal.*'),
+            'fields' => array('DISTINCT Competence.*, CompetenceGoal.*'),
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
             'order' => array('CompetenceGoal.code asc')
@@ -797,7 +797,7 @@ class CompetenceController extends AppController {
 
         $competence_result = $this->Competence->find('all', array(
             'recursive' => -1,
-            'fields' => array('distinct Competence.*, CompetenceGoal.*'),
+            'fields' => array('DISTINCT Competence.*, CompetenceGoal.*'),
             'joins' => $competence_joins,
             'conditions' => $competence_conditions,
             'order' => array('CompetenceGoal.code asc')

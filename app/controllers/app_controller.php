@@ -143,7 +143,9 @@ class AppController extends Controller {
       }
     }
 
-    Environment::setUser($this->Auth->user());
+    if (! Environment::user('id')) {
+      Environment::setUser($this->Auth->user());
+    }
 
     if (! $this->Auth->user('super_admin') && Environment::institution('id') && ! Environment::userInstitution('active')) {
       if ($this->RequestHandler->isAjax()) {

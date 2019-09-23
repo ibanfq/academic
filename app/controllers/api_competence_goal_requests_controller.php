@@ -429,7 +429,7 @@ class ApiCompetenceGoalRequestsController extends AppController {
         }
 
         return $this->CompetenceGoalRequest->find('all', array(
-            'fields' => array('distinct CompetenceGoalRequest.*, Competence.*, CompetenceGoal.*, Student.*, Teacher.*'),
+            'fields' => array('DISTINCT CompetenceGoalRequest.*, Competence.*, CompetenceGoal.*, Student.*, Teacher.*'),
             'recursive' => -1,
             'joins' => $competence_goal_request_joins,
             'conditions' => $competence_goal_request_conditions,

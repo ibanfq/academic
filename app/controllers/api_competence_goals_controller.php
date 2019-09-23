@@ -145,7 +145,7 @@ class ApiCompetenceGoalsController extends AppController {
             ),
         );
 
-        $fields = array('distinct CompetenceGoal.*');
+        $fields = array('DISTINCT CompetenceGoal.*');
         $order = array('Competence.code asc', 'CompetenceGoal.code asc', 'CompetenceCriterion.code asc');
 
         $contain = $this->Api->getParameter('contain', 'string');
@@ -364,7 +364,7 @@ class ApiCompetenceGoalsController extends AppController {
 
         $competence_goal_result = $this->CompetenceGoal->find('all', array(
             'recursive' => -1,
-            'fields' => array('distinct CompetenceGoal.*, CompetenceCriterion.*, CompetenceCriterionGrade.*'),
+            'fields' => array('DISTINCT CompetenceGoal.*, CompetenceCriterion.*, CompetenceCriterionGrade.*'),
             'joins' => $competence_goal_joins,
             'conditions' => $competence_goal_conditions,
             'order' => array('CompetenceCriterion.code asc')

@@ -132,26 +132,33 @@ class User extends AppModel {
         $security = Security::getInstance();
         $value = $security->cipher(base64_decode(strtr($token, '-_', '+/')), $key);
         $value = explode(' ', $value, 2);
+
         if (count($value) !== 2) {
             return false;
         }
+
         list($id, $field2) = $value;
+
         if (!is_numeric($id)) {
             return false;
         }
-        return $this->find('first', array(
-            'joins' => array(
-                array(
-                    'table' => 'users_institutions',
-                    'alias' => 'UserInstitution',
-                    'type' => 'INNER',
-                    'conditions' => array(
-                        'UserInstitution.user_id = User.id',
-                        'UserInstitution.institution_id' => Environment::institution('id'),
-                        'UserInstitution.active'
-                    )
+
+        $joins = array();
+
+        if (Environment::institution('id')) {
+            $joins[]= array(
+                'table' => 'users_institutions',
+                'alias' => 'UserInstitution',
+                'type' => 'INNER',
+                'conditions' => array(
+                    'UserInstitution.user_id = User.id',
+                    'UserInstitution.institution_id' => Environment::institution('id'),
+                    'UserInstitution.active'
                 )
-            ),
+                );
+        }
+        return $this->find('first', array(
+            'joins' => $joins,
             'conditions' => array(
                 'User.id' => $id,
                 'OR' => array(
@@ -247,7 +254,7 @@ class User extends AppModel {
                 ) AND ($whereUserType OR UserBooking.user_id = {$id})
             ");
         } else {
-            $user_institutions_ids = array_filter(Environment::userInstitutions('institution_id')) ?: array(null);
+            $user_institutions_ids = array_filter((array) Environment::userInstitutions('institution_id')) ?: array(null);
             $user_institutions_ids_list = implode(',', array_map(array($db, 'value'), $user_institutions_ids));
             $bookings = $this->query("
                 SELECT DISTINCT Booking.id, Booking.initial_hour, Booking.final_hour, Booking.reason
