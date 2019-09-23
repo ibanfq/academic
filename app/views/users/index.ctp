@@ -84,7 +84,7 @@
 							echo $html->link("{$user['User']['last_name']}, {$user['User']['first_name']}", array('controller' => 'users', 'action' => 'view', $user['User']['id']));
 						}
 					?></td>
-					<td><?php echo $user['User']['type'] ?></td>
+					<td><?php echo $auth->user('super_admin') && $user['User']['super_admin'] ? 'Super administrador' : $user['User']['type'] ?></td>
 					<td><?php echo TextUtils::maskdni($user['User']['dni']) ?></td>
 					<td><?php echo $user['User']['username'] ?></td>
 				</tr>

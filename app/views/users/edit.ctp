@@ -29,7 +29,7 @@
 					$help_text = '';
 				endif;
 				$types = array("Administrador" => "Administrador", "Administrativo" => "Administrativo" , "Conserje" => "Conserje",  "Profesor" => "Profesor", "Estudiante" => "Estudiante", "Becario" => "Becario");
-				if (! Environment::institution('id') && $auth->user('super_admin')) {
+				if ($auth->user('super_admin')) {
 					$types = array_merge(array('Super administrador' => 'Super administrador'), $types);
 				}
 				echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => "</dd></dl>$help_text", 'onchange' => 'userTypeChanged()', 'options' => $types));

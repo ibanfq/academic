@@ -71,7 +71,7 @@
 		<?php if ($auth->user('type') == "Administrador" || $auth->user('type') == "Administrativo"): ?>
 			<dl>
 				<dt>Tipo</dt>
-				<dd><?php echo $user['User']['super_admin'] ? 'Super administrador' : $user['User']['type'] ?></dd>
+				<dd><?php echo $auth->user('super_admin') && $user['User']['super_admin'] ? 'Super administrador' : $user['User']['type'] ?></dd>
 			</dl>
 		<?php endif; ?>
 		<?php if (Environment::institution('id')): ?>
