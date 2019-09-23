@@ -29,7 +29,7 @@
 		</div>
 		<div class="input text">
 			<dl>
-				<dt><label for="responsible_name">Responsable de prácticas*</label></dt>
+				<dt><label for="responsible_name">Responsable de prácticas</label></dt>
 				<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" <?php if (isset($this->data['Responsible']['first_name'])): ?>value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>"<?php endif ?> /></dd>
 				<?php echo $form->input('practice_responsible_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 			</dl>
