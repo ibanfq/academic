@@ -333,6 +333,7 @@ class UsersController extends AppController {
                 $this->User->set($user);
             } else {
                 $is_new = true;
+                ///** @deprecated in favour CAS auth */
                 // $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
                 // $this->data['User']['password'] = $this->Auth->password($password);
             }
@@ -379,6 +380,7 @@ class UsersController extends AppController {
                         ? Configure::read('app.email.user_registered')
                         : 'user_registered';
                     $this->set('user', $dataToSave);
+                    ///** @deprecated in favour CAS auth */
                     // if ($is_new) {
                     //    $this->set('password', $password);
                     //}
@@ -1975,12 +1977,13 @@ class UsersController extends AppController {
         $subjects_to_add = array_values(array_diff($subjects_to_register, $registered_subjects));
         $user['Subject']['Subject'] = array_unique($subjects_to_add);
         
-        if ($this->User->id) {
-            $password = null;
-        } else {
-            $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
-            $user['User']['password'] = $this->Auth->password($password);
-        }
+        ///** @deprecated in favour CAS auth */
+        //if ($this->User->id) {
+        //    $password = null;
+        //} else {
+        //    $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
+        //    $user['User']['password'] = $this->Auth->password($password);
+        //}
         
         if ($this->User->save($user)) {
             if (!empty($user['UserInstitution']['active'])) {
@@ -2004,9 +2007,10 @@ class UsersController extends AppController {
                     ? Configure::read('app.email.user_registered')
                     : 'user_registered';
                 $this->set('user', $user);
-                if ($password) {
-                    $this->set('password', $password);
-                }
+                ///** @deprecated in favour CAS auth */
+                //if ($password) {
+                //    $this->set('password', $password);
+                //}
                 $this->Email->send();
 
                 return true;
