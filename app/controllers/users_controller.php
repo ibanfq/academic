@@ -7,19 +7,22 @@ class UsersController extends AppController {
     var $fields_guarded = array('User' => ['id', 'created', 'modified']);
     var $refs_sections = array('competence' => 'courses');
 
-    function beforeFilter() 
-    {
-        parent::beforeFilter();
-        $this->Auth->allow('calendars');
-    }
-
     function login() {
+        if ($this->Auth->user('id')) {
+            $this->redirect($this->Auth->redirect(), null, true);
+        }
+        
         $this->set('action', 'login');
         $this->Auth->loginError = "El nombre de usuario y contraseña no son correctos";
     }
 
+    function cas_login() {
+        $this->Cas->forceAuthentication();
+        $this->redirect($this->Auth->redirect(), null, true);
+    }
+
     function logout() {
-        $this->redirect($this->Auth->logout());
+        $this->redirect($this->Cas->logout());
     }
     
     function home() {
@@ -264,9 +267,12 @@ class UsersController extends AppController {
     
     function add() {
         if (!empty($this->data)) {
+            $this->loadModel('UserInstitution');
+
             $this->data = $this->Form->filter($this->data);
             
             $user = null;
+            $userUpdatedBlocked = false;
 
             if (!empty($this->data['User']['username'])) {
                 $this->data['User']['username'] = trim($this->data['User']['username']);
@@ -291,14 +297,18 @@ class UsersController extends AppController {
                         'recursive' => -1
                     ));
 
-                    if ($user && ! empty($user['UserInstitution']['active'])) {
-                        $this->Session->setFlash('El usuario ya está registrado en el centro.');
-                        $this->redirect($this->referer());
-                    }
+                    if ($user) {
+                        if (! empty($user['UserInstitution']['active'])) {
+                            $this->Session->setFlash('El usuario ya está registrado en el centro.');
+                            $this->redirect($this->referer());
+                        }
 
-                    if ($user && !empty($this->data['User']['type']) && $user['User']['type'] !== $this->data['User']['type']) {
-                        $this->Session->setFlash('El usuario ya está registrado en el sistema como otro tipo de usuario.');
-                        $this->redirect($this->referer());
+                        if (!empty($this->data['User']['type']) && $user['User']['type'] !== $this->data['User']['type']) {
+                            $this->Session->setFlash('El usuario ya está registrado en el sistema como otro tipo de usuario.');
+                            $this->redirect($this->referer());
+                        }
+
+                        $userUpdatedBlocked = true;
                     }
                 } elseif (! $this->Auth->user('super_admin')) {
                     $this->Session->setFlash('No tiene permisos para realizar esta acción.');
@@ -334,12 +344,17 @@ class UsersController extends AppController {
                 $dataToSave['User']['super_admin'] = $this->Auth->user('super_admin');
             }
 
+            if ($userUpdatedBlocked) {
+                unset($dataToSave['User']['first_name']);
+                unset($dataToSave['User']['last_name']);
+                unset($dataToSave['User']['dni']);
+                unset($dataToSave['User']['phone']);
+            }
+
             if ($this->User->save($dataToSave)) {
                 $ok = true;
 
                 if (Environment::institution('id')) {
-                    $this->loadModel('UserInstitution');
-
                     if (! empty($user['UserInstitution']['id'])) {
                         $this->UserInstitution->id = $user['UserInstitution']['id'];
                     }
@@ -368,7 +383,12 @@ class UsersController extends AppController {
                         $this->set('password', $password);
                     }
                     $this->Email->send();
-                    $this->Session->setFlash('El usuario se ha guardado correctamente');
+                    
+                    if ($userUpdatedBlocked) {
+                        $this->Session->setFlash('El usuario ya está dado de alta en en sistema. Se añadirá al centro sin actualizar sus datos personales.');
+                    } else {
+                        $this->Session->setFlash('El usuario se ha guardado correctamente');
+                    }
                     $this->redirect(array('action' => 'index'));
                 }
 
@@ -433,12 +453,14 @@ class UsersController extends AppController {
             ));
 
             $type_editable = $institutionsCount === 1;
+            $dni_editable = $this->Auth->user('super_admin') || $institutionsCount === 1;
             $betaTesters = (array) Configure::read('app.beta.testers');
         } else {
             $type_editable = true;
+            $dni_editable = true;
             $betaTesters = array();
         }
-        
+
 
         if (empty($this->data)) {
             $this->data = $user;
@@ -460,6 +482,10 @@ class UsersController extends AppController {
                 $dataToSave['User']['super_admin'] = $this->Auth->user('super_admin');
             } elseif ($this->Auth->user('super_admin')) {
                 $dataToSave['User']['super_admin'] = false;
+            }
+
+            if (!$dni_editable) {
+                unset($dataToSave['User']['dni']);
             }
 
             if ($this->User->save($dataToSave)) {
@@ -509,6 +535,7 @@ class UsersController extends AppController {
 
         $this->set('user', $user);
         $this->set('type_editable', $type_editable);
+        $this->set('dni_editable', $dni_editable);
     }
     
     function delete($id = null) {
@@ -603,7 +630,7 @@ class UsersController extends AppController {
             WHERE registration.student_id = {$id}
         ");
 
-        if (Environtment::institution('id')) {
+        if (Environment::institution('id')) {
             $this->loadModel('UserInstitution');
 
             $this->User->query("
@@ -617,7 +644,7 @@ class UsersController extends AppController {
                 )
             ));
 
-            if ($institutionsCount === 1) {
+            if ($institutionsCount === 0) {
                 $this->User->query("DELETE user FROM `users` user WHERE user.id = {$id}"); 
             }
         } else {
@@ -918,6 +945,14 @@ class UsersController extends AppController {
                 $this->data['User'] = array_intersect_key(
                     $this->data['User'],
                     array_flip(array(
+                        'old_password', 'new_password', 'password_confirmation', 'notify_all'
+                    ))
+                );
+            } elseif ($this->Auth->user('__LOGGED_WITH_CAS__')) {
+                $this->data['User'] = array_intersect_key(
+                    $this->data['User'],
+                    array_flip(array(
+                        'dni', 'phone',
                         'old_password', 'new_password', 'password_confirmation', 'notify_all'
                     ))
                 );
@@ -2021,6 +2056,15 @@ class UsersController extends AppController {
         
         return $result;
     }
+
+    function _allowAnonymousActions() {
+        $this->Auth->allow('login', 'cas_login', 'rememberPassword', 'calendars');
+        
+        $acl = Configure::read('app.acl');
+        if (!empty($acl['all']['events.calendar_by_teacher'])) {
+            $this->Auth->allow('find_teachers_by_name');
+        }
+    }
     
     function _authorize() {
         parent::_authorize();
@@ -2047,21 +2091,23 @@ class UsersController extends AppController {
             Environment::setUser($user);
         } 
         
-        $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'logout', 'my_subjects', 'rememberPassword');
+        $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'cas_login', 'logout', 'my_subjects', 'rememberPassword');
         $administrator_actions = array('delete', 'import', 'acl_edit');
         $administrative_actions = array('edit_registration', 'delete_subject', 'edit', 'add');
         $stats_actions = array('index', 'teacher_stats', 'student_stats', 'teacher_stats_details', 'student_stats_details', 'get_student_subjects', 'view');
         $my_subjects_actions = array('my_subjects');
-        $public_actions = array('calendars');
 
         if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
             return false;
         }
 
-        $acl = Configure::read('app.acl');
         $auth_type = $this->Auth->user('type');
-        if ($auth_type && !empty($acl[$auth_type]['events.calendar_by_teacher']) || !empty($acl['all']['events.calendar_by_teacher'])) {
-            array_push($public_actions, 'find_teachers_by_name');
+
+        if ($auth_type) {
+            $acl = Configure::read('app.acl');
+            if (!empty($acl[$auth_type]['events.calendar_by_teacher'])) {
+                $this->Auth->allow('find_teachers_by_name');
+            }
         }
         
         if ((array_search($this->params['action'], $administrator_actions) !== false) && ($this->Auth->user('type') != "Administrador")) {
@@ -2080,10 +2126,6 @@ class UsersController extends AppController {
             return false;
         }
 
-        if ((array_search($this->params['action'], $public_actions) !== false)) {
-            $this->Auth->allow($this->params['action']);
-        }
-    
         return true;
     }
 

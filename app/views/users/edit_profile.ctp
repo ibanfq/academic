@@ -8,20 +8,25 @@
 	<fieldset>
 	<legend>Datos generales</legend>
 		<?php
-                    if ($auth->user('type') == "Estudiante" || $auth->user('type') == "Profesor") {
-                        echo "<dl><dt><label>Nombre</label></dt><dd>{$user['User']['first_name']}</dd></dl>";
-                        echo "<dl><dt><label>Apellidos</label></dt><dd>{$user['User']['last_name']}</dd></dl>";
-                        echo "<dl><dt><label>DNI sin letra</label></dt><dd>{$user['User']['dni']}</dd></dl>";
-                        echo "<dl><dt><label>Teléfono</label></dt><dd>{$user['User']['phone']}</dd></dl>";
-                    } else {
-			echo $form->input('first_name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
-			echo $form->input('last_name', array('label' => 'Apellidos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-			echo $form->input('dni', array('label' => 'DNI sin letra', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-			echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-                    }
-      if ($auth->user('type') == "Profesor" || $auth->user('type') == "Administrador") {
-        echo $form->input('notify_all', array('label' => 'Activar el envío de correos automáticos si olvida pasar la asistencia'));
-      }
+			if ($auth->user('type') == "Estudiante" || $auth->user('type') == "Profesor") {
+				echo "<dl><dt><label>Nombre</label></dt><dd>{$user['User']['first_name']}</dd></dl>";
+				echo "<dl><dt><label>Apellidos</label></dt><dd>{$user['User']['last_name']}</dd></dl>";
+				echo "<dl><dt><label>DNI sin letra</label></dt><dd>{$user['User']['dni']}</dd></dl>";
+				echo "<dl><dt><label>Teléfono</label></dt><dd>{$user['User']['phone']}</dd></dl>";
+			} else {
+				if ($auth->user('__LOGGED_WITH_CAS__')) {
+					echo "<div><dl><dt><label>Nombre</label></dt><dd>{$user['User']['first_name']}</dd></dl></div>";
+					echo "<div><dl><dt><label>Apellidos</label></dt><dd>{$user['User']['last_name']}</dd></dl></div>";
+				} else {
+					echo $form->input('first_name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
+					echo $form->input('last_name', array('label' => 'Apellidos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+				}
+				echo $form->input('dni', array('label' => 'DNI sin letra', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+				echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			}
+			if ($auth->user('type') == "Profesor" || $auth->user('type') == "Administrador") {
+				echo $form->input('notify_all', array('label' => 'Activar el envío de correos automáticos si olvida pasar la asistencia'));
+			}
 		?>
 	</fieldset>
 	

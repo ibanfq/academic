@@ -567,6 +567,12 @@ class BookingsController extends AppController {
         return $this->_authorizeEdit($booking);
     }
 
+    function _allowAnonymousActions() {
+        $this->Auth->allow('get', 'view');
+
+        parent::_allowAnonymousActions();
+    }
+
     function _authorize() {
         parent::_authorize();
 

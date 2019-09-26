@@ -17,11 +17,28 @@
 	<fieldset>
 	<legend>Datos generales</legend>
 		<?php 
-			echo $form->input('first_name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
-			echo $form->input('last_name', array('label' => 'Apellidos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-			echo $form->input('dni', array('label' => 'DNI (sin letra)', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
-			echo $form->input('username', array('label' => 'Correo electrónico', 'autocorrect' => 'off', 'autocapitalize' => 'none', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			if ($auth->user('super_admin')) {
+				echo $form->input('first_name', array('label' => 'Nombre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); 
+				echo $form->input('last_name', array('label' => 'Apellidos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			} else {
+				echo "<div><dl><dt><label>Nombre</label></dt><dd>{$user['User']['first_name']}</dd></dl></div>";
+				echo "<div><dl><dt><label>Apellidos</label></dt><dd>{$user['User']['last_name']}</dd></dl></div>";
+			}
+
+			if ($dni_editable) {
+				echo $form->input('dni', array('label' => 'DNI (sin letra)', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			} else {
+				echo "<div><dl><dt><label>DNI (sin letra)</label></dt><dd>{$user['User']['dni']}</dd></dl></div>";
+			}
+
+			if ($auth->user('super_admin')) {
+				echo $form->input('username', array('label' => 'Correo electrónico', 'autocorrect' => 'off', 'autocapitalize' => 'none', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+			} else {
+				echo "<div><dl><dt><label>Correo electrónico</label></dt><dd>{$user['User']['username']}</dd></dl></div>";
+			}
+
 			echo $form->input('phone', array('label' => 'Teléfono', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
+
 			if ($type_editable):
 				if ($auth->user('super_admin')):
 					$help_text = '<span class="help-text">El tipo de usuario se actualizará en todas los centros</span>';

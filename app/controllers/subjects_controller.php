@@ -800,6 +800,12 @@ class SubjectsController extends AppController {
         return false;
     }
 
+    function _allowAnonymousActions() {
+        $this->Auth->allow('find_subjects_by_name');
+
+        parent::_allowAnonymousActions();
+    }
+
     function _authorize() {
         parent::_authorize();
 

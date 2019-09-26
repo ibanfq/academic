@@ -951,6 +951,12 @@ class AttendanceRegistersController extends AppController {
         }
     }
 
+    function _allowAnonymousActions() {
+        $this->Auth->allow('clean_up_day');
+
+        parent::_allowAnonymousActions();
+    }
+
     function _authorize() {
         parent::_authorize();
         

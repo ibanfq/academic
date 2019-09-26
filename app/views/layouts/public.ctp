@@ -19,7 +19,7 @@
 			<div class="left">
 				<ul class="logo">
 					<li class="hidden-phone">
-						<a href="<?php echo Environment::getBaseUrl() ?>/calendar_by_classroom">
+						<a href="<?php echo $this->Html->url(null) ?>">
 							<img src="<?php echo Configure::read('app.logo') ?>">
 						</a>
 					</li>
@@ -41,7 +41,7 @@
 
 	<div id="footer">
     <p class="logo visible-block-phone">
-      <a href="<?php echo Environment::getBaseUrl() ?>/calendar_by_classroom">
+      <a href="<?php echo $this->Html->url(null) ?>">
         <img src="<?php echo Configure::read('app.logo') ?>">
       </a>
 	</p>

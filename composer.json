@@ -13,6 +13,7 @@
         "vendor-dir": "vendors/plugins"
     },
     "require": {
-        "firebase/php-jwt": "^5.0"
+        "firebase/php-jwt": "^5.0",
+        "jasig/phpcas": "^1.3"
     }
 }

@@ -1,0 +1,139 @@
+<?php
+
+/**
+ * CAS component
+ */
+class CasComponent extends Object {
+    var $components = array('Auth');
+
+    var $_initialized = false;
+    
+    function _initialize()
+    {
+        if ($this->_initialized) {
+            return;
+        }
+
+        $this->_initialized = true;
+
+        $debug = Configure::read('debug');
+
+        if ($debug) {
+            // Enable debugging
+            phpCAS::setDebug();
+            // Enable verbose error messages. Disable in production!
+            phpCAS::setVerbose(true);
+        }
+
+        // Initialize phpCAS
+        phpCAS::client(CAS_VERSION_2_0, 'identificate.ulpgc.es', 443, '/cas');
+
+        if ($debug) {
+            // For production use set the CA certificate that is the issuer of the cert
+            // on the CAS server and uncomment the line below
+            // phpCAS::setCasServerCACert($cas_server_ca_cert_path);
+            // For quick testing you can disable SSL validation of the CAS server.
+            // THIS SETTING IS NOT RECOMMENDED FOR PRODUCTION.
+            // VALIDATING THE CAS SERVER IS CRUCIAL TO THE SECURITY OF THE CAS PROTOCOL!
+            phpCAS::setNoCasServerValidation();
+        }
+    }
+
+    function checkAuthentication()
+    {
+        if ($this->Auth->user('id') && !$this->Auth->user('__LOGGED_WITH_CAS__')) {
+            // User logged already with other system
+            return;
+        }
+        
+        $this->_initialize();
+
+        // force CAS authentication
+        if (phpCAS::checkAuthentication()) {
+            $logged = $this->_loginCasUser();
+
+            if (! $logged && $this->Auth->user('id')) {
+                $this->Auth->logout();
+            }
+        } elseif ($this->Auth->user('id')) {
+            $this->Auth->logout();
+        }
+    }
+
+    function forceAuthentication()
+    {
+        if ($this->Auth->user('id') && !$this->Auth->user('__LOGGED_WITH_CAS__')) {
+            $this->Auth->logout();
+        }
+
+        $this->_initialize();
+
+        // force CAS authentication
+        phpCAS::forceAuthentication();
+        
+        $logged = $this->_loginCasUser();
+
+        if (! $logged) {
+            $this->Session->setFlash('No se ha podido acceder a la cuenta.');
+        }
+    }
+
+    function logout()
+    {
+        $this->_initialize();
+
+        $redirect = $this->Auth->logout();
+
+        phpCAS::logoutWithRedirectService($redirect);
+    }
+
+    function _loginCasUser()
+    {
+        $attributes = phpCAS::getAttributes();
+
+        if (empty($attributes['Correo'])) {
+            return false;
+        }
+
+        $model = $this->Auth->getModel();
+
+        $user = $model->find('first', array(
+            'conditions' => array(
+                "{$model->alias}.{$this->Auth->fields['username']}" => $attributes['Correo']
+            ),
+            'recursive' => 0
+        ));
+
+        if (! $user) {
+            return false;
+        }
+
+        $user = $user[$model->alias];
+        $hasChanges = false;
+
+        if (!empty($attributes['Nombre']) && $attributes['Nombre'] !== $user['first_name']) {
+            $user['first_name'] = $attributes['Nombre'];
+            $hasChanges = true;
+        }
+        if (!empty($attributes['Apellidos']) && $attributes['Apellidos'] !== $user['last_name']) {
+            $user['last_name'] = $attributes['Apellidos'];
+            $hasChanges = true;
+        }
+
+        if ($hasChanges) {
+            $model->save($user);
+        }
+
+        if ($user['id'] === $this->Auth->user('id')) {
+            $user['__LOGGED_WITH_CAS__'] = true;
+            $this->Auth->Session->write($this->Auth->sessionKey, $user);
+            return true;
+        } elseif ($this->Auth->login($user[$model->primaryKey])) {
+            $user['__LOGGED_WITH_CAS__'] = true;
+            $this->Auth->Session->write($this->Auth->sessionKey, $user);
+            return true;
+        }
+
+        return false;
+    }
+}

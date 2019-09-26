@@ -1098,6 +1098,25 @@ class EventsController extends AppController {
         return $this->_authorizeEdit($event);
     }
 
+    function _allowAnonymousActions() {
+        $this->Auth->allow('view', 'view_info', 'calendar_by_classroom', 'calendar_by_subject', 'calendar_by_level', 'board', 'get', 'get_by_level', 'get_by_degree_and_level', 'get_by_subject');
+
+        $children_actions = array('get_by_teacher' => 'calendar_by_teacher');
+
+        $action = $this->params['action'];
+        if (isset($children_actions[$action])) {
+            $action = $children_actions[$action];
+        }
+
+        $acl = Configure::read('app.acl');
+
+        if (!empty($acl['all']["{$this->params['controller']}.{$action}"])) {
+            $this->Auth->allow($this->params['action']);
+        }
+
+        parent::_allowAnonymousActions();
+    }
+
     function _authorize() {
         parent::_authorize();
 
@@ -1126,7 +1145,6 @@ class EventsController extends AppController {
                 $this->Auth->allow($this->params['action']);
                 return true;
             } elseif (!empty($acl['all']["{$this->params['controller']}.{$action}"])) {
-                $this->Auth->allow($this->params['action']);
                 return true;
             }
         }

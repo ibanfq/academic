@@ -616,6 +616,12 @@ class MonitorsController extends AppController {
 
         return round($bytes/pow(1024, $e), 2).$s[$e];
     }
+
+    function _allowAnonymousActions() {
+        $this->Auth->allow('board', 'show');
+
+        parent::_allowAnonymousActions();
+    }
     
     function _authorize() {
         parent::_authorize();

@@ -80,7 +80,6 @@
                 <?php endif; ?>
             <?php else: ?>
                 <li class="<?php echo ($section == 'users' ? 'active_tab' : '')?>"><a href="/">Identificarse</a></li>
-                <li class="<?php echo ($section == 'users_attendance_register' ? 'active_tab' : '')?>"><a href="/users_attendance_register/add_by_secret_code">Registrar mi asistencia</a></li>
             <?php endif; ?>
         </ul>
       </div>

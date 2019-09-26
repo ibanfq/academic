@@ -8,7 +8,7 @@ class AppController extends Controller {
 	/**
 	 * Application wide controllers
 	 */
-	var $components = array('Security', 'Session', 'Auth', 'Acl', 'RequestHandler', 'Email', 'Form', 'Api');
+	var $components = array('Security', 'Session', 'Auth', 'Cas', 'Acl', 'RequestHandler', 'Email', 'Form', 'Api');
   
 	/**
 	 * Application wide helpers
@@ -63,27 +63,109 @@ class AppController extends Controller {
      * @todo enable csrf security except to api requests
      */
     $this->Security->validatePost = false;
-    
-    /**
-     * Initialize the environment lib
-     */
-    $this->_initEnvironment();
+
 
     /**
-     * Change login scope per institution login form
-     *
-     * @deprecated in favour of CAS login
+     * Initialize the environment
      */
-    if (Environment::institution('id')) {
-      $authModel = ClassRegistry::init($this->Auth->userModel);
-      $db = $authModel->getDataSource();
-      $this->Auth->userScope = array(
-        "(super_admin OR EXISTS (SELECT '' FROM users_institutions UserInstitution WHERE UserInstitution.user_id = {$authModel->escapeField()} AND UserInstitution.institution_id = {$db->value(Environment::institution('id'))} AND UserInstitution.active))"
-      );
+    $this->_initInstitutionEnvironment();
+
+    /**
+     * Initialize authorization (call after _initInstitutionEnvironment)
+     */
+    $this->_initAuthorization();
+  }
+
+  function redirect($url, $status = null, $exit = true) {
+    if (is_string($url) && substr($url, 0, 1) === '/') {
+        if (defined('FULL_BASE_URL')) {
+          $url = FULL_BASE_URL . $url;
+        } else {
+          if (env('HTTPS') || env('HTTP_X_FORWARDED_PROTO') === 'https') {
+            $protocol = 'https://';
+          } else {
+            $protocol = 'http://';
+          }
+          $url = $protocol . env('HTTP_HOST') . $url;
+        }
     }
 
+    return parent::redirect($url, $status, $exit);
+  }
+  
+  function _initAuthorization() {
     /**
-     * Set HTML authorization
+     * Initialize anonymous actions. Controllers must call $this->auth->allow('action') per action
+     */
+    $this->_allowAnonymousActions();
+
+    /**
+     * Start current session
+     */
+    if ($this->isApi) {
+      // Read Authorization header
+      $authorization = env('HTTP_AUTHORIZATION');
+
+      if (! $authorization) {
+        $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
+      }
+
+      if (($authorization || env('PHP_AUTH_USER')) && !$this->Session->started()) {
+        // Fake php sessions to disable it and his cookie
+        session_set_save_handler(
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite'),
+          array(__CLASS__, '__fakeSessionWrite')
+        );
+        ini_set('session.use_cookies', 0);
+        session_start();
+      }
+
+      if (!$authorization) {
+        // No http authorization. Try a CAS authentication with gateway=true
+        $this->Session->start();
+        $this->Cas->checkAuthentication();
+
+        // Set user environment
+        Environment::setUser($this->Auth->user());
+        $this->_updateAppBetaOptions();
+      }
+    } else {
+      // Start the session
+      $this->Session->start();
+
+      if ($this->Auth->user('id')) {
+        // User is logged. Check if is a valid checking CAS authentication with gateway=true
+        $this->Cas->checkAuthentication();
+
+        // Set user environment
+        Environment::setUser($this->Auth->user());
+        $this->_updateAppBetaOptions();
+      } else {
+        // Check if is anonymous action
+        $anonymousActions = array_map('strtolower', $this->Auth->allowedActions);
+
+        $isAnonymousAction = (
+          $this->Auth->allowedActions == array('*') ||
+          in_array($this->params['action'], $anonymousActions)
+        );
+        
+        if (!$isAnonymousAction) {
+          // No anonymous action. Try a CAS authentication with gateway=true
+          $this->Cas->checkAuthentication();
+
+          // Set user environment
+          Environment::setUser($this->Auth->user());
+          $this->_updateAppBetaOptions();
+        }
+      }
+    }
+    
+    /**
+     * HTML authorization
      */
     if (!$this->isApi) {
       // Check logged user beta options
@@ -93,26 +175,30 @@ class AppController extends Controller {
       $this->Auth->loginAction = array('controller' => 'users', 'action' => 'login', 'base' => false);
       $this->Auth->logoutRedirect = Router::url(array('controller' => 'users', 'action' => 'login', 'base' => false, 'full_base' => true));
       $this->Auth->loginRedirect = Router::url(array('controller' => 'users', 'action' => 'home', 'base' => false, 'full_base' => true));
-
-      // Allow public actions
-      $this->Auth->allow('login');
-      $this->Auth->allow('rememberPassword', 'find_subjects_by_name', 'add_by_secret_code', 'clean_up_day');
-
-      if ($this->params['controller'] == 'bookings') {
-        $this->Auth->allow('view', 'get');
-      }
-
-      // Check acl authorization and 
+      
+      // Check controller and acl authorization
       $auth_type = $this->Auth->user('type');
       $acl = Configure::read('app.acl');
 
       if ($auth_type && !empty($acl[$auth_type]["{$this->params['controller']}.{$this->params['action']}"])) {
         // Authorize by user type acl options
         $this->Auth->allow($this->params['action']);
-      } elseif (!empty($acl['all']["{$this->params['controller']}.{$this->params['action']}"])) {
-        // Authorize by global acl options
-        $this->Auth->allow($this->params['action']);
-      } elseif (!$this->_authorize()) {
+      }
+
+      // Check if user is allowed to see current action
+      $isAllowed = false;
+
+      if ($this->_authorize()) {
+        $isAllowed = true;
+      } else {
+        $allowedActions = array_map('strtolower', $this->Auth->allowedActions);
+        $isAllowed = (
+          $this->Auth->allowedActions == array('*') ||
+          in_array($this->params['action'], $allowedActions)
+        );
+      }
+      
+      if (! $isAllowed) {
         // Fail to authorize
         if ($this->RequestHandler->isAjax()) {
           $this->redirect(null, 401, true);
@@ -131,34 +217,9 @@ class AppController extends Controller {
     }
 
     /**
-     * Set API authorization
+     * API authorization
      */
     if ($this->isApi) {
-      // Read Authorization header
-      $authorization = env('HTTP_AUTHORIZATION');
-      if (empty($authorization)) {
-        $authorization = env('REDIRECT_HTTP_AUTHORIZATION');
-      }
-
-      if (!$authorization) {
-        // Check logged user beta options
-        $this->_updateAppBetaOptions();
-      }
-
-      if (($authorization || env('PHP_AUTH_USER')) && !$this->Session->started()) {
-        // Fake php sessions to add api login compatibility to PHPCake
-        session_set_save_handler(
-          array(__CLASS__, '__fakeSessionWrite'),
-          array(__CLASS__, '__fakeSessionWrite'),
-          array(__CLASS__, '__fakeSessionWrite'),
-          array(__CLASS__, '__fakeSessionWrite'),
-          array(__CLASS__, '__fakeSessionWrite'),
-          array(__CLASS__, '__fakeSessionWrite')
-        );
-        ini_set('session.use_cookies', 0);
-        session_start();
-      }
-      
       // Set login options to api authenticate
       $this->Security->loginOptions = array(
         'type' => 'basic',
@@ -199,7 +260,7 @@ class AppController extends Controller {
     /**
      * If user is logged then check if has access to current institution.
      */
-    if (Environment::institution('id') && $this->Auth->user('id') && ! $this->Auth->user('super_admin') && ! Environment::userInstitution('active')) {
+    if (Environment::institution('id') && Environment::user('id') && ! Environment::user('super_admin') && ! Environment::userInstitution('active')) {
       if ($this->RequestHandler->isAjax()) {
         $this->redirect(null, 401, true);
       } else {
@@ -212,7 +273,7 @@ class AppController extends Controller {
         }
       }
     }
-	}
+  }
   
   function _api_authenticate($login) {
     $this->Auth->sessionKey = 'Api.Auth.User';
@@ -238,23 +299,31 @@ class AppController extends Controller {
       }
     }
 
-    // Check user beta options
+    // Set user environment
+    Environment::setUser($this->Auth->user());
     $this->_updateAppBetaOptions();
   }
 
-  function _initEnvironment()
+  function _initInstitutionEnvironment()
   {
+    /**
+     * Check if it is already initialized
+     */
     if (Environment::getInitialized()) {
-      // Initialize only the first time ignoring the next disptach calls
       return;
     }
 
     Environment::setInitialized(true);
 
+    /**
+     * Initialize the institution
+     */
     if (!empty($this->params['institution'])) {
       $institution_id = intval($this->params['institution']);
 
-      // Set institution in environment
+      /**
+       * Load institution to environment
+       */
       Environment::setInstitution($institution_id);
 
       if (! Environment::institution('id')) {
@@ -262,6 +331,36 @@ class AppController extends Controller {
         $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
       }
 
+      /**
+       * Set environment base url
+       */
+      $base_url = "/institutions/{$institution_id}";
+      Environment::setBaseUrl($base_url);
+
+      /** 
+       * Change base url in all route paths to prefix automatically the environment base url to generated urls
+       */
+      $router = Router::getInstance();
+      foreach (array_keys($router->__paths) as $i) {
+        $router->__paths[$i]['base'] = $base_url;
+      }
+
+      /**
+       * Change login query scope of current institution
+       *
+       * @deprecated in favour of CAS login
+       */
+      if (Environment::institution('id')) {
+        $authModel = ClassRegistry::init($this->Auth->userModel);
+        $db = $authModel->getDataSource();
+        $this->Auth->userScope = array(
+          "(super_admin OR EXISTS (SELECT '' FROM users_institutions UserInstitution WHERE UserInstitution.user_id = {$authModel->escapeField()} AND UserInstitution.institution_id = {$db->value(Environment::institution('id'))} AND UserInstitution.active))"
+        );
+      }
+
+      /**
+       * Check institution config files and intitialize if not exists
+       */
       if (! is_dir(CONFIGS . "institutions/{$institution_id}")) {
         if (! mkdir(CONFIGS . "institutions/{$institution_id}")) {
           $this->Session->setFlash('No se ha podido acceder al centro');
@@ -287,20 +386,14 @@ class AppController extends Controller {
         fclose($fp);
       }
 
-      // Set environment base url
-      $base_url = "/institutions/{$institution_id}";
-      Environment::setBaseUrl($base_url);
-
-      // Change base url in all route paths to prefix automatically the environment base url to all generated urls
-      $router = Router::getInstance();
-      foreach (array_keys($router->__paths) as $i) {
-        $router->__paths[$i]['base'] = $base_url;
-      }
-
-      // Load specific institution app config
+      /** 
+       * Load institution app config (fixed config vars, not editable by admin)
+       */
       Configure::load("institutions/$institution_id/app");
     
-      // Load configurable options values of current institution
+      /** 
+       * Load institution user app config (config vars editable by admin)
+       */
       $appOptions = include CONFIGS . "institutions/$institution_id/app.options.php";
       foreach ($appOptions as $key => $value) {
           Configure::write(
@@ -310,10 +403,12 @@ class AppController extends Controller {
           );
       }
     } else {
-        Configure::load('app');
+      /**
+       * No institution environment.
+       * Load global app config
+       */
+      Configure::load('app');
     }
-
-    Environment::setUser($this->Auth->user());
   }
 
   function _updateAppBetaOptions()
@@ -325,6 +420,14 @@ class AppController extends Controller {
       foreach ($config_writes as $config => $value) {
         Configure::write($config, $value);
       }
+    }
+  }
+
+  function _allowAnonymousActions() {
+    $acl = Configure::read('app.acl');
+
+    if (!empty($acl['all']["{$this->params['controller']}.{$this->params['action']}"])) {
+      $this->Auth->allow($this->params['action']);
     }
   }
 

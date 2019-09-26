@@ -62,6 +62,12 @@ class UsersAttendanceRegisterController extends AppController {
         }
     }
     
+    function _allowAnonymousActions() {
+        $this->Auth->allow('add_by_secret_code');
+
+        parent::_allowAnonymousActions();
+    }
+
     function _authorize(){
         parent::_authorize();
         
