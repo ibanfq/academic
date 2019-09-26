@@ -333,8 +333,8 @@ class UsersController extends AppController {
                 $this->User->set($user);
             } else {
                 $is_new = true;
-                $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
-                $this->data['User']['password'] = $this->Auth->password($password);
+                // $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
+                // $this->data['User']['password'] = $this->Auth->password($password);
             }
 
             $dataToSave = $this->data;
@@ -379,9 +379,9 @@ class UsersController extends AppController {
                         ? Configure::read('app.email.user_registered')
                         : 'user_registered';
                     $this->set('user', $dataToSave);
-                    if (! $user) {
-                        $this->set('password', $password);
-                    }
+                    // if ($is_new) {
+                    //    $this->set('password', $password);
+                    //}
                     $this->Email->send();
                     
                     if ($userUpdatedBlocked) {

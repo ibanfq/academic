@@ -146,11 +146,12 @@ class AppController extends Controller {
         $this->_updateAppBetaOptions();
       } else {
         // Check if is anonymous action
+        $action = strtolower($this->params['action']);
         $anonymousActions = array_map('strtolower', $this->Auth->allowedActions);
 
         $isAnonymousAction = (
           $this->Auth->allowedActions == array('*') ||
-          in_array($this->params['action'], $anonymousActions)
+          in_array($action, $anonymousActions)
         );
         
         if (!$isAnonymousAction) {
@@ -191,10 +192,11 @@ class AppController extends Controller {
       if ($this->_authorize()) {
         $isAllowed = true;
       } else {
+        $action = strtolower($this->params['action']);
         $allowedActions = array_map('strtolower', $this->Auth->allowedActions);
         $isAllowed = (
           $this->Auth->allowedActions == array('*') ||
-          in_array($this->params['action'], $allowedActions)
+          in_array($action, $allowedActions)
         );
       }
       

@@ -143,11 +143,8 @@ class CasComponent extends Object {
             $model->save($user);
         }
 
-        if ($user['id'] === $this->Auth->user('id')) {
-            $user['__LOGGED_WITH_CAS__'] = true;
-            $this->Auth->Session->write($this->Auth->sessionKey, $user);
-            return true;
-        } elseif ($this->Auth->login($user[$model->primaryKey])) {
+        if ($user['id'] === $this->Auth->user('id') || $this->Auth->login($user[$model->primaryKey])) {
+            unset($user['password']);
             $user['__LOGGED_WITH_CAS__'] = true;
             $this->Auth->Session->write($this->Auth->sessionKey, $user);
             return true;
