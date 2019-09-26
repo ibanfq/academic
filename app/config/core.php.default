@@ -254,6 +254,15 @@ Configure::write('Acl.classname', 'DbAcl');
 Configure::write('Acl.database', 'default');
 
 /**
+ * The CAS server configuration
+ */
+Configure::write('CAS.version', 'CAS_VERSION_2_0');
+Configure::write('CAS.hostname', 'identificate.ulpgc.es');
+Configure::write('CAS.port', 443);
+Configure::write('CAS.context', '/cas');
+Configure::write('CAS.server_ca_cert_path', false);
+
+/**
  * If you are on PHP 5.3 uncomment this line and correct your server timezone
  * to fix the date & time related errors.
  */
