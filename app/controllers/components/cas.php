@@ -20,9 +20,9 @@ class CasComponent extends Object {
 
         if ($debug) {
             // Enable debugging
-            phpCAS::setDebug();
+            phpCAS::setDebug(ROOT . DS . APP_DIR . '/tmp/logs/cas.log');
             // Enable verbose error messages. Disable in production!
-            phpCAS::setVerbose(true);
+            phpCAS::setVerbose($debug > 1);
         }
 
         // Initialize phpCAS
@@ -45,6 +45,17 @@ class CasComponent extends Object {
             // VALIDATING THE CAS SERVER IS CRUCIAL TO THE SECURITY OF THE CAS PROTOCOL!
             phpCAS::setNoCasServerValidation();
         }
+
+        // handle incoming logout requests
+        // As an advanced featue handle SAML logout requests that emanate from the
+        // CAS host exclusively.
+        // Failure to restrict SAML logout requests to authorized hosts could
+        // allow denial of service attacks where at the least the server is
+        // tied up parsing bogus XML messages.
+        phpCAS::handleLogoutRequests(
+            Configure::read('CAS.logout_check_client') === false ? false : true,
+            Configure::read('CAS.logout_allowed_clients') ?: array()
+        );
     }
 
     function checkAuthentication()

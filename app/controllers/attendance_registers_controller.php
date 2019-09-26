@@ -334,7 +334,7 @@ class AttendanceRegistersController extends AppController {
     function clean_up_day() {
         set_time_limit(0);
 
-        $log_file = dirname(dirname(__FILE__)) . '/tmp/logs/clean_up_day_' . date('l');
+        $log_file = ROOT . DS . APP_DIR . '/tmp/logs/clean_up_day_' . date('l');
         file_put_contents($log_file, '');
 
         $this->_log($log_file, 'init: ' . date('c'));
