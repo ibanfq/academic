@@ -93,7 +93,7 @@ class CasComponent extends Object {
         $logged = $this->_loginCasUser();
 
         if (! $logged) {
-            $this->Session->setFlash('No se ha podido acceder a la cuenta.');
+            $this->Auth->Session->setFlash('La cuenta con la que intentas identificarte no está registrada en Academic.');
         }
     }
 
