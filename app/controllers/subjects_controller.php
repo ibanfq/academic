@@ -793,6 +793,14 @@ class SubjectsController extends AppController {
                     'Subject.id' => $subject_id,
                     'Course.institution_id' => Environment::institution('id')
                 ),
+                'joins' => array(
+                    array(
+                        'table' => 'courses',
+                        'alias' => 'Course',
+                        'type' => 'INNER',
+                        'conditions' => 'Course.id = Subject.course_id'
+                    )
+                ),
                 'recursive' => -1
             ));
         }
