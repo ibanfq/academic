@@ -454,7 +454,7 @@ class UsersController extends AppController {
                 )
             ));
 
-            $type_editable = $institutionsCount === 1;
+            $type_editable = $institutionsCount === 1 && (! $user['User']['super_admin'] || $this->Auth->user('super_admin'));
             $dni_editable = $this->Auth->user('super_admin') || $institutionsCount === 1;
             $betaTesters = (array) Configure::read('app.beta.testers');
         } else {
