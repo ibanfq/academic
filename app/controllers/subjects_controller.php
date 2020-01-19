@@ -43,10 +43,35 @@ class SubjectsController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
+        $subjects = $this->Subject->find(
+            'all',
+            array(
+                'conditions' => array('Subject.course_id' => $course['Course']['id'], 'Subject.parent_id' => null),
+                'recursive' => -1
+            )
+        );
+
+        $subjects_values = [];
+        foreach ($subjects as $subject) {
+            $subjects_values[$subject['Subject']['id']] = strpos($subject['Subject']['name'], $subject['Subject']['code']) === false
+                ? "{$subject['Subject']['code']} {$subject['Subject']['name']}"
+                : $subject['Subject']['name'];
+        }
+
         if (!empty($this->data)) {
             $is_valid = true;
             $coordinator = null;
             $responsible = null;
+
+            if (!empty($this->data['Subject']['parent_id'])) {
+                $this->data['Subject']['coordinator_id'] = null;
+                $this->data['Subject']['practice_responsible_id'] = null;
+                if (!array_key_exists($this->data['Subject']['parent_id'], $subjects_values)) {
+                    unset($this->data['Subject']['parent_id']);
+                    $this->Session->setFlash('No se ha podido acceder a la asignatura maestra.');
+                    $is_valid = false;
+                }
+            }
 
             if (!empty($this->data['Subject']['coordinator_id'])) {
                 $coordinator = $this->Subject->Coordinator->find('first', array(
@@ -132,6 +157,7 @@ class SubjectsController extends AppController {
 
         $this->set('course', $course);
         $this->set('course_id', $course_id);
+        $this->set('subjects_values', $subjects_values);
     }
 
     function view($id = null) {
@@ -152,6 +178,10 @@ class SubjectsController extends AppController {
         if (!$subject) {
             $this->Session->setFlash('No se ha podido acceder a la asignatura.');
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
+        }
+
+        if (!empty($subject['Subject']['parent_id'])) {
+            $this->redirect(array('action' => 'view', $subject['Subject']['parent_id']));
         }
 
         $degree = $this->Subject->Course->Degree->find('first', array(
@@ -176,6 +206,13 @@ class SubjectsController extends AppController {
             SELECT count(*) AS total
             FROM subjects_users
             WHERE subjects_users.subject_id = {$id}
+            "));
+        $this->set('students_registered_on_child_subjects', $this->Subject->query("
+            SELECT Subject.code, Subject.name, count(*) as total
+            FROM subjects_users
+            LEFT JOIN subjects Subject ON Subject.id = subjects_users.child_subject_id
+            WHERE subjects_users.subject_id = {$id} AND subjects_users.child_subject_id IS NOT NULL
+            GROUP BY subjects_users.child_subject_id
             "));
 
         $this->set('subject', $subject);
@@ -204,6 +241,13 @@ class SubjectsController extends AppController {
             $this->data = $subject;
         } else {
             $is_valid = true;
+
+            if (!empty($subject['Subject']['parent_id'])) {
+                unset($this->data['Subject']['coordinator_id']);
+                unset($this->data['Subject']['practice_responsible_id']);
+                unset($this->data['Subject']['closed_attendance_groups']);
+            }
+            
             $coordinator = null;
             $responsible = null;
 
@@ -277,7 +321,11 @@ class SubjectsController extends AppController {
                 
                 if ($this->Subject->save($this->data)) {
                     $this->Session->setFlash('La asignatura se ha modificado correctamente');
-                    $this->redirect(array('action' => 'view', $id));
+                    if (empty($subject['Subject']['parent_id'])) {
+                        $this->redirect(array('action' => 'view', $id));
+                    } else {
+                        $this->redirect(array('controller' => 'courses', 'action' => 'view', $subject['Subject']['course_id']));
+                    }
                 }
             }
 
@@ -307,6 +355,7 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->find('first', array(
             'conditions' => array(
                 'Subject.id' => $id,
+                'Subject.parent_id' => null,
                 'Course.institution_id' => Environment::institution('id')
             )
         ));
@@ -344,6 +393,7 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->find('first', array(
             'conditions' => array(
                 'Subject.id' => $id,
+                'Subject.parent_id' => null,
                 'Course.institution_id' => Environment::institution('id')
             )
         ));
@@ -493,6 +543,7 @@ class SubjectsController extends AppController {
             ));
         } else {
             $conditions = array(
+                'Subject.parent_id' => null,
                 'OR' => array(
                     'Subject.code LIKE' => $q,
                     'Subject.name LIKE' => $q
@@ -537,6 +588,7 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->find('first', array(
             'conditions' => array(
                 'Subject.id' => $subject_id,
+                'Subject.parent_id' => null,
                 'Course.institution_id' => Environment::institution('id')
             )
         ));
@@ -557,7 +609,7 @@ class SubjectsController extends AppController {
         $practice_types = implode(', ', $db->value(Configure::read('app.activity.practice_types')));
         $other_types = implode(', ', $db->value(Configure::read('app.activity.other_types')));
 
-        $students = $this->Subject->query("SELECT Student.*, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others FROM users Student INNER JOIN subjects_users SU ON SU.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$theoretical_types}) GROUP BY user_id) teorical ON teorical.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$practice_types}) GROUP BY user_id) practice ON practice.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$other_types}) GROUP BY user_id) others ON others.user_id = Student.id WHERE SU.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
+        $students = $this->Subject->query("SELECT Student.*, ChildSubject.code, IFNULL(teorical.total, 0) AS teorical, IFNULL(practice.total, 0) AS practice, IFNULL(others.total, 0) AS others FROM users Student INNER JOIN subjects_users SU ON SU.user_id = Student.id LEFT JOIN subjects ChildSubject ON SU.child_subject_id IS NOT NULL AND ChildSubject.id = SU.child_subject_id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$theoretical_types}) GROUP BY user_id) teorical ON teorical.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$practice_types}) GROUP BY user_id) practice ON practice.user_id = Student.id LEFT JOIN (SELECT user_id, SUM(Event.duration) AS total FROM users_attendance_register UAR INNER JOIN attendance_registers AttendanceRegister ON AttendanceRegister.id = UAR.attendance_register_id INNER JOIN events Event ON Event.id = AttendanceRegister.event_id INNER JOIN activities Activity ON Activity.id = AttendanceRegister.activity_id WHERE UAR.user_gone AND Activity.subject_id = {$subject_id} AND Activity.type IN ({$other_types}) GROUP BY user_id) others ON others.user_id = Student.id WHERE SU.subject_id = {$subject_id} ORDER BY Student.last_name, Student.first_name");
 
         $this->set('students', $students);
         $this->Subject->id = $subject_id;
@@ -573,6 +625,7 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->find('first', array(
             'conditions' => array(
                 'Subject.id' => $subject_id,
+                'Subject.parent_id' => null,
                 'Course.institution_id' => Environment::institution('id')
             )
         ));
@@ -701,6 +754,7 @@ class SubjectsController extends AppController {
         $subject = $this->Subject->find('first', array(
             'conditions' => array(
                 'Subject.id' => $subject_id,
+                'Subject.parent_id' => null,
                 'Course.institution_id' => Environment::institution('id')
             )
         ));
@@ -753,7 +807,7 @@ class SubjectsController extends AppController {
         $currentSubjectsQuery = "SELECT DISTINCT `Subject`.id FROM subjects `Subject`";
         $this->Subject->query("DELETE FROM `groups` WHERE subject_id NOT IN ($currentSubjectsQuery)");
         $this->Subject->query("DELETE FROM `activities` WHERE subject_id NOT IN ($currentSubjectsQuery)");
-        $this->Subject->query("DELETE FROM `subjects_users` WHERE subject_id NOT IN ($currentSubjectsQuery)");
+        $this->Subject->query("DELETE FROM `subjects_users` WHERE subject_id NOT IN ($currentSubjectsQuery) OR (child_subject_id IS NOT NULL AND child_subject_id NOT IN ($currentSubjectsQuery))");
 
         $currentActivitiesQuery = "SELECT DISTINCT `Activity`.id FROM activities `Activity`";
         $this->Subject->query("DELETE FROM `attendance_registers` WHERE activity_id NOT IN ($currentActivitiesQuery)");

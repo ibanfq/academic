@@ -2,8 +2,8 @@
 class AcademicYearsController extends AppController {
     var $name = 'AcademicYears';
     var $paginate = array(
-        'AcademicYear' => array('limit' => 10, 'order' => array('AcademicYear.initial_date' => 'asc')),
-        'Institution' => array('limit' => 10, 'order' => array('Institution.acronym' => 'asc')),
+        'AcademicYear' => array('limit' => 30, 'order' => array('AcademicYear.initial_date' => 'asc')),
+        'Institution' => array('limit' => 30, 'order' => array('Institution.acronym' => 'asc')),
     );
     var $fields_fillable = array('AcademicYear');
     var $fields_guarded = array('AcademicYear' => ['id', 'created', 'modified']);

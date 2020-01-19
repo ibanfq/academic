@@ -223,7 +223,7 @@ class CoursesController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $student_id = null;
+        $course['Subject'] = Set::combine($course['Subject'], '{n}.id', '{n}');
 
         $this->Course->set($course);
 

@@ -20,25 +20,48 @@
 		<?php echo $form->input('semester', array('label' => 'Semestre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.semesters'))); ?>
 		<?php echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.types'))); ?>
 		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-		<div class="input text">
-			<dl>
-				<dt><label for="coordinator_name">Coordinador*</label></dt>
-				<dd><input type="text" name="coordinator_name" id="coordinator_name" autocomplete="off" <?php if (isset($this->data['Coordinator']['first_name'])): ?>value="<?php echo "{$this->data['Coordinator']['first_name']} {$this->data['Coordinator']['last_name']}" ?>"<?php endif ?>/></dd>
-				<?php echo $form->input('coordinator_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-			</dl>
-			<?php echo $form->error('coordinator_id'); ?>
-		</div>
-		<div class="input text">
-			<dl>
-				<dt><label for="responsible_name">Responsable de prácticas</label></dt>
-				<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" <?php if (isset($this->data['Responsible']['first_name'])): ?>value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>"<?php endif ?> /></dd>
-				<?php echo $form->input('practice_responsible_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-			</dl>
-			<?php echo $form->error('practice_responsible_id'); ?>
-		</div>
-		<?php echo $form->input('closed_attendance_groups', array('label' => 'Grupos de asistencias cerrados (los alumnos solo pueden registrar la asistencia en el grupo apuntado)')); ?>
+		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+		<?php if ($subject['Subject']['parent_id']): ?>
+			<div class="input">
+				<dl>
+					<dt><label>Asignatura maestra</label></dt>
+					<dd><?php
+						echo $html->link(
+							strpos($subject['Parent']['name'], $subject['Parent']['code']) === false ? "{$subject['Parent']['code']} {$subject['Parent']['name']}" : $subject['Parent']['name'],
+							array('controller' => 'subjects', 'action' => 'view', $subject['Parent']['id'])
+						)
+					?></dd>
+				</dl>
+			</div>
+		<?php else: ?>
+			<div class="input text">
+				<dl>
+					<dt><label for="coordinator_name">Coordinador*</label></dt>
+					<dd><input type="text" name="coordinator_name" id="coordinator_name" autocomplete="off" <?php if (isset($this->data['Coordinator']['first_name'])): ?>value="<?php echo "{$this->data['Coordinator']['first_name']} {$this->data['Coordinator']['last_name']}" ?>"<?php endif ?>/></dd>
+					<?php echo $form->input('coordinator_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+				</dl>
+				<?php echo $form->error('coordinator_id'); ?>
+			</div>
+			<div class="input text">
+				<dl>
+					<dt><label for="responsible_name">Responsable de prácticas</label></dt>
+					<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" <?php if (isset($this->data['Responsible']['first_name'])): ?>value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>"<?php endif ?> /></dd>
+					<?php echo $form->input('practice_responsible_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+				</dl>
+				<?php echo $form->error('practice_responsible_id'); ?>
+			</div>
+			<?php echo $form->input('closed_attendance_groups', array('label' => 'Grupos de asistencias cerrados (los alumnos solo pueden registrar la asistencia en el grupo apuntado)')); ?>
+		<?php endif; ?>
 		
 		<?php echo $form->input('course_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+
+		<?php
+			if ($auth->user('type') == "Administrador") {
+				echo '<div class="submit">';
+				echo $html->link('Eliminar asignatura', array('action' => 'delete', $subject['Subject']['id']), null, 'Cuando elimina una asignatura, elimina también los grupos, las actividades y toda la programación. ¿Está seguro que desea borrarla?');
+				echo '</div>';
+			}
+		?>
 	</fieldset>
 	<?php echo $form->input('id', array('type' => 'hidden')); ?>
 <?php

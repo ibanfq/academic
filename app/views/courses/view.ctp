@@ -62,6 +62,10 @@
 						<th>Nombre</th>
 						<th>Acrónimo</th>
 						<th>Curso</th>
+						<th>Maestra</th>
+						<?php if (empty($ref)): ?>
+							<th></th>
+						<?php endif; ?>
 					</tr>
 				</thead>
 				<tbody>
@@ -78,6 +82,18 @@
 								<td><?php echo $subject['name'] ?></td>
 								<td><?php echo $subject['acronym'] ?></td>
 								<td><?php echo $subject['level'] ?></td>
+								<td><?php
+									if ($subject['parent_id'] && isset($course['Subject'][$subject['parent_id']])) {
+										if ($ref === 'competence_subject_stats') {
+											echo $html->link($course['Subject'][$subject['parent_id']]['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['parent_id']));
+										} else {
+											echo $html->link($course['Subject'][$subject['parent_id']]['code'], array('controller' => 'subjects', 'action' => 'view', $subject['parent_id']));
+										}
+									}
+								?></td>
+								<?php if (empty($ref)): ?>
+									<td><?php echo $html->link('Editar', array('controller' => 'subjects', 'action' => 'edit', $subject['id'])); ?></td>
+								<?php endif; ?>
 							</tr>
 						<?php endforeach; ?>
 					<?php endif; ?>

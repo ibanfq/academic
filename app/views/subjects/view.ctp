@@ -54,8 +54,21 @@
 		</dl>
 		<dl>
 			<dt>Nº total de matriculados</dt>
-			<dd><?php echo "{$students_registered_on_subject[0][0]['total']}"?></dd>
+			<dd><?php echo "{$students_registered_on_subject[0][0]['total']}" ?></dd>
 		</dl>
+		<?php if (!empty($students_registered_on_child_subjects)): ?>
+			<dl>
+				<dt>De los cuales</dt>
+				<dd><?php
+					foreach ($students_registered_on_child_subjects as $students_registered_on_child_subject) {
+						echo "{$students_registered_on_child_subject[0]['total']} en ";
+						echo strpos($students_registered_on_child_subject['Subject']['name'], $students_registered_on_child_subject['Subject']['code']) === false
+							? "{$students_registered_on_child_subject['Subject']['code']} {$students_registered_on_child_subject['Subject']['name']}"
+							: $students_registered_on_child_subject['Subject']['name'];
+					}
+				?></dd>
+			</dl>
+		<?php endif; ?>
 	</fieldset>
 
 	<?php if (count($subject['Group']) > 0) {?>

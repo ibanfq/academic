@@ -1,7 +1,7 @@
 <?php
 class InstitutionsController extends AppController {
     var $name = 'Institutions';
-    var $paginate = array('limit' => 10, 'order' => array('Institution.acronym' => 'asc'));
+    var $paginate = array('limit' => 30, 'order' => array('Institution.acronym' => 'asc'));
     var $fields_fillable = array('Institution');
     var $fields_guarded = array('Institution' => ['id', 'created', 'modified']);
     var $refs_sections = array('classrooms' => 'classrooms', 'users' => 'users', 'attendance_registers' => 'attendance_registers', 'bookings' => 'bookings');

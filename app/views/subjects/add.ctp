@@ -19,7 +19,8 @@
 		<?php echo $form->input('semester', array('label' => 'Semestre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.semesters'))); ?>
 		<?php echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.types'), 'default' => Configure::read('app.subject.default_type'))); ?>
 		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-		<div class="input text">
+		<?php echo $form->input('parent_id', array('label' => 'Asignatura maestra', 'type' => 'select', 'value' => isset($this->data['Subject']['parent_id']) ? $this->data['Subject']['parent_id'] : '', 'options' => array('No es una asignatura vinculada') + $subjects_values, 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+		<div id="coordinator_field_group" class="input text">
 			<dl>
 				<dt><label for="coordinator_name">Coordinador*</label></dt>
 				<dd><input type="text" name="coordinator_name" id="coordinator_name" autocomplete="off" <?php if (isset($this->data['Coordinator']['first_name'])): ?>value="<?php echo "{$this->data['Coordinator']['first_name']} {$this->data['Coordinator']['last_name']}" ?>"<?php endif ?>/></dd>
@@ -27,7 +28,7 @@
 			</dl>
 			<?php echo $form->error('coordinator_id'); ?>
 		</div>
-		<div class="input text">
+		<div id="practice_responsible_field_group" class="input text">
 			<dl>
 				<dt><label for="responsible_name">Responsable de prácticas</label></dt>
 				<dd><input type="text" name="responsible_name" id="responsible_name" autocomplete="off" <?php if (isset($this->data['Responsible']['first_name'])): ?>value="<?php echo "{$this->data['Responsible']['first_name']} {$this->data['Responsible']['last_name']}" ?>"<?php endif ?> /></dd>
@@ -53,5 +54,9 @@
 		
 	    $("input#coordinator_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#SubjectCoordinatorId").val(item[1]); });
 		$("input#responsible_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#SubjectPracticeResponsibleId").val(item[1]); });
+
+		$('select#SubjectParentId').change(function() {
+			$('#coordinator_field_group, #practice_responsible_field_group')[parseInt(this.value) ? 'hide' : 'show']()
+		}).change();
 	});
 </script>

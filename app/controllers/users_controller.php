@@ -1052,7 +1052,7 @@ class UsersController extends AppController {
                     'table' => 'subjects_users',
                     'alias' => 'SubjectUser',
                     'type' => 'INNER',
-                    'conditions' => 'SubjectUser.subject_id = Subject.id'
+                    'conditions' => 'SubjectUser.child_subject_id IS NULL AND SubjectUser.subject_id = Subject.id OR SubjectUser.child_subject_id = Subject.id'
                 ),
                 array(
                     'table' => 'degrees',
@@ -1118,7 +1118,7 @@ class UsersController extends AppController {
 
         $activities = $this->User->Subject->Activity->find('all', array('conditions' => array('Activity.subject_id' => $subject_id)));
 
-        $this->User->query("DELETE FROM subjects_users WHERE user_id = {$student_id} AND subject_id = {$subject_id}");
+        $this->User->query("DELETE FROM subjects_users WHERE user_id = {$student_id} AND subject_id = {$subject_id} OR child_subject_id = {$subject_id}");
 
         if (count(array_values($activities)) > 0) {
             $activities_id = array();
@@ -1175,12 +1175,17 @@ class UsersController extends AppController {
         }
 
         if (($user != null) && ($subject != null)) {
+            $master_subject_id = $subject['Subject']['parent_id'] ?: $subject['Subject']['id'];
             foreach ($user['Subject'] as $user_subject) {
-                if ($user_subject['id'] == $subject_id) {
+                if ($user_subject['id'] == $master_subject_id) {
                     return;
                 }
             }
-            $success = $this->User->query("INSERT INTO subjects_users(subject_id, user_id) VALUES({$subject_id}, {$student_id})");
+            if ($subject['Subject']['parent_id']) {
+                $success = $this->User->query("INSERT INTO subjects_users(subject_id, child_subject_id, user_id) VALUES({$master_subject_id}, {$subject_id}, {$student_id})");
+            } else {
+                $success = $this->User->query("INSERT INTO subjects_users(subject_id, user_id) VALUES({$subject_id}, {$student_id})");
+            }
             $this->set('success', $success);
             $this->set('user', $user);
             $this->set('subject', $subject);
@@ -1324,7 +1329,7 @@ class UsersController extends AppController {
                     );
                 endforeach;
 
-                $inexistent_subjects = implode(';', array_diff(array_unique($imported_subjects), array_flip($subjects)));
+                $inexistent_subjects = implode(';', array_diff(array_unique($imported_subjects), array_keys($subjects)));
                 $failed_students = implode(';', array_unique($failed_students));
                             
                 $this->redirect(array('action' => 'import_finished', $course_id, $saved_students, $inexistent_subjects, $failed_students));
@@ -1972,10 +1977,13 @@ class UsersController extends AppController {
         
         $subjects_codes_to_register = $args['subjects'];
         
-        $subjects_to_register = array_intersect_key($subjects, array_flip($subjects_codes_to_register));
-        
-        $subjects_to_add = array_values(array_diff($subjects_to_register, $registered_subjects));
-        $user['Subject']['Subject'] = array_unique($subjects_to_add);
+        $subjects_to_register = Set::combine(
+            array_intersect_key($subjects, array_flip($subjects_codes_to_register)),
+            '{n}.subject_id',
+            '{n}'
+        );
+
+        $subjects_to_add = array_diff_key($subjects_to_register, array_flip($registered_subjects));
         
         ///** @deprecated in favour CAS auth */
         //if ($this->User->id) {
@@ -1986,34 +1994,44 @@ class UsersController extends AppController {
         //}
         
         if ($this->User->save($user)) {
-            if (!empty($user['UserInstitution']['active'])) {
-                return true;
+            $subjects_user = [];
+
+            foreach ($subjects_to_add as $subject_to_add) {
+                $subjects_user []= array(
+                    'SubjectUser' => array('user_id' => $this->User->id) + $subject_to_add
+                );
             }
 
-            $user_institution = array(
-                'UserInstitution' => array(
-                    'user_id' => $this->User->id,
-                    'institution_id' => Environment::institution('id'),
-                    'active' => 1 
-                )
-            );
+            if ($this->SubjectUser->saveAll($subjects_user)) {
+                if (!empty($user['UserInstitution']['active'])) {
+                    return true;
+                }
 
-            if ($this->UserInstitution->save($user_institution)) {
-                $this->Email->from = 'Academic <noreply@ulpgc.es>';
-                $this->Email->to = $user['User']['username'];
-                $this->Email->subject = "Alta en Academic";
-                $this->Email->sendAs = 'both';
-                $this->Email->template = Configure::read('app.email.user_registered')
-                    ? Configure::read('app.email.user_registered')
-                    : 'user_registered';
-                $this->set('user', $user);
-                ///** @deprecated in favour CAS auth */
-                //if ($password) {
-                //    $this->set('password', $password);
-                //}
-                $this->Email->send();
+                $user_institution = array(
+                    'UserInstitution' => array(
+                        'user_id' => $this->User->id,
+                        'institution_id' => Environment::institution('id'),
+                        'active' => 1 
+                    )
+                );
 
-                return true;
+                if ($this->UserInstitution->save($user_institution)) {
+                    $this->Email->from = 'Academic <noreply@ulpgc.es>';
+                    $this->Email->to = $user['User']['username'];
+                    $this->Email->subject = "Alta en Academic";
+                    $this->Email->sendAs = 'both';
+                    $this->Email->template = Configure::read('app.email.user_registered')
+                        ? Configure::read('app.email.user_registered')
+                        : 'user_registered';
+                    $this->set('user', $user);
+                    ///** @deprecated in favour CAS auth */
+                    //if ($password) {
+                    //    $this->set('password', $password);
+                    //}
+                    $this->Email->send();
+
+                    return true;
+                }
             }
         }
 
@@ -2022,13 +2040,16 @@ class UsersController extends AppController {
     
     function _get_course_subjects($course_id) {
         $subjects = $this->User->Subject->find('all', array(
-            'fields' => array('Subject.id', 'Subject.code'),
+            'fields' => array('Subject.id', 'Subject.code', 'Subject.parent_id'),
             'conditions' => array('Subject.course_id' => $course_id),
             'recursive' => -1
         ));
         $result = array();
         foreach ($subjects as $subject):
-            $result[$subject['Subject']['code']] = $subject['Subject']['id'];
+            $result[$subject['Subject']['code']] = array(
+                'subject_id' => isset($subject['Subject']['parent_id']) ? $subject['Subject']['parent_id'] : $subject['Subject']['id'],
+                'child_subject_id' => isset($subject['Subject']['parent_id']) ? $subject['Subject']['id'] : null,
+            );
         endforeach;
         
         return $result;

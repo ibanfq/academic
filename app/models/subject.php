@@ -20,6 +20,9 @@ class Subject extends AcademicModel {
         'Course' => array(
             'className' => 'Course'
         ),
+        'Parent' => array(
+            'className' => 'Subject'
+        ),
         'Coordinator' => array(
             'className' => 'User',
             'conditions' => array("(Coordinator.type = 'Profesor' OR Coordinator.type = 'Administrador')")
@@ -88,8 +91,7 @@ class Subject extends AcademicModel {
         ),
         'coordinator_id' => array(
             'notEmpty' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
+                'rule' => 'notEmptyIfMaster',
                 'message' => 'El coordinador de la asignatura no puede estar vacío'
             )
         )
@@ -119,6 +121,14 @@ class Subject extends AcademicModel {
         }
 
         return 0 == $this->find('count', array('recursive' => -1, 'conditions' => $conditions));
+    }
+
+    /**
+     * Validates that is not empty value when is a master subject
+     */
+    function notEmptyIfMaster($value) {
+        $subject = $this->data[$this->alias];
+        return !empty($subject['parent_id']) || strlen(trim(array_values($value)[0])) > 0;
     }
 
     /**
