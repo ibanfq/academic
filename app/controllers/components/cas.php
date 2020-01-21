@@ -108,27 +108,32 @@ class CasComponent extends Object {
 
     function _loginCasUser()
     {
-        $attributes = phpCAS::getAttributes();
-
-        if (empty($attributes['Correo'])) {
+        $casUser = phpCAS::getUser();
+        
+        if (empty($casUser)) {
             return false;
         }
 
         $model = $this->Auth->getModel();
 
-        $user = $model->find('first', array(
+        $prioritize_current_type = $this->Auth->user('type') ? "'" . $this->Auth->user('type') . "'," : '';
+
+        $user = $model->find('all', array(
             'conditions' => array(
-                "{$model->alias}.{$this->Auth->fields['username']}" => $attributes['Correo']
+                "{$model->alias}.dni" => $casUser
             ),
+            'order' => "FIELD(User.type, {$prioritize_current_type} 'Profesor', 'Administrador', 'Administrativo', 'Conserje', 'Becario', 'Estudiante')",
             'recursive' => 0
         ));
 
-        if (! $user) {
+        if (empty($user)) {
             return false;
         }
-
-        $user = $user[$model->alias];
+        
+        $user_types = Set::extract($user, "{n}.{$model->alias}.type");
+        $user = $user[0][$model->alias];
         $hasChanges = false;
+        $attributes = phpCAS::getAttributes();
 
         if (!empty($attributes['Nombre']) && $attributes['Nombre'] !== $user['first_name']) {
             $user['first_name'] = $attributes['Nombre'];
@@ -146,6 +151,7 @@ class CasComponent extends Object {
         if ($user['id'] === $this->Auth->user('id') || $this->Auth->login($user[$model->primaryKey])) {
             unset($user['password']);
             $user['__LOGGED_WITH_CAS__'] = true;
+            $user['types'] = $user_types;
             $this->Auth->Session->write($this->Auth->sessionKey, $user);
             return true;
         }

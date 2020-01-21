@@ -16,6 +16,33 @@ class UsersController extends AppController {
         $this->Auth->loginError = "El nombre de usuario y contraseña no son correctos";
     }
 
+    function login_as($type) {
+        if (! $this->Auth->user('id') || ! $this->Auth->user('__LOGGED_WITH_CAS__')) {
+            $this->redirect(Router::normalize($this->Auth->logoutRedirect));
+        }
+
+        $user = $this->User->find('first', array(
+            'conditions' => array(
+                'User.dni' => Environment::user('dni'),
+                'User.type' => $type,
+            ),
+            'recursive' => 0
+        ));
+
+        if ($user) {
+            $user = $user['User'];
+            $user_types = $this->Auth->user('types');
+            if ($this->Auth->login($user)) {
+                unset($user['password']);
+                $user['__LOGGED_WITH_CAS__'] = true;
+                $user['types'] = $user_types;
+                $this->Auth->Session->write($this->Auth->sessionKey, $user);
+            }
+        }
+        
+        $this->redirect(array('controller' => 'users', 'action' => 'home'));
+    }
+
     function cas_login() {
         $this->Cas->forceAuthentication();
         $this->redirect($this->Auth->redirect(), null, true);
@@ -2116,7 +2143,7 @@ class UsersController extends AppController {
             Environment::setUser($user);
         } 
         
-        $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'cas_login', 'logout', 'my_subjects', 'rememberPassword');
+        $no_institution_actions = array('index', 'edit', 'add', 'view', 'delete', 'calendars', 'editProfile', 'home', 'login', 'login_as', 'cas_login', 'logout', 'my_subjects', 'rememberPassword');
         $administrator_actions = array('delete', 'import', 'acl_edit');
         $administrative_actions = array('edit_registration', 'delete_subject', 'edit', 'add');
         $stats_actions = array('index', 'teacher_stats', 'student_stats', 'teacher_stats_details', 'student_stats_details', 'get_student_subjects', 'view');

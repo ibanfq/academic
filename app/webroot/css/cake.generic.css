@@ -138,7 +138,7 @@ ul, li {
 
 #header .right {
 	float: right;
-        margin-top: 0.5em;
+        margin-top: 1em;
         margin-bottom: 1em;
         text-align: right;
 }
@@ -554,6 +554,11 @@ body .ui-state-error-text .ui-icon {
 }
 body .ui-button .ui-icon {
 	background-image: url("../img/jquery-ui/ui-icons_777777_256x240.png");
+}
+
+body .ui-selectmenu-button {
+    border-radius: 0;
+    padding: 6px 9px;
 }
 
 /** Debugging **/

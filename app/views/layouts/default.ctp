@@ -33,10 +33,20 @@
                 </ul>
             </div>
             <div class="right">
-                <?php if (isset($auth)) {?>
-                    <a href="/editProfile" title="Haga clic aquí para editar sus datos" class="profile"><?php echo "{$auth->user('first_name')} {$auth->user('last_name')}" ?></a>
-                    <a href="/users/logout" class="logout">Salir</a>
-                <?php } ?>
+                <?php if (isset($auth)): ?>
+                    <div class="controlgroup">
+                        <select id="user-logged-menu">
+                            <option><?php echo strtr($auth->user('type'), array('Profesor' => 'Prof', 'Administrador' => 'Adm', 'Administrativo' => 'Aux', 'Conserje' => 'Consj', 'Becario' => 'Becario', 'Estudiante' => 'Est')) . ": {$auth->user('first_name')} {$auth->user('last_name')}" ?></option>
+                            <?php foreach ($auth->user('types') as $type): ?>
+                                <?php if ($auth->user('type') !== $type): ?>
+                                    <option data-link="/users/login_as/<?php echo strtolower($type) ?>">Cambiar a <?php echo strtolower($type) ?></option>
+                                <?php endif; ?>
+                            <?php endforeach ?>
+                            <option data-link="/editProfile">Editar perfil</option>
+                            <option data-link="/users/logout">Desconectar</option>
+                        </select>
+                    </div>
+                <?php endif; ?>
             </div>
       <div class="tabs">
         <ul>
@@ -105,5 +115,15 @@
         <?php if (Configure::read('debug') > 1) echo $this->element('sql_dump') ?>
     </div>
 </div>
+
+<script>
+    $( "#user-logged-menu" ).selectmenu({
+        select: function (event, ui) {
+            if (ui.item.element.data('link')) {
+                document.location.href = ui.item.element.data('link');
+            }
+        }
+    });
+</script>
 </body>
 </html>
