@@ -231,20 +231,29 @@ class ApiComponent extends Object {
         $data[$i] = $this->_sanitizeData($controller, $models);
       }
     } else {
+      unset($data['password']);
+      unset($data['super_admin']);
+      unset($data['created']);
+      unset($data['modified']);
+      unset($data['audit_email']);
+      if (array_key_exists('dni', $data) || array_key_exists('phone', $data)) {
+        if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $data['id'])) {
+          $data['dni'] = TextUtils::maskdni($data['dni']);
+          unset($data['phone']);
+        }
+      }
       foreach ($data as $model => $values) {
         if (is_array($values)) {
-          if (array_key_exists('password', $values)) {
-            unset($data[$model]['password']);
-          }
-          if (array_key_exists('dni', $values) || array_key_exists('phone', $values)) {
-            if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $values['id'])) {
-              $data[$model]['dni'] = TextUtils::maskdni($data[$model]['dni']);
-              unset($data[$model]['phone']);
+          if (is_int(key($values))) {
+            foreach ($values as $i => $value) {
+              $data[$model][$i] = $this->_sanitizeData($controller, $value);
             }
-          }
-          foreach ($values as $field => $value) {
-            if (is_array($value)) {
-              $data[$model][$field] = $this->_sanitizeData($controller, $value);
+          } else {
+            $data[$model] = $this->_sanitizeData($controller, $values);
+            foreach ($values as $field => $value) {
+              if (is_array($value)) {
+                $data[$model][$field] = $this->_sanitizeData($controller, $value);
+              }
             }
           }
         }

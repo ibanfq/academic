@@ -37,7 +37,17 @@
     array('institution' => '[0-9]+')
   );
   Router::connect(
+    '/api/users/login',
+    array('controller' => 'api_users', 'action' => 'login', '[method]' => 'GET'),
+    array('institution' => '[0-9]+')
+  );
+  Router::connect(
     '/api/institutions/:institution/users/me',
+    array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET'),
+    array('institution' => '[0-9]+')
+  );
+  Router::connect(
+    '/api/users/me',
     array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET'),
     array('institution' => '[0-9]+')
   );
@@ -132,11 +142,16 @@
     array('institution' => '[0-9]+')
   );
   Router::connect(
-    '/institutions/:institution/api/log',
+    '/api/institutions/:institution/log',
     array('controller' => 'api_log', 'action' => 'add', '[method]' => 'POST'),
     array('institution' => '[0-9]+')
   );
   // Fake api requests
+  Router::connect(
+    '/api/fake_data/institutions/:institution/:fake_controller/*',
+    array('controller' => 'api_fake_data', 'action' => 'fake_request'),
+    array('institution' => '[0-9]+')
+  );
   Router::connect(
     '/api/fake_data/:fake_controller/*',
     array('controller' => 'api_fake_data', 'action' => 'fake_request'),

@@ -543,7 +543,6 @@ class SubjectsController extends AppController {
             ));
         } else {
             $conditions = array(
-                'Subject.parent_id' => null,
                 'OR' => array(
                     'Subject.code LIKE' => $q,
                     'Subject.name LIKE' => $q

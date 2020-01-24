@@ -177,12 +177,25 @@ class Environment extends Object {
             }
 
             $model =& Environment::getModel($_this->userInstitutionModel);
-            $_this->_user_institution = $model->find('first', array(
-                'conditions' => array(
-                  "{$model->alias}.user_id" => Environment::user('id'),
-                  "{$model->alias}.institution_id" => Environment::institution('id')
+            $institutionModel =& Environment::getModel($_this->institutionModel);
+            $_this->_user_institution = $model->find(
+                'first',
+                array(
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions',
+                            'alias' => 'Institution',
+                            'type' => 'INNER',
+                            'conditions' => "{$institutionModel->alias}.id = {$model->alias}.institution_id"
+                        ),
+                    ),
+                    'conditions' => array(
+                        "{$model->alias}.user_id" => Environment::user('id'),
+                        "{$model->alias}.institution_id" => Environment::institution('id'),
+                        "{$model->alias}.active" => true
+                    )
                 )
-            ));
+            );
             if (! $_this->_user_institution) {
                 return null;
             }
@@ -191,9 +204,13 @@ class Environment extends Object {
         if ($key === null) {
             return $_this->_user_institution;
         } else {
+            $key_parts = explode('.', $key, 1);
+            if (count($key_parts) === 1) {
+                array_unshift($key_parts, $model->alias);
+            }
             $model =& Environment::getModel($_this->userInstitutionModel);
-            if (isset($_this->_user_institution[$model->alias][$key])) {
-                return $_this->_user_institution[$model->alias][$key];
+            if (isset($_this->_user_institution[$key_parts[0]][$key_parts[1]])) {
+                return $_this->_user_institution[$key_parts[0]][$key_parts[1]];
             }
         }
 
@@ -210,19 +227,37 @@ class Environment extends Object {
             }
 
             $model =& Environment::getModel($_this->userInstitutionModel);
-            $_this->_user_institutions = $model->find('all', array(
-                'conditions' => array(
-                  "{$model->alias}.user_id" => Environment::user('id')
+            $institutionModel =& Environment::getModel($_this->institutionModel);
+            $_this->_user_institutions = $model->find(
+                'all',
+                array(
+                    'fields' => array("{$model->alias}.*", "{$institutionModel->alias}.*"),
+                    'joins' => array(
+                        array(
+                            'table' => 'institutions',
+                            'alias' => 'Institution',
+                            'type' => 'INNER',
+                            'conditions' => "{$institutionModel->alias}.id = {$model->alias}.institution_id"
+                        ),
+                    ),
+                    'conditions' => array(
+                        "{$model->alias}.user_id" => Environment::user('id'),
+                        "{$model->alias}.active" => true
+                    )
                 )
-            ));
+            );
             if (! $_this->_user_institutions) {
                 return null;
             }
         }
 
         if ($key !== null) {
+            $key_parts = explode('.', $key, 1);
+            if (count($key_parts) === 1) {
+                array_unshift($key_parts, $model->alias);
+            }
             $model =& Environment::getModel($_this->userInstitutionModel);
-            return Set::extract("/{$model->alias}/{$key}", $_this->_user_institutions);
+            return Set::extract('/'.implode('/', $key_parts), $_this->_user_institutions);
         }
 
         return $_this->_user_institutions;

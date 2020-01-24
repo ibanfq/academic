@@ -49,7 +49,11 @@ class UsersController extends AppController {
     }
 
     function logout() {
-        $this->redirect($this->Cas->logout());
+        if (! $this->Auth->user('id') || ! $this->Auth->user('__LOGGED_WITH_CAS__')) {
+            $this->redirect($this->Auth->logout());
+        } else {
+            $this->redirect($this->Cas->logout());
+        }
     }
     
     function home() {

@@ -26,10 +26,6 @@ class Event extends AcademicModel {
             'className' => 'User',
             'conditions' => array("(Teacher.type = 'Profesor' OR Teacher.type = 'Administrador')")
         ),
-        'Parent' => array(
-            'className' => 'Event',
-            'foreignKey' => 'parent_id'
-        )
     );
     var $hasMany = array(
         'Events' => array(

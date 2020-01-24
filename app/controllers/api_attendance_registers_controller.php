@@ -164,7 +164,7 @@ class ApiAttendanceRegistersController extends AppController {
     function _openByEvent($event_id) {
         $event_id = $event_id === null ? null : intval($event_id);
         $db = $this->AttendanceRegister->getDataSource();
-        $this->AttendanceRegister->Event->unbindModel(array('belongsTo' => array('Parent'), 'hasMany' => array('Events')));
+        $this->AttendanceRegister->Event->unbindModel(array('hasMany' => array('Events')));
         $event = $this->AttendanceRegister->Event->find('first', array(
             'conditions' => array(
                 'Event.id' => $event_id,

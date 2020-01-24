@@ -83,7 +83,7 @@ class BookingsController extends AppController {
                 }
                 else 
                 {
-                    if ($this->data['Booking']['parent_id'] != null) {
+                    if (!empty($this->data['Booking']['parent_id'])) {
                         $this->Booking->query("DELETE FROM bookings WHERE id = {$this->data['Booking']['parent_id']} OR parent_id = {$this->data['Booking']['parent_id']}");
                     }
                     

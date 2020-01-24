@@ -297,9 +297,35 @@ class AppController extends Controller
             }
         } else {
             try {
+                $authorization_type = isset($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) ? base64_decode($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) : null;
                 $secretKey = base64_decode(Configure::read('Security.secret'));
                 $token = \Firebase\JWT\JWT::decode($login['username'], $secretKey, array('HS512'));
-                $this->Auth->login($token->data->id);
+                $id = $token->data->id;
+                $model = $this->Auth->getModel();
+                if ($authorization_type) {
+                    $user = $model->find('first', array(
+                        'fields' => ("{$model->alias}.id"),
+                        'joins' => array(
+                            array(
+                                'table' => 'users',
+                                'alias' => 'TokenUser',
+                                'type' => 'INNER',
+                                'conditions' => array(
+                                    "{$model->alias}.dni = TokenUser.dni",
+                                    "{$model->alias}.type" => 'Estudiante'
+                                )
+                            ),
+                        ),
+                        'conditions' => array(
+                            "TokenUser.id " => $id
+                        ),
+                        'recursive' => -1
+                    ));
+                    if ($user) {
+                        $id = $user[$model->alias]['id'];
+                    }
+                }
+                $this->Auth->login($id);
             } catch (Exception $e) {
                 /*
                  * the token was not able to be decoded.

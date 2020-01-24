@@ -42,7 +42,7 @@
                                     <option data-link="/users/login_as/<?php echo strtolower($type) ?>">Cambiar a <?php echo strtolower($type) ?></option>
                                 <?php endif; ?>
                             <?php endforeach ?>
-                            <option data-link="/editProfile">Editar perfil</option>
+                            <option data-link="/editProfile">Configurar cuenta</option>
                             <option data-link="/users/logout">Desconectar</option>
                         </select>
                     </div>

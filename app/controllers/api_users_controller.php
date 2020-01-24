@@ -41,32 +41,19 @@ class ApiUsersController extends AppController {
     
     function me()
     {
-        $responseData = $this->Auth->user();
-        $username = $responseData['User']['username'];
-        $beta_testers = (array) Configure::read('app.beta.testers');
-        if ($username && !empty($beta_testers[$username])) {
-            $responseData['User']['beta'] = true;
-            $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
-        }
-        $this->Api->setData($responseData);
+        $this->Api->setData($this->_getCurrentUserInfo());
         $this->Api->respond($this);
     }
 
     function login()
     {
+        $responseData = $this->_getCurrentUserInfo();
+        
         $issuer    = Configure::read('app.issuer');
         $issuedAt  = time();
         $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
         $secretKey = base64_decode(Configure::read('Security.secret'));
 
-        $responseData = $this->Auth->user();
-        $username = $responseData['User']['username'];
-        $beta_testers = (array) Configure::read('app.beta.testers');
-        if ($username && !empty($beta_testers[$username])) {
-            $responseData['User']['beta'] = true;
-            $responseData['User']['beta_config'] = (array) Configure::read('app.beta.config_writes');
-        }
-        
         /*
         * Create the token as an array
         */
@@ -75,8 +62,8 @@ class ApiUsersController extends AppController {
             'jti'  => $tokenId,  // Json Token Id: an unique identifier for the token
             'iss'  => $issuer,   // Issuer
             'data' => array(     // Data related to the signed user
-                'id'       => $responseData['User']['id'],       // id from the auth user
-                'username' => $responseData['User']['username'], // username from the auth user
+                'id'       => $this->Auth->user('id'),       // id from the auth user
+                'username' => $this->Auth->user('username'), // username from the auth user
             )
         );
 
@@ -88,6 +75,64 @@ class ApiUsersController extends AppController {
 
         $this->Api->setData($responseData);
         $this->Api->respond($this);
+    }
+
+    function _getCurrentUserInfo()
+    {
+        $responseData = $this->Auth->user();
+
+        $model = $this->Auth->getModel();
+
+        $userTypes = $model->find('list', array(
+            'fields' => array("{$model->alias}.type"),
+            'conditions' => array(
+                "{$model->alias}.dni" => $responseData[$model->alias]['dni']
+            ),
+            'order' => "FIELD({$model->alias}.type, 'Profesor', 'Administrador', 'Administrativo', 'Conserje', 'Becario', 'Estudiante')",
+        ));
+
+        unset($responseData[$model->alias]['id']);
+        unset($responseData[$model->alias]['type']);
+        $responseData[$model->alias]['types'] = $userTypes;
+        
+        $currentInstitution = Environment::institution();
+
+        if ($currentInstitution) {
+            $responseData['Institution'] = $this->_addInstitutionConfig($currentInstitution['Institution'], $responseData);
+        } else {
+            $responseData['Institutions'] = Set::extract(Environment::userInstitutions(), '{n}.Institution');
+            foreach ($responseData['Institutions'] as $i => $institution) {
+                $responseData['Institutions'][$i] = $this->_addInstitutionConfig($responseData['Institutions'][$i], $responseData);
+            }
+        }
+
+        return $responseData;
+    }
+
+    function _addInstitutionConfig($institution, $user)
+    {
+        $configLoader = function ($institution) {
+            $path = CONFIGS . "institutions/{$institution['id']}/app.php";
+            if (is_readable($path)) {
+                include $path;
+            }
+            return isset($config)? $config : array();
+        };
+        $optionsLoader = function ($institution) {
+            $path = CONFIGS . "institutions/{$institution['id']}/app.options.php";
+            return is_readable($path) ? (array) include $path : array();
+        };
+        $config = $configLoader($institution);
+        $options = $optionsLoader($institution);
+        $institution['competences'] = !empty($config['app']['competence']['enable']);
+        $username = $user['User']['username'];
+        $beta_testers = (array) (isset($options['beta']['testers']) ? $options['beta']['testers'] : array());
+        if (!empty($beta_testers[$username])) {
+            if (!empty($config['app']['beta']['config_writes']['app.competence.enable'])) {
+                $institution['competences'] = true;
+            }
+        }
+        return $institution;
     }
     
     function index()
