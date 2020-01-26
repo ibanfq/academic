@@ -1,5 +1,9 @@
 <?php
 
+if (!class_exists('ErrorHandler')) {
+    include_once LIBS . 'error.php';
+}
+
 class AppError extends ErrorHandler {
     function __construct($method, $messages) {
         if (class_exists('Configure') && Configure::read('app') === null) {
