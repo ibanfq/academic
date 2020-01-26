@@ -10,7 +10,7 @@ class UsersAttendanceRegisterController extends AppController {
                     'AttendanceRegister' => array()
             );
             
-            if ($this->Auth->user('id') == null || $this->Auth->user('type') !== "Estudiante") {
+            if ($this->Auth->user('id') == null) {
                 if (empty($this->data['User']['username'])) {
                     $this->UserAttendanceRegister->User->invalidate('username', 'Por favor, introduzca su correo electrónico o DNI');
                     $error = true;
@@ -63,7 +63,9 @@ class UsersAttendanceRegisterController extends AppController {
     }
     
     function _allowAnonymousActions() {
-        $this->Auth->allow('add_by_secret_code');
+        if (Configure::read('app.users_attendance_register.by_password')) {
+            $this->Auth->allow('add_by_secret_code');
+        }
 
         parent::_allowAnonymousActions();
     }
@@ -72,8 +74,14 @@ class UsersAttendanceRegisterController extends AppController {
         parent::_authorize();
         
         $no_institution_actions = array("add_by_secret_code");
-        $public_actions = array("add_by_secret_code");
-        $private_actions = array();
+        if (Configure::read('app.users_attendance_register.by_password')) {
+            $public_actions = array("add_by_secret_code");
+        } else {
+            $public_actions = array();
+        }
+        $only_student_actions = array("add_by_secret_code");
+
+        $this->set('section', 'users_attendance_register');
 
         if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
             return false;
@@ -81,6 +89,10 @@ class UsersAttendanceRegisterController extends AppController {
         
         if (array_search($this->params['action'], $public_actions) !== false) {
             return true;
+        }
+
+        if (array_search($this->params['action'], $only_student_actions) !== false) {
+            return $this->Auth->user('type') == "Estudiante";
         }
 
         if (($this->Auth->user('type') != "Profesor") && ($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo") && ($this->Auth->user('type') != "Becario")) {
@@ -91,7 +103,6 @@ class UsersAttendanceRegisterController extends AppController {
             return false;
         }
 
-        $this->set('section', 'users_attendance_register');
         return true;
     }
 }

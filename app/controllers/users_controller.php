@@ -1006,6 +1006,43 @@ class UsersController extends AppController {
                 $this->set('user', $this->data);
             }
         }
+
+        $authTokenModel = ClassRegistry::init('AuthToken');
+        $auth_token = $authTokenModel->find(
+            'first',
+            array(
+                'conditions' => array(
+                    'user_id' => $this->Auth->user('id'),
+                    'last_used' => null
+                )
+            )
+        );
+        if ($auth_token) {
+            $authTokenModel->delete($auth_token['AuthToken']['token']);
+            $auth_token = null;
+        }
+        while (!$auth_token) {
+            $auth_token = array(
+                'AuthToken' => array(
+                    'token' => base64_encode(random_bytes(64)),
+                    'user_id' => $this->Auth->user('id')
+                )
+            );
+            $authTokenModel->save($auth_token);
+        }
+
+        $qrCode = new \Endroid\QrCode\QrCode();
+        $qrCode
+            ->setText($auth_token['AuthToken']['token'])
+            ->setSize(200)
+            ->setPadding(10)
+            ->setErrorCorrection('high')
+            ->setForegroundColor(['r' => 0, 'g' => 0, 'b' => 0, 'a' => 0])
+            ->setBackgroundColor(['r' => 255, 'g' => 255, 'b' => 255, 'a' => 0])
+            ->setLabelFontSize(16)
+            ->setImageType(\Endroid\QrCode\QrCode::IMAGE_TYPE_PNG)
+        ;
+        $this->set('qr_image', $qrCode->getDataUri());
     }
     
     function rememberPassword() {

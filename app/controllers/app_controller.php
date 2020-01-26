@@ -27,6 +27,7 @@ class AppController extends Controller
 
     function __construct()
     {
+
         if ($this->isApi) {
             $this->autoRender = false;
         }
@@ -297,35 +298,98 @@ class AppController extends Controller
             }
         } else {
             try {
-                $authorization_type = isset($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) ? base64_decode($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) : null;
-                $secretKey = base64_decode(Configure::read('Security.secret'));
-                $token = \Firebase\JWT\JWT::decode($login['username'], $secretKey, array('HS512'));
-                $id = $token->data->id;
-                $model = $this->Auth->getModel();
-                if ($authorization_type) {
-                    $user = $model->find('first', array(
-                        'fields' => ("{$model->alias}.id"),
+                $authModel = $this->Auth->getModel();
+                if ($this->params['controller'] === 'api_users' && $this->params['action'] === 'login') {
+                    $token = $login['username'];
+                    $user = $authModel->find('first', array(
+                        'fields' => ("{$authModel->alias}.id"),
                         'joins' => array(
                             array(
-                                'table' => 'users',
-                                'alias' => 'TokenUser',
+                                'table' => 'auth_tokens',
+                                'alias' => 'Token',
                                 'type' => 'INNER',
                                 'conditions' => array(
-                                    "{$model->alias}.dni = TokenUser.dni",
-                                    "{$model->alias}.type" => 'Estudiante'
+                                    "Token.user_id = {$authModel->alias}.id"
                                 )
                             ),
                         ),
                         'conditions' => array(
-                            "TokenUser.id " => $id
+                            "Token.token " => $token,
+                            "Token.last_used " => null,
+                            "Token.created >" => date('Y-m-d H:i:s', strtotime('- 10 min'))
                         ),
                         'recursive' => -1
                     ));
-                    if ($user) {
-                        $id = $user[$model->alias]['id'];
+                } else {
+                    $authorization_type = isset($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) ? base64_decode($_SERVER['HTTP_X_AUTHORIZATION_TYPE']) : null;
+                    $secretKey = base64_decode(Configure::read('Security.secret'));
+                    $authorization = \Firebase\JWT\JWT::decode($login['username'], $secretKey, array('HS512'));
+                    $token = $authorization->data->token;
+                    
+                    if ($authorization_type) {
+                        $user = $authModel->find('first', array(
+                            'fields' => ("{$authModel->alias}.id"),
+                            'joins' => array(
+                                array(
+                                    'table' => 'users',
+                                    'alias' => 'TokenUser',
+                                    'type' => 'INNER',
+                                    'conditions' => array(
+                                        "TokenUser.dni = {$authModel->alias}.dni",
+                                    )
+                                ),
+                                array(
+                                    'table' => 'auth_tokens',
+                                    'alias' => 'Token',
+                                    'type' => 'INNER',
+                                    'conditions' => array(
+                                        "Token.user_id = TokenUser.id"
+                                    )
+                                ),
+                            ),
+                            'conditions' => array(
+                                "Token.token " => $token,
+                                "{$authModel->alias}.type" => $authorization_type
+                            ),
+                            'recursive' => -1
+                        ));
+                    } else {
+                        $user = $authModel->find('first', array(
+                            'fields' => ("{$authModel->alias}.id"),
+                            'joins' => array(
+                                array(
+                                    'table' => 'auth_tokens',
+                                    'alias' => 'Token',
+                                    'type' => 'INNER',
+                                    'conditions' => array(
+                                        "Token.user_id = {$authModel->alias}.id"
+                                    )
+                                ),
+                            ),
+                            'conditions' => array(
+                                "Token.token " => $token
+                            ),
+                            'recursive' => -1
+                        ));
                     }
                 }
-                $this->Auth->login($id);
+                if ($user) {
+                    $id = $user[$authModel->alias]['id'];
+                    $this->Auth->login($id);
+                    $user = $this->Auth->user()[$authModel->alias];
+                    $user['__LOGGED_WITH_TOKEN__'] = $token;
+                    $this->Auth->Session->write($this->Auth->sessionKey, $user);
+                    $authTokenModel = ClassRegistry::init('AuthToken');
+                    $db = $authTokenModel->getDataSource();
+                    $authTokenModel->updateAll(
+                        array(
+                            "{$authTokenModel->alias}.last_used" => $db->value(date('Y-m-d H:i:s'))
+                        ),
+                        array("{$authTokenModel->alias}.token" => $token)
+                    );
+                } else {
+                    $this->redirect(null, 401, true);
+                }
             } catch (Exception $e) {
                 /*
                  * the token was not able to be decoded.

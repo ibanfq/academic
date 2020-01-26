@@ -184,7 +184,23 @@ class ApiAttendanceRegistersController extends AppController {
             if ($today->format('Ymd') === $initial_date->format('Ymd')) {
                 $secret_code = null;
                 if (empty($event['AttendanceRegister']['secret_code'])) {
-                    $secret_code = mt_rand(100000, 999999);
+                    $today = date('Y-m-d');
+                    $tomorrow = date('Y-m-d', strtotime('tomorrow'));
+                    while (!$secret_code) {
+                        $secret_code = str_pad(mt_rand(0, 999999), 6, "0", STR_PAD_LEFT);
+                        $secret_code_duplicated = $this->AttendanceRegister->find('count', array(
+                            'conditions' => array(
+                                'AttendanceRegister.secret_code' => $secret_code,
+                                'OR' => array(
+                                    'AttendanceRegister.initial_hour BETWEEN ? AND ?' => array($today, $tomorrow),
+                                    'Event.initial_hour BETWEEN ? AND ?' => array($today, $tomorrow)
+                                )
+                            )
+                        ));
+                        if ($secret_code_duplicated) {
+                            $secret_code = null;
+                        }
+                    }
                 }
                 $attendance_register = $this->AttendanceRegister->createFromEvent($event, false, $secret_code);
                 $attendance_register['Students'] = &$attendance_register['AttendanceRegister']['Student'];

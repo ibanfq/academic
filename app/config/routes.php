@@ -42,6 +42,11 @@
     array('institution' => '[0-9]+')
   );
   Router::connect(
+    '/api/users/logout',
+    array('controller' => 'api_users', 'action' => 'logout', '[method]' => 'GET'),
+    array('institution' => '[0-9]+')
+  );
+  Router::connect(
     '/api/institutions/:institution/users/me',
     array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET'),
     array('institution' => '[0-9]+')

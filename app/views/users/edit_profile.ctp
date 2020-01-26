@@ -31,7 +31,7 @@
 		?>
 	</fieldset>
 	
-	<?php if ($this->data['User']['password'] !== null): ?>
+	<?php /*if ($this->data['User']['password'] !== null): ?>
 		<fieldset>
 		<p>Para modificar su contraseña, debe introducir su contraseña actual y, a continuación, introducir la nueva contraseña, la cual debe repetir en el campo "Confirmación".</p> 
 		<legend>Contraseña</legend>
@@ -42,7 +42,14 @@
 				echo $form->input("password_confirmation", array('type' => 'password', 'label' => 'Confirmación', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>'));
 			?>
 		</fieldset>
-	<?php endif; ?>
+	<?php endif; */ ?>
 <?php
 	echo $form->end('Actualizar');
 ?>
+
+<fieldset style="margin-top: 3em">
+	<legend>Dispositivos vinculados</legend>
+	<p>Para vincular un nuevo dispositivo escanea el siguiente código QR con la app de Academic:</p>
+	<div style="margin: 1em 0;"><img src="<?php echo htmlspecialchars($qr_image) ?>" alt="qr code"></div>
+	<p><strong>¿Tienes problemas para leer el código?</strong> Prueba <a href="<?php htmlspecialchars($this->Html->url(null, true)) ?>" onclick="window.location.reload(true); return false;">recargando la página</a> para generar uno nuevo.</p>
+</fieldset>

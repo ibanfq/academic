@@ -53,8 +53,8 @@ class ApiFakeDataController extends AppController {
 
             $responseData = $this->Auth->user();
             $responseData['User']['types'] = array(
-                1 => 'Profesor',
-                2 => 'Estudiante'
+                'Profesor',
+                'Estudiante'
             );
             $responseData['Institutions'] = array(
                 array(

@@ -139,10 +139,11 @@ class MassiveAttendanceRegistersController extends AppController {
 
         $private_actions = array("add");
 
+        $this->set('section', 'courses');
+
         if (($this->Auth->user('type') != "Administrador") && ($this->Auth->user('type') != "Administrativo"))
             return false;
 
-        $this->set('section', 'courses');
         return true;
     }
 

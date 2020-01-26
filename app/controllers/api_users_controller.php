@@ -53,6 +53,25 @@ class ApiUsersController extends AppController {
         $issuedAt  = time();
         $tokenId   = base64_encode($issuer.$issuedAt.mcrypt_create_iv(16));
         $secretKey = base64_decode(Configure::read('Security.secret'));
+        $loggedWithToken = $this->Auth->user('__LOGGED_WITH_TOKEN__');
+        if ($loggedWithToken) {
+            $device = isset($_SERVER['HTTP_X_AUTHORIZATION_DEVICE']) ? trim($_SERVER['HTTP_X_AUTHORIZATION_DEVICE']) : null;
+            $authTokenModel = ClassRegistry::init('AuthToken');
+            $db = $authTokenModel->getDataSource();
+            $authTokenModel->updateAll(
+                array(
+                    "{$authTokenModel->alias}.device" => $db->value(strip_tags(strlen($device) ? $device : 'Dispositivo no identificado')),
+                    "{$authTokenModel->alias}.last_used" => $db->value(date('Y-m-d H:i:s'))
+                ),
+                array("{$authTokenModel->alias}.token" => $loggedWithToken)
+            );
+            $data = array('token' => $loggedWithToken);
+        } else {
+            $data = array(
+                'id'       => $this->Auth->user('id'),
+                'username' => $this->Auth->user('username'),
+            );
+        }
 
         /*
         * Create the token as an array
@@ -61,10 +80,7 @@ class ApiUsersController extends AppController {
             'iat'  => $issuedAt, // Issued at: time when the token was generated
             'jti'  => $tokenId,  // Json Token Id: an unique identifier for the token
             'iss'  => $issuer,   // Issuer
-            'data' => array(     // Data related to the signed user
-                'id'       => $this->Auth->user('id'),       // id from the auth user
-                'username' => $this->Auth->user('username'), // username from the auth user
-            )
+            'data' => $data
         );
 
         $responseData['Auth']['token'] = \Firebase\JWT\JWT::encode(
@@ -74,6 +90,18 @@ class ApiUsersController extends AppController {
         );
 
         $this->Api->setData($responseData);
+        $this->Api->respond($this);
+    }
+
+    function logout()
+    {
+        $loggedWithToken = $this->Auth->user('__LOGGED_WITH_TOKEN__');
+        if ($loggedWithToken) {
+            $authTokenModel = ClassRegistry::init('AuthToken');
+            $authTokenModel->delete($loggedWithToken);
+        }
+
+        $this->Api->setData([]);
         $this->Api->respond($this);
     }
 
@@ -93,7 +121,9 @@ class ApiUsersController extends AppController {
 
         unset($responseData[$model->alias]['id']);
         unset($responseData[$model->alias]['type']);
-        $responseData[$model->alias]['types'] = $userTypes;
+        unset($responseData[$model->alias]['__LOGGED_WITH_TOKEN__']);
+        unset($responseData[$model->alias]['__LOGGED_WITH_CAS__']);
+        $responseData[$model->alias]['types'] = array_values($userTypes);
         
         $currentInstitution = Environment::institution();
 

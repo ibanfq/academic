@@ -964,6 +964,8 @@ class AttendanceRegistersController extends AppController {
         $public_actions = array("clean_up_day");
         $private_actions = array("index", "add", "edit", "get_register_info");
 
+        $this->set('section', 'attendance_registers');
+
         if (array_search($this->params['action'], $no_institution_actions) === false && ! Environment::institution('id')) {
             return false;
         }
@@ -980,7 +982,6 @@ class AttendanceRegistersController extends AppController {
             return false;
         }
 
-        $this->set('section', 'attendance_registers');
         return true;
     }
 }

@@ -237,7 +237,7 @@ class ApiComponent extends Object {
       unset($data['modified']);
       unset($data['audit_email']);
       if (array_key_exists('dni', $data) || array_key_exists('phone', $data)) {
-        if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante' && $controller->Auth->user('id') != $data['id'])) {
+        if ($controller->Auth->user('id') === null || ($controller->Auth->user('type') === 'Estudiante')) {
           $data['dni'] = TextUtils::maskdni($data['dni']);
           unset($data['phone']);
         }

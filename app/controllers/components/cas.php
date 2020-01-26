@@ -6,15 +6,15 @@
 class CasComponent extends Object {
     var $components = array('Auth');
 
-    var $_initialized = false;
-    
     function _initialize()
     {
-        if ($this->_initialized) {
+        static $initialized = false;
+
+        if ($initialized) {
             return;
         }
 
-        $this->_initialized = true;
+        $initialized = true;
 
         $debug = Configure::read('debug');
 
