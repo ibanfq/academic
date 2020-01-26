@@ -143,12 +143,12 @@ INSERT INTO `subjects` (`id`, `course_id`, `code`, `level`, `type`, `name`, `acr
     SELECT
         (`subjects`.`id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`subjects`) - (select min(`id`) FROM `bd_centros_eite`.`subjects`)),
         (`subjects`.`course_id` + IFNULL(`degrees`.`id`, 2) - 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`courses`) - (select min(`id`) FROM `bd_centros_eite`.`courses`)),
-        `code`, `level`, `type`, `subjects`.`name`, `subjects`.`acronym`, `semester`, `credits_number`,
+        `subjects`.`code`, `level`, `type`, `subjects`.`name`, `subjects`.`acronym`, `semester`, `credits_number`,
         (`coordinator_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
         (`practice_responsible_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
         `closed_attendance_groups`, `subjects`.`created`, `subjects`.`modified`
     FROM `bd_centros_eite`.`subjects`
-    LEFT JOIN `academic`.`degrees` ON `institution_id` = 2 AND `degrees`.`acronym` = `subjects`.`degree`
+    LEFT JOIN `degrees` ON `institution_id` = 2 AND `degrees`.`acronym` = `subjects`.`degree`
     ORDER BY `subjects`.`id`;
 
 # SUBJECTS_USERS

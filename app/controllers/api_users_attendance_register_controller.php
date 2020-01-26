@@ -39,6 +39,14 @@ class ApiUsersAttendanceRegisterController extends AppController {
 
         return true;
     }
+
+    function _allowAnonymousActions() {
+        if (Configure::read('app.users_attendance_register.by_password')) {
+            $this->Auth->allow('add');
+        }
+
+        parent::_allowAnonymousActions();
+    }
     
     function add() {
         $attendance_id = false;
@@ -127,21 +135,26 @@ class ApiUsersAttendanceRegisterController extends AppController {
                     -1 // Recursive
                 );
             } elseif (strlen($dni)) {
-                $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByDniAndPassword(
-                    strtoupper($dni),
-                    $password,
-                    array(), // Fields
-                    array(), // Order
-                    -1 // Recursive
-                );
+                $student = $this->UserAttendanceRegister->AttendanceRegister->Student->find('first', array(
+                    'conditions' => array(
+                        'dni' => $dni,
+                        'type' => 'Estudiante',
+                        'password' => $password
+                    ),
+                    'recursive' => -1
+                ));
             } elseif (strlen($username)) {
-                $student = $this->UserAttendanceRegister->AttendanceRegister->Student->findByUsernameAndPassword(
-                    $username,
-                    $password,
-                    array(), // Fields
-                    array(), // Order
-                    -1 // Recursive
-                );
+                $student = $this->UserAttendanceRegister->AttendanceRegister->Student->find('first', array(
+                    'conditions' => array(
+                        'OR' => array(
+                            'username' => $username,
+                            'dni' => $username
+                        ),
+                        'type' => 'Estudiante',
+                        'password' => $password
+                    ),
+                    'recursive' => -1
+                ));
             } elseif ($is_student) {
                 $user = $this->Auth->user();
                 $student = array('Student' => $user['User']);

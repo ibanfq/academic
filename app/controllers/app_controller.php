@@ -136,7 +136,7 @@ class AppController extends Controller
                 session_start();
             }
 
-            if (!$authorization) {
+            if (!$authorization && empty($_POST)) {
                 // No http authorization. Try a CAS authentication with gateway=true
                 $this->Session->start();
                 $this->Cas->checkAuthentication();
