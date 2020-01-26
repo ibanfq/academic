@@ -208,7 +208,7 @@ class UsersController extends AppController {
         }
 
         if (!empty($this->params['named']['type'])) {
-            $scope = array('User.type' => $this->params['named']['type']);
+            $scope[] = array('User.type' => $this->params['named']['type']);
         }
         
         if (!empty($q)) {
