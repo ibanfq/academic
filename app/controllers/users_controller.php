@@ -165,7 +165,7 @@ class UsersController extends AppController {
                 $this->Session->setFlash('No se ha podido acceder al centro.');
                 $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
             }
-        } elseif (Environment::institution('id')) {
+        } elseif (!Environment::institution('id')) {
             $this->Session->setFlash('No tiene permisos para realizar esta acción.');
             $this->redirect(array('controller' => 'institutions', 'action' => 'index', 'base' => false, 'ref' => 'users'));
         } else {
