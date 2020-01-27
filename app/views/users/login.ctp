@@ -10,5 +10,5 @@
     */
 ?>
 
-<p style="margin: 2em 0;">El sistema de identificación de Academic ha sido unificado con el de MiULPGC.<br><br>A continuación se te pedirá que te identifiques mediante el sistem de clave única de MiULPGC para poder continuar.</p>
+<p style="margin: 2em 0;">El sistema de identificación de Academic ha sido unificado con el de MiULPGC.<br><br>A continuación se te pedirá que te identifiques mediante el sistema de clave única de MiULPGC para poder continuar.</p>
 <?php echo $html->link('Acceder con MiULPGC', array('action' => 'cas_login'), array('class' => 'button button-action')) ?>

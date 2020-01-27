@@ -132,20 +132,23 @@ class CasComponent extends Object {
         
         $user_types = Set::extract($user, "{n}.{$model->alias}.type");
         $user = $user[0][$model->alias];
-        $hasChanges = false;
-        $attributes = phpCAS::getAttributes();
 
-        if (!empty($attributes['Nombre']) && $attributes['Nombre'] !== $user['first_name']) {
-            $user['first_name'] = $attributes['Nombre'];
-            $hasChanges = true;
-        }
-        if (!empty($attributes['Apellidos']) && $attributes['Apellidos'] !== $user['last_name']) {
-            $user['last_name'] = $attributes['Apellidos'];
-            $hasChanges = true;
-        }
+        if ($user['type'] === 'Administrador') {
+            $hasChanges = false;
+            $attributes = phpCAS::getAttributes();
 
-        if ($hasChanges) {
-            $model->save($user);
+            if (!empty($attributes['Nombre']) && $attributes['Nombre'] !== $user['first_name']) {
+                $user['first_name'] = $attributes['Nombre'];
+                $hasChanges = true;
+            }
+            if (!empty($attributes['Apellidos']) && $attributes['Apellidos'] !== $user['last_name']) {
+                $user['last_name'] = $attributes['Apellidos'];
+                $hasChanges = true;
+            }
+
+            if ($hasChanges) {
+                $model->save($user);
+            }
         }
 
         if ($user['id'] === $this->Auth->user('id') || $this->Auth->login($user[$model->primaryKey])) {
