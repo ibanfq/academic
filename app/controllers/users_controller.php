@@ -367,6 +367,7 @@ class UsersController extends AppController {
                 ///** @deprecated in favour CAS auth */
                 // $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
                 // $this->data['User']['password'] = $this->Auth->password($password);
+                $this->data['User']['password'] = '############';
             }
 
             $dataToSave = $this->data;
