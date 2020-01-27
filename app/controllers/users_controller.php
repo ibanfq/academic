@@ -2060,6 +2060,7 @@ class UsersController extends AppController {
         //    $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
         //    $user['User']['password'] = $this->Auth->password($password);
         //}
+        $user['User']['password'] = '############';
         
         if ($this->User->save($user)) {
             $subjects_user = [];
