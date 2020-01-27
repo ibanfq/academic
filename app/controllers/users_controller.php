@@ -8,6 +8,11 @@ class UsersController extends AppController {
     var $refs_sections = array('competence' => 'courses');
 
     function login() {
+        if (isset($_GET['error_not_user'])) {
+            $this->Session->setFlash('La cuenta con la que intentas identificarte no está registrada en Academic.');
+            $this->redirect('/login', true);
+        }
+
         if ($this->Auth->user('id')) {
             $this->redirect($this->Auth->redirect(), null, true);
         }

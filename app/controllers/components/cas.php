@@ -93,11 +93,12 @@ class CasComponent extends Object {
         $logged = $this->_loginCasUser();
 
         if (! $logged) {
-            $this->Auth->Session->setFlash('La cuenta con la que intentas identificarte no está registrada en Academic.');
+            $redirect = Router::url('/login?error_not_user', true);
+            phpCAS::logoutWithRedirectService($redirect);
         }
     }
 
-    function logout()
+    function logout($message)
     {
         $this->_initialize();
 
