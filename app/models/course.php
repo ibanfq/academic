@@ -28,6 +28,11 @@ class Course extends AcademicModel {
             'required' => true,
             'message' => 'Debe especificar el centro academico'
         ),
+        'degree_id' => array(
+            'rule' => 'notEmpty',
+            'required' => true,
+            'message' => 'Debe especificar la titulación'
+        ),
         'name' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
@@ -60,12 +65,13 @@ class Course extends AcademicModel {
     function courseOverlap($initial_date) {
     	App::import('Core', 'Sanitize');
         $institution_id = Sanitize::escape($this->data[$this->alias]['institution_id']);
+        $degree_id = Sanitize::escape($this->data[$this->alias]['degree_id']);
         $initial_date = Sanitize::escape($this->data[$this->alias]['initial_date']);
         $final_date = Sanitize::escape($this->data[$this->alias]['final_date']);
         $query = "
             SELECT *
             FROM courses
-            WHERE institution_id = '{$institution_id}' AND (
+            WHERE institution_id = '{$institution_id}' AND degree_id = '{$degree_id}' AND (
                 (initial_date <= '{$initial_date}' AND final_date >= '{$initial_date}')
                 OR (initial_date <= '{$final_date}' AND final_date >= '{$final_date}')
                 OR (initial_date >= '{$initial_date}' AND final_date <= '{$final_date}')

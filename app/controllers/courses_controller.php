@@ -111,7 +111,7 @@ class CoursesController extends AppController {
         ));
 
         if (empty($degrees)) {
-            $this->Session->setFlash('No se ha podido acceder al las titulaciones.');
+            $this->Session->setFlash('No se ha podido acceder al las titulaciones. Por favor, compruebe que el centro las tiene creadas.');
             $this->redirect(array('action' => 'index', $academic_year_id));
         }
 
