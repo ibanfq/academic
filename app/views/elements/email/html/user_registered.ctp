@@ -1,7 +1,6 @@
 <p>Hola</p>
 <p>Usted ha sido dado de alta en el gestor académico Academic con los siguientes datos de acceso:</p>
 <p>
-	Nombre de usuario: <?php echo $user['User']['username'] ?><br />
-	<?php if (isset($password)): ?>Contraseña: <?php echo $password ?><br /><?php endif; ?>
+	Identificador de usuario: <?php echo $user['User']['dni'] ?><br />
 </p>
 <p>Un saludo,<br />El equipo de Academic.</p>

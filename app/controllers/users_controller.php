@@ -1353,25 +1353,16 @@ class UsersController extends AppController {
                                     'type' => 'LEFT',
                                     'conditions' => array(
                                         'UserInstitution.user_id = User.id',
-                                        'UserInstitution.institution_id' => Environment::institution('id')
+                                        'UserInstitution.institution_id' => Environment::institution('id'),
                                     )
                                 )
                             ),
                             'conditions' => array(
-                                'User.username' => $args['username']
+                                'User.dni' => $args['dni'],
+                                'User.type' => 'Estudiante'
                             ),
                             'recursive' => -1
                         ));
-
-                        if ($user && $user['User']['type'] !== 'Estudiante') {
-                            if (!$has_error) {
-                                $has_error = true;
-                                $this->Session->setFlash(sprintf(
-                                    'El alumno %s ya está registrado en el sistema como otro tipo de usuario.',
-                                    $args['username']
-                                ));
-                            }
-                        }
 
                         $lines[] = array(
                             'user' => $user,
@@ -2026,6 +2017,7 @@ class UsersController extends AppController {
             $this->loadModel('UserInstitution');
         }
 
+        $is_new_user = true;
         $this->User->id = null;
         $this->UserInstitution->id = null;
 
@@ -2033,6 +2025,7 @@ class UsersController extends AppController {
             $user = array();
             $registered_subjects = array();
         } else {
+            $is_new_user = false;
             $this->User->id = $user['User']['id'];
 
             if (! empty($user['UserInstitution']['id'])) {
@@ -2091,19 +2084,21 @@ class UsersController extends AppController {
                 );
 
                 if ($this->UserInstitution->save($user_institution)) {
-                    $this->Email->from = 'Academic <noreply@ulpgc.es>';
-                    $this->Email->to = $user['User']['username'];
-                    $this->Email->subject = "Alta en Academic";
-                    $this->Email->sendAs = 'both';
-                    $this->Email->template = Configure::read('app.email.user_registered')
-                        ? Configure::read('app.email.user_registered')
-                        : 'user_registered';
-                    $this->set('user', $user);
-                    ///** @deprecated in favour CAS auth */
-                    //if ($password) {
-                    //    $this->set('password', $password);
-                    //}
-                    $this->Email->send();
+                    if ($is_new_user) {
+                        $this->Email->from = 'Academic <noreply@ulpgc.es>';
+                        $this->Email->to = $user['User']['username'];
+                        $this->Email->subject = "Alta en Academic";
+                        $this->Email->sendAs = 'both';
+                        $this->Email->template = Configure::read('app.email.user_registered')
+                            ? Configure::read('app.email.user_registered')
+                            : 'user_registered';
+                        $this->set('user', $user);
+                        ///** @deprecated in favour CAS auth */
+                        //if ($password) {
+                        //    $this->set('password', $password);
+                        //}
+                        $this->Email->send();
+                    }
 
                     return true;
                 }
