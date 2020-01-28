@@ -134,7 +134,7 @@ class CasComponent extends Object {
         $user_types = Set::extract($user, "{n}.{$model->alias}.type");
         $user = $user[0][$model->alias];
 
-        if ($user['type'] === 'Administrador') {
+        if ($user['type'] !== 'Administrador') {
             $hasChanges = false;
             $attributes = phpCAS::getAttributes();
 
