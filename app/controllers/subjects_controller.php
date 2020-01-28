@@ -63,7 +63,9 @@ class SubjectsController extends AppController {
             $coordinator = null;
             $responsible = null;
 
-            if (!empty($this->data['Subject']['parent_id'])) {
+            if (empty($this->data['Subject']['parent_id'])) {
+                $this->data['Subject']['parent_id'] = null;
+            } else {
                 $this->data['Subject']['coordinator_id'] = null;
                 $this->data['Subject']['practice_responsible_id'] = null;
                 if (!array_key_exists($this->data['Subject']['parent_id'], $subjects_values)) {
@@ -242,7 +244,9 @@ class SubjectsController extends AppController {
         } else {
             $is_valid = true;
 
-            if (!empty($subject['Subject']['parent_id'])) {
+            if (empty($subject['Subject']['parent_id'])) {
+                unset($this->data['Subject']['parent_id']);
+            } else {
                 unset($this->data['Subject']['coordinator_id']);
                 unset($this->data['Subject']['practice_responsible_id']);
                 unset($this->data['Subject']['closed_attendance_groups']);
