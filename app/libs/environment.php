@@ -170,13 +170,13 @@ class Environment extends Object {
     static function userInstitution($key =  null)
     {
         $_this =& Environment::getInstance();
-        $model =& Environment::getModel($_this->userInstitutionModel);
 
         if (! is_array($_this->_user_institution)) {
             if (! Environment::user('id') || ! Environment::institution('id')) {
                 return null;
             }
 
+            $model =& Environment::getModel($_this->userInstitutionModel);
             $institutionModel =& Environment::getModel($_this->institutionModel);
             $_this->_user_institution = $model->find(
                 'first',
@@ -205,10 +205,12 @@ class Environment extends Object {
             return $_this->_user_institution;
         } else {
             $key_parts = explode('.', $key, 1);
+            if (!isset($model)) {
+                $model =& Environment::getModel($_this->userInstitutionModel);
+            }
             if (count($key_parts) === 1) {
                 array_unshift($key_parts, $model->alias);
             }
-            $model =& Environment::getModel($_this->userInstitutionModel);
             if (isset($_this->_user_institution[$key_parts[0]][$key_parts[1]])) {
                 return $_this->_user_institution[$key_parts[0]][$key_parts[1]];
             }
