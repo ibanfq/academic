@@ -170,13 +170,13 @@ class Environment extends Object {
     static function userInstitution($key =  null)
     {
         $_this =& Environment::getInstance();
+        $model =& Environment::getModel($_this->userInstitutionModel);
 
         if (! is_array($_this->_user_institution)) {
             if (! Environment::user('id') || ! Environment::institution('id')) {
                 return null;
             }
 
-            $model =& Environment::getModel($_this->userInstitutionModel);
             $institutionModel =& Environment::getModel($_this->institutionModel);
             $_this->_user_institution = $model->find(
                 'first',
