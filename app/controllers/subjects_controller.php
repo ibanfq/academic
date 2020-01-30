@@ -43,23 +43,9 @@ class SubjectsController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $subjects = $this->Subject->find(
-            'all',
-            array(
-                'conditions' => array('Subject.course_id' => $course['Course']['id'], 'Subject.parent_id' => null),
-                'recursive' => -1
-            )
-        );
-
-        $subjects_values = [];
-        foreach ($subjects as $subject) {
-            $subjects_values[$subject['Subject']['id']] = strpos($subject['Subject']['name'], $subject['Subject']['code']) === false
-                ? "{$subject['Subject']['code']} {$subject['Subject']['name']}"
-                : $subject['Subject']['name'];
-        }
-
         if (!empty($this->data)) {
             $is_valid = true;
+            $parent = null;
             $coordinator = null;
             $responsible = null;
 
@@ -68,7 +54,28 @@ class SubjectsController extends AppController {
             } else {
                 $this->data['Subject']['coordinator_id'] = null;
                 $this->data['Subject']['practice_responsible_id'] = null;
-                if (!array_key_exists($this->data['Subject']['parent_id'], $subjects_values)) {
+                $parent = $this->Subject->find('first', array(
+                    'fields' => array('Subject.*', 'Course.*', 'Degree.*'),
+                    'joins' => array(
+                        array(
+                            'table' => 'courses',
+                            'alias' => 'Course',
+                            'type' => 'INNER',
+                            'conditions' => 'Course.id = Subject.course_id'
+                        ),
+                        array(
+                            'table' => 'degrees',
+                            'alias' => 'Degree',
+                            'type' => 'INNER',
+                            'conditions' => 'Degree.id = Course.degree_id'
+                        )
+                    ),
+                    'conditions' => array(
+                        'Subject.id' => $this->data['Subject']['parent_id']
+                    ),
+                    'recursive' => -1, 
+                ));
+                if (!$parent) {
                     unset($this->data['Subject']['parent_id']);
                     $this->Session->setFlash('No se ha podido acceder a la asignatura maestra.');
                     $is_valid = false;
@@ -148,10 +155,12 @@ class SubjectsController extends AppController {
                 }
             }
 
+            if ($parent) {
+                $this->data['Parent'] = $parent;
+            }
             if ($coordinator) {
                 $this->data['Coordinator'] = $coordinator['Coordinator'];
             }
-
             if ($responsible) {
                 $this->data['Responsible'] = $responsible['Responsible'];
             }
@@ -159,7 +168,6 @@ class SubjectsController extends AppController {
 
         $this->set('course', $course);
         $this->set('course_id', $course_id);
-        $this->set('subjects_values', $subjects_values);
     }
 
     function view($id = null) {
@@ -238,6 +246,17 @@ class SubjectsController extends AppController {
         }
 
         $this->Subject->set($subject);
+
+        if (!empty($subject['Parent'])) {
+            $parent_course = $this->Subject->Course->find('first', array(
+                'fields' => array('Course.*'),
+                'conditions' => array(
+                    'Course.id' => $subject['Parent']['course_id']
+                ),
+                'recursive' => -1, 
+            ));
+            $subject['Parent']['Course'] = $parent_course['Course'];
+        }
         
         if (empty($this->data)) {
             $this->data = $subject;

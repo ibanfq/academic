@@ -19,7 +19,15 @@
 		<?php echo $form->input('semester', array('label' => 'Semestre', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.semesters'))); ?>
 		<?php echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.types'), 'default' => Configure::read('app.subject.default_type'))); ?>
 		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-		<?php echo $form->input('parent_id', array('label' => 'Asignatura maestra', 'type' => 'select', 'value' => isset($this->data['Subject']['parent_id']) ? $this->data['Subject']['parent_id'] : '', 'options' => array('No es una asignatura vinculada') + $subjects_values, 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+		<?php echo $form->input('has_parent', array('label' => 'Es asignatura vinculada', 'type' => 'select', 'value' => empty($this->data['Subject']['parent_id']) ? 0 : 1, 'options' => array('No', 'Si'), 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
+		<div id="parent_field_group" class="input text">
+			<dl>
+				<dt><label for="parent_name">Asignatura maestra</label></dt>
+				<dd><input type="text" name="parent_name" id="parent_name" autocomplete="off" <?php if (isset($this->data['Parent']['Subject']['code'])): ?>value="<?php echo "{$this->data['Parent']['Subject']['code']} - {$this->data['Parent']['Subject']['name']} ({$this->data['Parent']['Degree']['name']})|{$this->data['Parent']['Subject']['id']}" ?>"<?php endif ?>/></dd>
+				<?php echo $form->input('parent_id', array('type' => 'hidden', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'value' => isset($this->data['Subject']['parent_id']) ? $this->data['Subject']['parent_id'] : '')); ?>
+			</dl>
+			<?php echo $form->error('parent_id'); ?>
+		</div>
 		<div id="coordinator_field_group" class="input text">
 			<dl>
 				<dt><label for="coordinator_name">Coordinador*</label></dt>
@@ -51,12 +59,28 @@
 			else
 				return 'No existe ningún profesor con este nombre.';
 		}
-		
+		$("input#parent_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/subjects/find_subjects_by_name", {extraParams: { academic_year_id: <?php echo json_encode($course['Course']['academic_year_id']) ?> }, formatItem: formatItem}).result(function(event, item){ $("input#SubjectParentId").val(item[1]); });
 	    $("input#coordinator_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#SubjectCoordinatorId").val(item[1]); });
 		$("input#responsible_name").autocomplete("<?php echo Environment::getBaseUrl() ?>/users/find_teachers_by_name", {formatItem: formatItem}).result(function(event, item){ $("input#SubjectPracticeResponsibleId").val(item[1]); });
 
-		$('select#SubjectParentId').change(function() {
-			$('#coordinator_field_group, #practice_responsible_field_group')[parseInt(this.value) ? 'hide' : 'show']()
+		$('select#SubjectHasParent').change(function() {
+			if (parseInt(this.value)) {
+				$('#parent_field_group').hide()
+				$('#coordinator_field_group, #practice_responsible_field_group').hide()
+				$('#parent_field_group').show();
+			} else {
+				$('#parent_field_group').show()
+				$('#coordinator_field_group, #practice_responsible_field_group').show()
+				$('#parent_field_group').hide();
+				$("input#SubjectParentId").val('')
+				$('#parent_name').val('');
+			}
 		}).change();
+
+		$('#parent_name').change(function () {
+			if (! this.value) {
+				$("input#SubjectParentId").val('');
+			}
+		})
 	});
 </script>

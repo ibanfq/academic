@@ -21,15 +21,19 @@
 		<?php echo $form->input('type', array('label' => 'Tipo', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>', 'options' => Configure::read('app.subject.types'))); ?>
 		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
 		<?php echo $form->input('credits_number', array('label' => 'Nº créditos', 'before' => '<dl><dt>', 'between' => '</dt><dd>', 'after' => '</dd></dl>')); ?>
-		<?php if ($subject['Subject']['parent_id']): ?>
+		<?php if ($subject['Subject']['parent_id'] && isset($subject['Parent'])): ?>
 			<div class="input">
 				<dl>
 					<dt><label>Asignatura maestra</label></dt>
 					<dd><?php
-						echo $html->link(
-							strpos($subject['Parent']['name'], $subject['Parent']['code']) === false ? "{$subject['Parent']['code']} {$subject['Parent']['name']}" : $subject['Parent']['name'],
-							array('controller' => 'subjects', 'action' => 'view', $subject['Parent']['id'])
-						)
+						$parent_name = strpos($subject['Parent']['name'], $subject['Parent']['code']) === false ? "{$subject['Parent']['code']} {$subject['Parent']['name']}" : $subject['Parent']['name'];
+						$parent_institution_id = $subject['Parent']['Course']['institution_id'];
+						if ($auth->user('super_admin') || in_array($parent_institution_id, Environment::userInstitutions('institution_id'))) {
+							$link_url = $html->url(array('institution' => $parent_institution_id, 'controller' => 'subjects', 'action' => 'view', $subject['Parent']['id'], 'base' => false));
+							echo $html->link($parent_name, $link_url);								
+						} else {
+							echo $parent_name;
+						}
 					?></dd>
 				</dl>
 			</div>

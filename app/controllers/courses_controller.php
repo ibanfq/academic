@@ -223,7 +223,25 @@ class CoursesController extends AppController {
             $this->redirect(array('controller' => 'academic_years', 'action' => 'index', 'base' => false));
         }
 
-        $course['Subject'] = Set::combine($course['Subject'], '{n}.id', '{n}');
+        foreach ($course['Subject'] as $i => $subject) {
+            if (!empty($subject['parent_id'])) {
+                $course['Subject'][$i]['Parent'] = $this->Course->Subject->find('first', array(
+                    'fields' => array('Subject.*', 'Course.*'),
+                    'joins' => array(
+                        array(
+                            'table' => 'courses',
+                            'alias' => 'Course',
+                            'type' => 'INNER',
+                            'conditions' => 'Course.id = Subject.course_id'
+                        )
+                    ),
+                    'conditions' => array(
+                        'Subject.id' => $subject['parent_id']
+                    ),
+                    'recursive' => -1, 
+                ));
+            }
+        }
 
         $this->Course->set($course);
 

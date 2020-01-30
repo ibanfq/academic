@@ -71,24 +71,35 @@
 				<tbody>
 					<?php if (isset($course['Subject'])): ?>
 						<?php foreach ($course['Subject'] as $subject): ?>
+							<?php
+								if ($subject['parent_id'] && isset($subject['Parent'])) {
+									$parent_institution_id = $subject['Parent']['Course']['institution_id'];
+									if ($auth->user('super_admin') || in_array($parent_institution_id, Environment::userInstitutions('institution_id'))) {
+										if ($ref === 'competence_subject_stats') {
+											$link_url = $html->url(array('institution' => $parent_institution_id, 'controller' => 'competence', 'action' => 'stats_by_subject', $subject['Parent']['Subject']['course_id'], $subject['parent_id'], 'base' => false));
+										} else {
+											$link_url = $html->url(array('institution' => $parent_institution_id, 'controller' => 'subjects', 'action' => 'view', $subject['parent_id'], 'base' => false));
+										}
+									} else {
+										$link_url = false;
+									}
+								} elseif ($ref === 'competence_subject_stats') {
+									$link_url = array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['id']);
+								} else {
+									$link_url = array('controller' => 'subjects', 'action' => 'view', $subject['id']);
+								}
+							?>
 							<tr>
 								<td><?php
-									if ($ref === 'competence_subject_stats') {
-										echo $html->link($subject['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['id']));
-									} else {
-										echo $html->link($subject['code'], array('controller' => 'subjects', 'action' => 'view', $subject['id']));
-									}
+									echo $link_url ? $html->link($subject['code'], $link_url) : $subject['code'];
 								?></td>
 								<td><?php echo $subject['name'] ?></td>
 								<td><?php echo $subject['acronym'] ?></td>
 								<td><?php echo $subject['level'] ?></td>
 								<td><?php
-									if ($subject['parent_id'] && isset($course['Subject'][$subject['parent_id']])) {
-										if ($ref === 'competence_subject_stats') {
-											echo $html->link($course['Subject'][$subject['parent_id']]['code'], array('controller' => 'competence', 'action' => 'stats_by_subject', $course['Course']['id'], $subject['parent_id']));
-										} else {
-											echo $html->link($course['Subject'][$subject['parent_id']]['code'], array('controller' => 'subjects', 'action' => 'view', $subject['parent_id']));
-										}
+									if ($subject['parent_id'] && isset($subject['Parent'])) {
+										$parent_code = $subject['Parent']['Subject']['code'];
+										echo $link_url ? $html->link($parent_code, $link_url) : $parent_code;
 									}
 								?></td>
 								<?php if (empty($ref)): ?>
