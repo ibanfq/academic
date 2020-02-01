@@ -1,7 +1,7 @@
 <?php $html->addCrumb('Cursos', '/academic_years'); ?>
 <?php $html->addCrumb($modelHelper->academic_year_name($subject), "/academic_years/view/{$subject['Course']['academic_year_id']}"); ?>
 <?php $html->addCrumb(Environment::institution('name'), Environment::getBaseUrl() . "/courses/index/{$subject['Course']['academic_year_id']}"); ?>
-<?php $html->addCrumb("{$subject['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Degree']['id']}"); ?>
+<?php $html->addCrumb("{$subject['Degree']['name']}", Environment::getBaseUrl() . "/courses/view/{$subject['Subject']['course_id']}"); ?>
 <?php $html->addCrumb($subject['Subject']['name'], Environment::getBaseUrl() . "/subjects/view/{$subject['Subject']['id']}"); ?>
 <?php $html->addCrumb($activity['Activity']['name'], Environment::getBaseUrl() . "/activities/view/{$activity['Activity']['id']}"); ?>
 <?php $html->addCrumb("Estadísticas estudiantes", Environment::getBaseUrl() . "/activities/students_stats/{$activity['Activity']['id']}"); ?>
