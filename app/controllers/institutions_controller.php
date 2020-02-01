@@ -225,7 +225,7 @@ class InstitutionsController extends AppController {
         $this->Institution->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Institution->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Institution->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
-        $this->Institution->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Institution->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
 
         $this->Session->setFlash('El curso ha sido eliminado correctamente');
         $this->redirect(array('action' => 'index'));

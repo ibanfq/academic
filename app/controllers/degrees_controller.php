@@ -153,7 +153,7 @@ class DegreesController extends AppController {
         $this->Degree->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Degree->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Degree->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
-        $this->Degree->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Degree->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
 
         $this->Session->setFlash('La titulación ha sido eliminado correctamente');
         $this->redirect(array('controller' => 'institutions', 'action' => 'view', $degree['Institution']['id']));

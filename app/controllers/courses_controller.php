@@ -530,7 +530,7 @@ class CoursesController extends AppController {
         $this->Course->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Course->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Course->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
-        $this->Course->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Course->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
 
         $this->Session->setFlash('La titulación ha sido eliminado correctamente de ese curso');
         $this->redirect(array('action' => 'index', $course['Course']['academic_year_id']));

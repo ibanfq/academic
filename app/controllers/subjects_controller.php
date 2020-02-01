@@ -850,7 +850,7 @@ class SubjectsController extends AppController {
         $this->Subject->query("DELETE FROM `competence_criterion_rubrics` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Subject->query("DELETE FROM `competence_criterion_subjects` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
         $this->Subject->query("DELETE FROM `competence_criterion_teachers` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
-        $this->Subject->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceGoalsQuery)");
+        $this->Subject->query("DELETE FROM `competence_criterion_grades` WHERE criterion_id NOT IN ($currentCompetenceCriteriaQuery)");
 
         $this->Session->setFlash('La asignatura ha sido eliminada correctamente');
         $this->redirect(array('controller' => 'courses', 'action' => 'view', $course_id));

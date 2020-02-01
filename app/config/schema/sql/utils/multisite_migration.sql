@@ -253,22 +253,27 @@ INSERT INTO `events` (`id`, `parent_id`, `group_id`, `activity_id`, `teacher_id`
     ORDER BY `events`.`id`;
 
 # ATENDANCE REGISTERS
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
 INSERT INTO `attendance_registers` (`id`, `event_id`, `initial_hour`, `final_hour`, `duration`, `teacher_id`, `activity_id`, `group_id`, `num_students`, `teacher_2_id`, `secret_code`, `created`, `modified`)
     SELECT
         `attendance_registers`.`id`, `attendance_registers`.`event_id`,
-        IF(`attendance_registers`.`initial_hour` > '0000-01-01 00:00:00', `attendance_registers`.`initial_hour`, `events`.`initial_hour`),
-        IF(`attendance_registers`.`final_hour` > '0000-01-01 00:00:00', `attendance_registers`.`final_hour`, `events`.`final_hour`),
+        IF(`attendance_registers`.`initial_hour` > '0000-01-01 00:00:00', `attendance_registers`.`initial_hour`, IF(`events`.`initial_hour` > '0000-01-01 00:00:00', `events`.`initial_hour`, `attendance_registers`.`initial_hour`)),
+        IF(`attendance_registers`.`final_hour` > '0000-01-01 00:00:00', `attendance_registers`.`final_hour`, IF(`events`.`final_hour` > '0000-01-01 00:00:00', `events`.`final_hour`, `attendance_registers`.`final_hour`)),
         `attendance_registers`.`duration`, `attendance_registers`.`teacher_id`, `attendance_registers`.`activity_id`, `attendance_registers`.`group_id`, `attendance_registers`.`num_students`, `attendance_registers`.`teacher_2_id`, `attendance_registers`.`secret_code`, `attendance_registers`.`created`, `attendance_registers`.`modified`
     FROM `bd_centros_veterinaria`.`attendance_registers`
-    INNER JOIN `events` on `events`.`id` = `attendance_registers`.`event_id`
+    LEFT JOIN `bd_centros_veterinaria`.`events` on `events`.`id` = `attendance_registers`.`event_id`
     ORDER BY `attendance_registers`.`id`;
 
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 INSERT INTO `attendance_registers` (`id`, `event_id`, `initial_hour`, `final_hour`, `duration`, `teacher_id`, `activity_id`, `group_id`, `num_students`, `teacher_2_id`, `secret_code`, `created`, `modified`)
     SELECT
         (`attendance_registers`.`id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`attendance_registers`) - (select min(`id`) FROM `bd_centros_eite`.`attendance_registers`)),
         (`attendance_registers`.`event_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`events`) - (select min(`id`) FROM `bd_centros_eite`.`events`)),
-        IF(`attendance_registers`.`initial_hour` > '0000-01-01 00:00:00', `attendance_registers`.`initial_hour`, `events`.`initial_hour`),
-        IF(`attendance_registers`.`final_hour` > '0000-01-01 00:00:00', `attendance_registers`.`final_hour`, `events`.`final_hour`),
+        IF(`attendance_registers`.`initial_hour` > '0000-01-01 00:00:00', `attendance_registers`.`initial_hour`, IF(`events`.`initial_hour` > '0000-01-01 00:00:00', `events`.`initial_hour`, `attendance_registers`.`initial_hour`)),
+        IF(`attendance_registers`.`final_hour` > '0000-01-01 00:00:00', `attendance_registers`.`final_hour`, IF(`events`.`final_hour` > '0000-01-01 00:00:00', `events`.`final_hour`, `attendance_registers`.`final_hour`)),
         `attendance_registers`.`duration`,
         (`attendance_registers`.`teacher_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
         (`attendance_registers`.`activity_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`activities`) - (select min(`id`) FROM `bd_centros_eite`.`activities`)),
@@ -277,8 +282,9 @@ INSERT INTO `attendance_registers` (`id`, `event_id`, `initial_hour`, `final_hou
         (`attendance_registers`.`teacher_2_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
         `attendance_registers`.`secret_code`, `attendance_registers`.`created`, `attendance_registers`.`modified`
     FROM `bd_centros_eite`.`attendance_registers`
-    INNER JOIN `events` on `events`.`id` = `attendance_registers`.`event_id`
+    LEFT JOIN `bd_centros_veterinaria`.`events` on `events`.`id` = `attendance_registers`.`event_id`
     ORDER BY `attendance_registers`.`id`;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 
 # MASSIVE ATTENDANCE REGISTERS
 INSERT INTO `massive_attendance_registers` (`id`, `subject_id`, `created`, `modified`)
