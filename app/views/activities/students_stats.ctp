@@ -13,6 +13,7 @@
     <thead>
       <tr>
         <th>Estudiante</th>
+        <th>Asignatura vinculada</th>
         <th>Fecha asistencia</th>
         <th>Grupo apuntado</th>
         <th>Profesor que la impartió</th>
@@ -27,6 +28,13 @@
       ?>
         <tr>
           <td><?php echo "{$register['Student']['first_name']} {$register['Student']['last_name']}" ?></td>
+          <td><?php
+							if (!empty($subjects_users[$register['Student']['id']]['ChildSubject']['code'])) {
+								echo strpos($subjects_users[$register['Student']['id']]['ChildSubject']['name'], $subjects_users[$register['Student']['id']]['ChildSubject']['code']) === false
+									? "{$subjects_users[$register['Student']['id']]['ChildSubject']['code']} {$subjects_users[$register['Student']['id']]['ChildSubject']['name']}"
+									: $subjects_users[$register['Student']['id']]['ChildSubject']['name'];
+							}
+          ?></td>
           <td><?php echo $initial_hour ? $initial_hour->format('d-m-Y') : '' ?></td>
           <td><?php echo $initial_hour ? $register['Group']['name'] : $register['RegistrationGroup']['name'] ?></td>
           <td><?php

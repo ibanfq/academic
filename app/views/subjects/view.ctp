@@ -60,7 +60,11 @@
 			<dl>
 				<dt>De los cuales</dt>
 				<dd><?php
+					$i=0;
 					foreach ($students_registered_on_child_subjects as $students_registered_on_child_subject) {
+						if ($i++) {
+							echo "<br>";
+						}
 						echo "{$students_registered_on_child_subject[0]['total']} en ";
 						echo strpos($students_registered_on_child_subject['Subject']['name'], $students_registered_on_child_subject['Subject']['code']) === false
 							? "{$students_registered_on_child_subject['Subject']['code']} {$students_registered_on_child_subject['Subject']['name']}"

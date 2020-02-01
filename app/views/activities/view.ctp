@@ -70,11 +70,19 @@
 			<table>
 				<tr>
 					<th>Estudiante</th>
+					<th>Asignatura vinculada</th>
 					<th>Grupo</th>
 				</tr>
 				<?php foreach($registrations as $registration): ?>
 					<tr>
 						<td><?php echo rtrim($registration['Student']['last_name']).', '.$registration['Student']['first_name']; ?></td>
+						<td><?php
+							if (!empty($registration['ChildSubject']['code'])) {
+								echo strpos($registration['ChildSubject']['name'], $registration['ChildSubject']['code']) === false
+									? "{$registration['ChildSubject']['code']} {$registration['ChildSubject']['name']}"
+									: $registration['ChildSubject']['name'];
+							}
+						?></td>
 						<td><?php
 							if ($registration['Registration']['group_id'] == -1) {
 								echo $isEvaluation? 'No se puede presentar' : 'Actividad aprobada';

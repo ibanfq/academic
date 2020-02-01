@@ -268,49 +268,51 @@ class CoursesController extends AppController {
 
         // Duplicate every subject
         foreach ($course['Subject'] as $subject) {
-            $subject['course_id'] = $new_course_id;
-            $newSubject['Subject'] = $subject;
-            unset($newSubject['Subject']['id']);
-            unset($newSubject['Subject']['created']);
-            unset($newSubject['Subject']['modified']);
+            if (empty($subject['Subject']['parent_id'])) {
+                $subject['course_id'] = $new_course_id;
+                $newSubject['Subject'] = $subject;
+                unset($newSubject['Subject']['id']);
+                unset($newSubject['Subject']['created']);
+                unset($newSubject['Subject']['modified']);
 
-            $new_subject_id = null;
-            $this->Course->Subject->create();
-            if ($this->Course->Subject->save($newSubject)) {
-                $new_subject_id = $this->Course->Subject->id;
-                $savedSubjects[$subject['id']] = $new_subject_id;
-            } else {
-                $error = true;
-                break;
-            }
-
-            // Duplicate all groups of this subject
-            foreach ($this->Course->Subject->Group->findAllBySubjectId($subject['id'], array('Group.*')) as $group) {
-                $group_id = $group['Group']['id'];
-                unset($group['Group']['id']);
-                unset($group['Group']['created']);
-                unset($group['Group']['modified']);
-                $group['Group']['subject_id'] = $new_subject_id;
-
-                $this->Course->Subject->Group->create();
-                if ($this->Course->Subject->Group->save($group) === false) {
+                $new_subject_id = null;
+                $this->Course->Subject->create();
+                if ($this->Course->Subject->save($newSubject)) {
+                    $new_subject_id = $this->Course->Subject->id;
+                    $savedSubjects[$subject['id']] = $new_subject_id;
+                } else {
                     $error = true;
-                    break(2);
+                    break;
                 }
-            }
 
-            // Duplicate all activities of this subject
-            foreach ($this->Course->Subject->Activity->findAllBySubjectId($subject['id'], array('Activity.*')) as $activity) {
-                $activity_id = $activity['Activity']['id'];
-                unset($activity['Activity']['id']);
-                unset($activity['Activity']['created']);
-                unset($activity['Activity']['modified']);
-                $activity['Activity']['subject_id'] = $new_subject_id;
+                // Duplicate all groups of this subject
+                foreach ($this->Course->Subject->Group->findAllBySubjectId($subject['id'], array('Group.*')) as $group) {
+                    $group_id = $group['Group']['id'];
+                    unset($group['Group']['id']);
+                    unset($group['Group']['created']);
+                    unset($group['Group']['modified']);
+                    $group['Group']['subject_id'] = $new_subject_id;
 
-                $this->Course->Subject->Activity->create();
-                if ($this->Course->Subject->Activity->save($activity) === false) {
-                    $error = true;
-                    break(2);
+                    $this->Course->Subject->Group->create();
+                    if ($this->Course->Subject->Group->save($group) === false) {
+                        $error = true;
+                        break(2);
+                    }
+                }
+
+                // Duplicate all activities of this subject
+                foreach ($this->Course->Subject->Activity->findAllBySubjectId($subject['id'], array('Activity.*')) as $activity) {
+                    $activity_id = $activity['Activity']['id'];
+                    unset($activity['Activity']['id']);
+                    unset($activity['Activity']['created']);
+                    unset($activity['Activity']['modified']);
+                    $activity['Activity']['subject_id'] = $new_subject_id;
+
+                    $this->Course->Subject->Activity->create();
+                    if ($this->Course->Subject->Activity->save($activity) === false) {
+                        $error = true;
+                        break(2);
+                    }
                 }
             }
         }
