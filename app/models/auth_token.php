@@ -4,7 +4,6 @@ App::import('model', 'academicModel');
 
 class AuthToken extends AcademicModel {
     var $name = 'AuthToken';
-    var $primaryKey = 'token';
 
     var $validate = array(
         'token' => array(

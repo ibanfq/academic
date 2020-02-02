@@ -53,11 +53,27 @@ class UsersController extends AppController {
         $this->redirect($this->Auth->redirect(), null, true);
     }
 
-    function logout() {
-        if (! $this->Auth->user('id') || ! $this->Auth->user('__LOGGED_WITH_CAS__')) {
-            $this->redirect($this->Auth->logout());
+    function logout($device = null) {
+        if (empty($device)) {exit;
+            if (! $this->Auth->user('id') || ! $this->Auth->user('__LOGGED_WITH_CAS__')) {
+                $this->redirect($this->Auth->logout());
+            } else {
+                $this->redirect($this->Cas->logout());
+            }    
         } else {
-            $this->redirect($this->Cas->logout());
+            $authTokenModel = ClassRegistry::init('AuthToken');
+            $auth_token = $authTokenModel->find('first',
+                array(
+                    'conditions' => array(
+                        'id' => $device,
+                        'user_id' => $this->Auth->user('id')
+                    )
+                )
+            );
+            if ($auth_token) {
+                $authTokenModel->delete($auth_token['AuthToken']['id']);
+            }
+            exit;
         }
     }
     
@@ -972,6 +988,7 @@ class UsersController extends AppController {
     }
 
     function editProfile() {
+        $this->helpers[] = 'Ajax';
         $this->User->id = $this->Auth->user('id');
         
         $user = $this->User->read();
@@ -1014,6 +1031,15 @@ class UsersController extends AppController {
         }
 
         $authTokenModel = ClassRegistry::init('AuthToken');
+        $auth_tokens = $authTokenModel->find(
+            'all',
+            array(
+                'conditions' => array(
+                    'user_id' => $this->Auth->user('id'),
+                    'not' => array('last_used' => null)
+                )
+            )
+        );
         $auth_token = $authTokenModel->find(
             'first',
             array(
@@ -1024,7 +1050,7 @@ class UsersController extends AppController {
             )
         );
         if ($auth_token) {
-            $authTokenModel->delete($auth_token['AuthToken']['token']);
+            $authTokenModel->delete($auth_token['AuthToken']['id']);
             $auth_token = null;
         }
         while (!$auth_token) {
@@ -1036,6 +1062,7 @@ class UsersController extends AppController {
             );
             $authTokenModel->save($auth_token);
         }
+        
 
         $qrCode = new \Endroid\QrCode\QrCode();
         $qrCode
@@ -1049,6 +1076,7 @@ class UsersController extends AppController {
             ->setImageType(\Endroid\QrCode\QrCode::IMAGE_TYPE_PNG)
         ;
         $this->set('qr_image', $qrCode->getDataUri());
+        $this->set('auth_tokens', $auth_tokens);
     }
     
     function rememberPassword() {

@@ -38,13 +38,11 @@
   );
   Router::connect(
     '/api/users/login',
-    array('controller' => 'api_users', 'action' => 'login', '[method]' => 'GET'),
-    array('institution' => '[0-9]+')
+    array('controller' => 'api_users', 'action' => 'login', '[method]' => 'GET')
   );
   Router::connect(
     '/api/users/logout',
-    array('controller' => 'api_users', 'action' => 'logout', '[method]' => 'GET'),
-    array('institution' => '[0-9]+')
+    array('controller' => 'api_users', 'action' => 'logout', '[method]' => 'GET')
   );
   Router::connect(
     '/api/institutions/:institution/users/me',
@@ -53,8 +51,7 @@
   );
   Router::connect(
     '/api/users/me',
-    array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET'),
-    array('institution' => '[0-9]+')
+    array('controller' => 'api_users', 'action' => 'me', '[method]' => 'GET')
   );
   // Events
   Router::connect(

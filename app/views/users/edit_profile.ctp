@@ -49,7 +49,35 @@
 
 <fieldset style="margin-top: 3em">
 	<legend>Dispositivos vinculados</legend>
-	<p>Para vincular un nuevo dispositivo escanea el siguiente código QR con la app de Academic:</p>
+	<?php if (!empty($auth_tokens)): ?>
+		<ul id="UserLogoutDevice">
+			<?php foreach ($auth_tokens as $auth_token): ?>
+				<li style="margin-top:0.5em;"><?php echo h($auth_token['AuthToken']['device']) ?> (<a href="#" data-device="<?php echo htmlspecialchars($auth_token['AuthToken']['id']) ?>">Desconectar</a>)</li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
+	<p style="margin-top: 1em">Para vincular un nuevo dispositivo escanea el siguiente código QR con la app de Academic:</p>
 	<div style="margin: 1em 0;"><img src="<?php echo htmlspecialchars($qr_image) ?>" alt="qr code"></div>
 	<p><strong>¿Tienes problemas para leer el código?</strong> Prueba <a href="<?php htmlspecialchars($this->Html->url(null, true)) ?>" onclick="window.location.reload(true); return false;">recargando la página</a> para generar uno nuevo.</p>
 </fieldset>
+
+<script type="text/javascript">
+	$(function() {
+		$('#UserLogoutDevice').on('click', 'a[data-device]', function (e) {
+			e.preventDefault(); // avoid to execute the actual submit of the form.
+			var a = $(this);
+			var device = a.attr('data-device');
+
+			if (confirm('¿Está seguro de que desea desconectar el dispositivo?')) {
+				$.ajax({
+					type: "GET",
+					url: '/users/logout/'+device,
+					success: function(data)
+					{
+						a.closest('li').remove();
+					}
+				});
+			}
+		})
+	});
+</script>
