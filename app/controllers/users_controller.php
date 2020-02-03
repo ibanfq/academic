@@ -54,7 +54,7 @@ class UsersController extends AppController {
     }
 
     function logout($device = null) {
-        if (empty($device)) {exit;
+        if (empty($device)) {
             if (! $this->Auth->user('id') || ! $this->Auth->user('__LOGGED_WITH_CAS__')) {
                 $this->redirect($this->Auth->logout());
             } else {

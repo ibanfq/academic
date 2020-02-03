@@ -98,7 +98,7 @@ class CasComponent extends Object {
         }
     }
 
-    function logout($message)
+    function logout()
     {
         $this->_initialize();
 
