@@ -2078,7 +2078,7 @@ class UsersController extends AppController {
             '{n}'
         );
 
-        $subjects_to_add = array_diff_key($subjects_to_register, array_flip($registered_subjects));
+        $subjects_to_add = array_diff_key($subjects_to_register, $registered_subjects);
         
         ///** @deprecated in favour CAS auth */
         //if ($this->User->id) {
@@ -2174,7 +2174,10 @@ class UsersController extends AppController {
         ));
         $result = array();
         foreach ($subjects as $subject):
-            $result[$subject['Subject']['code']] = $subject['Subject']['id'];
+            $result[$subject['Subject']['code']] = array(
+                'subject_id' => isset($subject['Subject']['parent_id']) ? $subject['Subject']['parent_id'] : $subject['Subject']['id'],
+                'child_subject_id' => isset($subject['Subject']['parent_id']) ? $subject['Subject']['id'] : null,
+            );
         endforeach;
         
         return $result;
