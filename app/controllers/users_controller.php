@@ -2072,14 +2072,15 @@ class UsersController extends AppController {
         
         $subjects_codes_to_register = $args['subjects'];
         
-        $subjects_to_register = Set::combine(
-            array_intersect_key($subjects, array_flip($subjects_codes_to_register)),
+        $subjects_to_add = Set::combine(
+            array_diff_key(
+                array_intersect_key($subjects, array_flip($subjects_codes_to_register)),
+                $registered_subjects
+            ),
             '{n}.subject_id',
             '{n}'
         );
 
-        $subjects_to_add = array_diff_key($subjects_to_register, $registered_subjects);
-        
         ///** @deprecated in favour CAS auth */
         //if ($this->User->id) {
         //    $password = null;
@@ -2162,7 +2163,7 @@ class UsersController extends AppController {
                     'alias' => 'SubjectUser',
                     'type'  => 'INNER',
                     'conditions' => array(
-                        'SubjectUser.subject_id = Subject.id',
+                        'SubjectUser.subject_id = Subject.id OR SubjectUser.child_subject_id = Subject.id',
                         'SubjectUser.user_id' => $user_id
                     )
                 )
