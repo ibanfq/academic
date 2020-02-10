@@ -211,6 +211,18 @@ INSERT INTO `registrations` (`id`, `group_id`, `activity_id`, `student_id`, `cre
         (`student_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
         `created`, `modified`
     FROM `bd_centros_eite`.`registrations`
+    WHERE `group_id` > -1
+    ORDER BY `registrations`.`id`;
+
+INSERT INTO `registrations` (`id`, `group_id`, `activity_id`, `student_id`, `created`, `modified`)
+    SELECT
+        (`registrations`.`id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`registrations`) - (select min(`id`) FROM `bd_centros_eite`.`registrations`)),
+        -1
+        (`activity_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`activities`) - (select min(`id`) FROM `bd_centros_eite`.`activities`)),
+        (`student_id` + 1 + (select max(`id`) FROM `bd_centros_veterinaria`.`users`) - (select min(`id`) FROM `bd_centros_eite`.`users`)),
+        `created`, `modified`
+    FROM `bd_centros_eite`.`registrations`
+    WHERE `group_id` = -1
     ORDER BY `registrations`.`id`;
 
 # GROUP_REQUESTS

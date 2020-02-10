@@ -30,7 +30,7 @@ class GroupRequest extends AcademicModel {
 
         $db = $this->getDataSource();
 
-        if (!empty($group_id)) {
+        if (empty($group_id)) {
             $where = "(student_id = $user_id OR student_2_id = $user_id)";
         } else {
             $group_id = intval($group_id);
