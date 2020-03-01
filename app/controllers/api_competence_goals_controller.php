@@ -43,24 +43,27 @@ class ApiCompetenceGoalsController extends AppController {
         $db = $this->CompetenceGoal->getDataSource();
         $this->loadModel('User');
 
+        $teacher = null;
         $authIsTeacher = in_array($this->Auth->user('type'), array('Profesor', 'Administrador'));
 
         if ($authIsTeacher && $teacher_id === 'me') {
             $teacher = $this->Auth->user();
             $teacher_id = $this->Auth->user('id');
-        } else {
-            $teacher_id = $teacher_id === null ? null : intval($teacher_id);
+        } elseif ($teacher_id !== null) {
+            $teacher_id = intval($teacher_id);
             
-            $teacher = $this->User->find('first', array(
-                'recursive' => -1,
-                'conditions' => array(
-                    'User.id' => $teacher_id,
-                    'OR' => array(
-                        array('User.type' => 'Profesor'),
-                        array('User.type' => 'Administrador')
-                    ),
-                )
-            ));
+            if ($teacher_id) {
+                $teacher = $this->User->find('first', array(
+                    'recursive' => -1,
+                    'conditions' => array(
+                        'User.id' => $teacher_id,
+                        'OR' => array(
+                            array('User.type' => 'Profesor'),
+                            array('User.type' => 'Administrador')
+                        ),
+                    )
+                ));
+            }
         }
 
         if (empty($teacher)) {
