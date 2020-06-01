@@ -318,7 +318,7 @@ class CoursesController extends AppController {
         }
 
         // Duplicate every competence
-        $competenceList = $this->Competence->find(
+        $competenceList = $error ? [] : $this->Competence->find(
             'all',
             array(
                 'conditions' => array('Competence.course_id' => $course['Course']['id']),
@@ -467,14 +467,22 @@ class CoursesController extends AppController {
             $competenceGoalIds = implode(',', $savedCompetenceGoals);
             $competenceIds = implode(',', $savedCompetence);
             $subjectIds = implode(',', $savedSubjects);
-            $this->Course->query("DELETE FROM competence_criterion_teachers WHERE competence_criterion_teachers.criterion_id IN ($competenceCriterionIds)");
-            $this->Course->query("DELETE FROM competence_criterion_subjects WHERE competence_criterion_subjects.criterion_id IN ($competenceCriterionIds)");
-            $this->Course->query("DELETE FROM competence_criterion_rubrics WHERE competence_criterion_rubrics.criterion_id IN ($competenceCriterionIds)");
-            $this->Course->query("DELETE FROM competence_criteria WHERE competence_criteria.goal_id IN ($competenceGoalIds)");
-            $this->Course->query("DELETE FROM competence_goals WHERE competence_goals.competence_id IN ($competenceIds)");
+            if ($competenceCriterionIds) {
+                $this->Course->query("DELETE FROM competence_criterion_teachers WHERE competence_criterion_teachers.criterion_id IN ($competenceCriterionIds)");
+                $this->Course->query("DELETE FROM competence_criterion_subjects WHERE competence_criterion_subjects.criterion_id IN ($competenceCriterionIds)");
+                $this->Course->query("DELETE FROM competence_criterion_rubrics WHERE competence_criterion_rubrics.criterion_id IN ($competenceCriterionIds)");
+            }
+            if ($competenceGoalIds) {
+                $this->Course->query("DELETE FROM competence_criteria WHERE competence_criteria.goal_id IN ($competenceGoalIds)");
+            }
+            if ($competenceIds) {
+                $this->Course->query("DELETE FROM competence_goals WHERE competence_goals.competence_id IN ($competenceIds)");
+            }
             $this->Course->query("DELETE FROM competence WHERE competence.course_id = {$new_course_id}");
-            $this->Course->query("DELETE FROM activities WHERE activities.subject_id IN ($subjectIds)");
-            $this->Course->query("DELETE FROM groups WHERE groups.subject_id IN ($subjectIds)");
+            if ($subjectIds) {
+                $this->Course->query("DELETE FROM activities WHERE activities.subject_id IN ($subjectIds)");
+                $this->Course->query("DELETE FROM groups WHERE groups.subject_id IN ($subjectIds)");
+            }
             $this->Course->query("DELETE FROM subjects WHERE course_id = {$new_course_id}");
             return false;
         }
