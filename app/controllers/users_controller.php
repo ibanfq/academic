@@ -2163,7 +2163,7 @@ class UsersController extends AppController {
                     'alias' => 'SubjectUser',
                     'type'  => 'INNER',
                     'conditions' => array(
-                        'SubjectUser.subject_id = Subject.id OR SubjectUser.child_subject_id = Subject.id',
+                        '(SubjectUser.subject_id = Subject.id OR SubjectUser.child_subject_id = Subject.id)',
                         'SubjectUser.user_id' => $user_id
                     )
                 )
