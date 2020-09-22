@@ -68,7 +68,7 @@ class CasComponent extends Object {
         $this->_initialize();
 
         // force CAS authentication
-        if (phpCAS::checkAuthentication()) {
+        if (Configure::read('CAS.force_user') || phpCAS::checkAuthentication()) {
             $logged = $this->_loginCasUser();
 
             if (! $logged && $this->Auth->user('id')) {
@@ -109,7 +109,7 @@ class CasComponent extends Object {
 
     function _loginCasUser()
     {
-        $casUser = phpCAS::getUser();
+        $casUser = Configure::read('CAS.force_user') ?: phpCAS::getUser();
         
         if (empty($casUser)) {
             return false;

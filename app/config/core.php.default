@@ -263,6 +263,8 @@ Configure::write('CAS.context', '/cas');
 Configure::write('CAS.server_ca_cert_path', false);
 Configure::write('CAS.logout_check_client', true);
 Configure::write('CAS.logout_allowed_clients', null);
+Configure::write('CAS.force_user', false);
+//Configure::write('CAS.force_user', '12345678');
 
 /**
  * If you are on PHP 5.3 uncomment this line and correct your server timezone
